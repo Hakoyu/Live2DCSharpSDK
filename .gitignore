@@ -1,4 +1,5 @@
 /Resources
+tmp/
 obj/
 bin/
 /.vs

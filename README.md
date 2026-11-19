@@ -41,7 +41,7 @@
 
 ## 验收模型
 
-冒烟与验收使用四个模型: `Haru`、`Mao`、`Ren`(取自官方 `Samples/Resources`)与 `大肥鱼`(本地 `live2d-models/`)。
+冒烟与验收使用四个模型: `Haru`、`Mao`、`Ren`(取自官方 `Samples/Resources`)。
 
 ## 已知差异
 
@@ -50,4 +50,4 @@
 
 ## 许可与反馈
 
-许可见 [LICENSE](LICENSE)。交流 QQ 群: 571239090。
+许可见 [LICENSE](LICENSE)。
