@@ -48,6 +48,11 @@ public class CubismMoc : IDisposable
             );
         }
 
+        if (mocBytes is null)
+        {
+            throw new ArgumentNullException(nameof(mocBytes), "MOC3 data is required.");
+        }
+
         _context = context;
 
         // 两块非托管内存先按 "所有权未转移" 处理, 任何一步失败都在下面的 catch 里统一回收.
@@ -61,6 +66,11 @@ public class CubismMoc : IDisposable
                 mocBytes.Length,
                 CsmEnum.csmAlignofMoc
             );
+            if (alignedBuffer == IntPtr.Zero)
+            {
+                throw new OutOfMemoryException("Failed to allocate MOC3 memory.");
+            }
+
             Marshal.Copy(mocBytes, 0, alignedBuffer, mocBytes.Length);
 
             if (
@@ -85,6 +95,10 @@ public class CubismMoc : IDisposable
 
             var modelSize = CubismCore.GetSizeofModel(_moc);
             modelMemory = context.Allocator.AllocateAligned(modelSize, CsmEnum.CsmAlignofModel);
+            if (modelMemory == IntPtr.Zero)
+            {
+                throw new OutOfMemoryException("Failed to allocate model memory.");
+            }
 
             var model = CubismCore.InitializeModelInPlace(_moc, modelMemory, modelSize);
 
@@ -101,14 +115,19 @@ public class CubismMoc : IDisposable
         }
         catch
         {
-            if (modelMemoryOwned is false && modelMemory != IntPtr.Zero)
+            try
             {
-                context.Allocator.DeallocateAligned(modelMemory);
+                if (modelMemoryOwned is false && modelMemory != IntPtr.Zero)
+                {
+                    context.Allocator.DeallocateAligned(modelMemory);
+                }
             }
-
-            if (alignedBuffer != IntPtr.Zero)
+            finally
             {
-                context.Allocator.DeallocateAligned(alignedBuffer);
+                if (alignedBuffer != IntPtr.Zero)
+                {
+                    context.Allocator.DeallocateAligned(alignedBuffer);
+                }
             }
 
             throw;
@@ -153,13 +172,20 @@ public class CubismMoc : IDisposable
             mocBytes.Length,
             CsmEnum.csmAlignofMoc
         );
-        Marshal.Copy(mocBytes, 0, alignedBuffer, mocBytes.Length);
+        if (alignedBuffer == IntPtr.Zero)
+        {
+            throw new OutOfMemoryException("Failed to allocate MOC3 memory.");
+        }
 
-        var version = CubismCore.GetMocVersion(alignedBuffer, mocBytes.Length);
-
-        context.Allocator.DeallocateAligned(alignedBuffer);
-
-        return version;
+        try
+        {
+            Marshal.Copy(mocBytes, 0, alignedBuffer, mocBytes.Length);
+            return CubismCore.GetMocVersion(alignedBuffer, mocBytes.Length);
+        }
+        finally
+        {
+            context.Allocator.DeallocateAligned(alignedBuffer);
+        }
     }
 
     /// <summary>
@@ -194,13 +220,20 @@ public class CubismMoc : IDisposable
             data.Length,
             CsmEnum.csmAlignofMoc
         );
-        Marshal.Copy(data, 0, alignedBuffer, data.Length);
+        if (alignedBuffer == IntPtr.Zero)
+        {
+            throw new OutOfMemoryException("Failed to allocate MOC3 memory.");
+        }
 
-        bool consistency = HasMocConsistency(alignedBuffer, data.Length);
-
-        context.Allocator.DeallocateAligned(alignedBuffer);
-
-        return consistency;
+        try
+        {
+            Marshal.Copy(data, 0, alignedBuffer, data.Length);
+            return HasMocConsistency(alignedBuffer, data.Length);
+        }
+        finally
+        {
+            context.Allocator.DeallocateAligned(alignedBuffer);
+        }
     }
 
     /// <summary>

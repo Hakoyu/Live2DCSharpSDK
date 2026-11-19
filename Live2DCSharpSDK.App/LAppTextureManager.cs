@@ -13,7 +13,7 @@ public class LAppTextureManager(LAppDelegate lapp)
     /// </summary>
     private const int PlaceholderTextureSize = 1;
 
-    private readonly List<TextureInfo> _textures = [];
+    private readonly Dictionary<TextureKey, TextureInfo> _textures = [];
 
     /// <summary>
     /// 读取图像
@@ -28,8 +28,8 @@ public class LAppTextureManager(LAppDelegate lapp)
     public unsafe TextureInfo? CreateTextureFromPngFile(LAppModel model, int index, string fileName)
     {
         //search loaded texture already.
-        var item = _textures.FirstOrDefault(a => a.FileName == fileName);
-        if (item is not null)
+        var key = new TextureKey(model, index, fileName);
+        if (_textures.TryGetValue(key, out var item))
         {
             return item;
         }
@@ -99,7 +99,7 @@ public class LAppTextureManager(LAppDelegate lapp)
         info.Index = index;
         info.Height = image.Height;
 
-        _textures.Add(info);
+        _textures.Add(key, info);
 
         return info;
     }
@@ -166,7 +166,28 @@ public class LAppTextureManager(LAppDelegate lapp)
     /// <param name="textureId">要释放的纹理 ID</param>
     public void ReleaseTexture(TextureInfo info)
     {
+        TextureKey? key = null;
+        foreach (var item in _textures)
+        {
+            if (ReferenceEquals(item.Value, info))
+            {
+                key = item.Key;
+                break;
+            }
+        }
+
         info.Dispose();
-        _textures.Remove(info);
+        if (key is not null)
+        {
+            _textures.Remove(key.Value);
+        }
     }
+
+    /// <summary>
+    /// 纹理缓存键. 后端会把纹理与模型和纹理单元绑定, 因此仅按文件名缓存会返回错误绑定.
+    /// </summary>
+    /// <param name="Model">持有纹理的模型</param>
+    /// <param name="Index">纹理单元编号</param>
+    /// <param name="FileName">纹理文件路径</param>
+    private readonly record struct TextureKey(LAppModel Model, int Index, string FileName);
 }

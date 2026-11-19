@@ -153,10 +153,10 @@ public sealed class LAppTextureManagerTests
     }
 
     /// <summary>
-    /// 同一个文件第二次读取命中缓存, 不再创建第二张纹理.
+    /// 同一模型与纹理单元第二次读取命中缓存, 不再创建第二张纹理.
     /// </summary>
     [TestMethod]
-    public void CreateTextureFromPngFile_WhenSameFileTwice_ReturnsCachedTexture()
+    public void CreateTextureFromPngFile_WhenSameModelAndIndexTwice_ReturnsCachedTexture()
     {
         using TemporaryDirectory temp = new();
         string fileName = CreatePng(temp, "cached.png", 2, 3);
@@ -166,12 +166,56 @@ public sealed class LAppTextureManagerTests
         using LogCaptureScope log = new();
 
         TextureInfo? first = manager.CreateTextureFromPngFile(null!, TextureIndex, fileName);
-        TextureInfo? second = manager.CreateTextureFromPngFile(null!, TextureIndex + 1, fileName);
+        TextureInfo? second = manager.CreateTextureFromPngFile(null!, TextureIndex, fileName);
 
         Assert.IsNotNull(first);
         Assert.AreSame(first, second, "The same file must reuse the loaded texture.");
         Assert.AreEqual(1, lapp.CreateTextureCalls.Count);
         Assert.AreEqual(TextureIndex, first.Index, "The cached texture keeps its original index.");
+    }
+
+    /// <summary>
+    /// 同一文件绑定到不同纹理单元时分别创建, 避免把第一个单元的绑定复用到第二个单元.
+    /// </summary>
+    [TestMethod]
+    public void CreateTextureFromPngFile_WhenSameFileUsesDifferentIndex_CreatesTexturePerIndex()
+    {
+        using TemporaryDirectory temp = new();
+        string fileName = CreatePng(temp, "shared-index.png", 2, 3);
+        TestLAppDelegate lapp = new();
+        LAppTextureManager manager = new(lapp);
+
+        TextureInfo? first = manager.CreateTextureFromPngFile(null!, TextureIndex, fileName);
+        TextureInfo? second = manager.CreateTextureFromPngFile(null!, TextureIndex + 1, fileName);
+
+        Assert.IsNotNull(first);
+        Assert.IsNotNull(second);
+        Assert.AreNotSame(first, second);
+        Assert.AreEqual(2, lapp.CreateTextureCalls.Count);
+        Assert.AreEqual(TextureIndex, lapp.CreateTextureCalls[0].Index);
+        Assert.AreEqual(TextureIndex + 1, lapp.CreateTextureCalls[1].Index);
+    }
+
+    /// <summary>
+    /// 同一文件被不同模型使用时分别创建, 避免共享后端纹理所属模型不一致.
+    /// </summary>
+    [TestMethod]
+    public void CreateTextureFromPngFile_WhenSameFileUsesDifferentModel_CreatesTexturePerModel()
+    {
+        using TemporaryDirectory temp = new();
+        string fileName = CreatePng(temp, "shared-model.png", 2, 3);
+        TestLAppDelegate lapp = new();
+        LAppTextureManager manager = new(lapp);
+        LAppModel firstModel = CreateTestModel();
+        LAppModel secondModel = CreateTestModel();
+
+        TextureInfo? first = manager.CreateTextureFromPngFile(firstModel, TextureIndex, fileName);
+        TextureInfo? second = manager.CreateTextureFromPngFile(secondModel, TextureIndex, fileName);
+
+        Assert.IsNotNull(first);
+        Assert.IsNotNull(second);
+        Assert.AreNotSame(first, second);
+        Assert.AreEqual(2, lapp.CreateTextureCalls.Count);
     }
 
     /// <summary>
@@ -342,6 +386,18 @@ public sealed class LAppTextureManagerTests
         using SKData data = image.Encode(SKEncodedImageFormat.Png, 100);
         File.WriteAllBytes(path, data.ToArray());
         return path;
+    }
+
+    /// <summary>
+    /// 创建不触发 Core 或图形后端的模型引用, 仅用于区分纹理缓存所有者.
+    /// </summary>
+    /// <returns>未初始化的模型实例</returns>
+    private static LAppModel CreateTestModel()
+    {
+        return (LAppModel)
+            System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(
+                typeof(LAppModel)
+            );
     }
 
     /// <summary>
