@@ -50,47 +50,69 @@ public class CubismMoc : IDisposable
 
         _context = context;
 
-        IntPtr alignedBuffer = context.Allocator.AllocateAligned(
-            mocBytes.Length,
-            CsmEnum.csmAlignofMoc
-        );
-        Marshal.Copy(mocBytes, 0, alignedBuffer, mocBytes.Length);
+        // 两块非托管内存先按 "所有权未转移" 处理, 任何一步失败都在下面的 catch 里统一回收.
+        IntPtr alignedBuffer = IntPtr.Zero;
+        IntPtr modelMemory = IntPtr.Zero;
+        bool modelMemoryOwned = false;
 
-        if (shouldCheckMocConsistency)
+        try
         {
-            // 确认 .moc3 的一致性
-            bool consistency = HasMocConsistency(alignedBuffer, mocBytes.Length);
-            if (!consistency)
-            {
-                context.Allocator.DeallocateAligned(alignedBuffer);
+            alignedBuffer = context.Allocator.AllocateAligned(
+                mocBytes.Length,
+                CsmEnum.csmAlignofMoc
+            );
+            Marshal.Copy(mocBytes, 0, alignedBuffer, mocBytes.Length);
 
-                // 如果无法确认一致性则不处理
+            if (
+                shouldCheckMocConsistency
+                && HasMocConsistency(alignedBuffer, mocBytes.Length) is false
+            )
+            {
+                // 如果无法确认一致性则不处理, 缓冲区交给 catch 释放.
                 throw new Exception("Inconsistent MOC3.");
             }
+
+            var moc = CubismCore.ReviveMocInPlace(alignedBuffer, mocBytes.Length);
+
+            if (moc == IntPtr.Zero)
+            {
+                throw new Exception("MOC3 revive failed.");
+            }
+
+            _moc = moc;
+
+            MocVersion = CubismCore.GetMocVersion(alignedBuffer, mocBytes.Length);
+
+            var modelSize = CubismCore.GetSizeofModel(_moc);
+            modelMemory = context.Allocator.AllocateAligned(modelSize, CsmEnum.CsmAlignofModel);
+
+            var model = CubismCore.InitializeModelInPlace(_moc, modelMemory, modelSize);
+
+            if (model == IntPtr.Zero)
+            {
+                throw new Exception("Model initialization failed.");
+            }
+
+            Model = new CubismModel(context, model);
+
+            // 所有权转移点: 模型对象构造成功后, model 内存由 CubismModel.Dispose 释放,
+            // catch 中不得再释放, 否则会与模型自身的释放叠成 double free.
+            modelMemoryOwned = true;
         }
-
-        var moc = CubismCore.ReviveMocInPlace(alignedBuffer, mocBytes.Length);
-
-        if (moc == IntPtr.Zero)
+        catch
         {
-            throw new Exception("MOC3 is null");
+            if (modelMemoryOwned is false && modelMemory != IntPtr.Zero)
+            {
+                context.Allocator.DeallocateAligned(modelMemory);
+            }
+
+            if (alignedBuffer != IntPtr.Zero)
+            {
+                context.Allocator.DeallocateAligned(alignedBuffer);
+            }
+
+            throw;
         }
-
-        _moc = moc;
-
-        MocVersion = CubismCore.GetMocVersion(alignedBuffer, mocBytes.Length);
-
-        var modelSize = CubismCore.GetSizeofModel(_moc);
-        var modelMemory = context.Allocator.AllocateAligned(modelSize, CsmEnum.CsmAlignofModel);
-
-        var model = CubismCore.InitializeModelInPlace(_moc, modelMemory, modelSize);
-
-        if (model == IntPtr.Zero)
-        {
-            throw new Exception("MODEL is null");
-        }
-
-        Model = new CubismModel(context, model);
     }
 
     /// <summary>
