@@ -4,6 +4,24 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!--
+      NuGet 打包元数据. App 是「基础应用层」(LApp* 示例逻辑), 但后端的公开类型
+      (LAppDelegateOpenGL / LAppDelegateVulkan 等) 派生自本程序集, 因此必须随包发布,
+      否则消费 OpenGL/Vulkan 包的程序集无法解析基类.
+    -->
+    <PackageId>Live2DCSharpSDK.App</PackageId>
+    <Authors>HKW</Authors>
+    <Description>Live2D Cubism SDK 的基础应用层 (模型管理/视图/纹理/平台适配). 依赖 Framework 与 SkiaSharp; 不含 Live2DCubismCore 原生库, 使用前需自行准备.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Hakoyu/Live2DCSharpSDK</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>live2d;cubism;sdk</PackageTags>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 只抑制「缺少/未文档化参数」类, 与 Framework 同口径; 格式错误不抑制. -->
+    <NoWarn>$(NoWarn);CS1573;CS1591</NoWarn>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -21,9 +39,13 @@
     <ProjectReference Include="..\Live2DCSharpSDK.Framework\Live2DCSharpSDK.Framework.csproj" />
   </ItemGroup>
 
+  <!-- 包自述文件：PACKAGE.md 作为 None 项打进包根目录（对应 PackageReadmeFile）。 -->
+  <ItemGroup>
+    <None Include="PACKAGE.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <!--
-    单元测试需要访问 internal 成员 (LAppDelegate.Latest / SetDeltaTime, LAppView.Render),
-    见 PLAN-06 §5.
+    单元测试需要访问 internal 成员 (LAppDelegate.Latest / SetDeltaTime, LAppView.Render)
   -->
   <ItemGroup>
     <InternalsVisibleTo Include="Live2DCSharpSDK.Tests" />

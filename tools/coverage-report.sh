@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# 按 PLAN-06 §8 的 allowlist 统计行覆盖率 (coverlet -> Cobertura).
+# 按 allowlist 统计行覆盖率 (coverlet -> Cobertura).
 #
 # 用法:
 #   tools/coverage-report.sh [a|core|all] [dotnet test args...]
 #
 # 说明:
-#   - 覆盖率只报告不阻断: 低于 80% 打印 WARN, 退出码仍为 0 (见 PLAN-06 §8).
+#   - 覆盖率只报告不阻断: 低于 80% 打印 WARN, 退出码仍为 0.
 #   - 需要 python (或 python3) 解析 Cobertura XML.
 #   - 结果目录由 COVERAGE_RESULTS_DIR 指定; 未设置时用临时目录, 脚本结束前保留并打印路径,
 #     便于在日志里回查 coverage.cobertura.xml.
@@ -94,7 +94,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 
-# PLAN-06 §8 的 allowlist. 每项: (显示名, 精确类名, 嵌套类前缀, 排除前缀).
+# allowlist. 每项: (显示名, 精确类名, 嵌套类前缀, 排除前缀).
 ALLOWLIST = [
     ("CubismMath", "Live2DCSharpSDK.Framework.Math.CubismMath", None, None),
     ("CubismMatrix44", "Live2DCSharpSDK.Framework.Math.CubismMatrix44", None, None),
@@ -189,5 +189,5 @@ if warnings:
         print(gap)
 else:
     print("[coverage] all allowlist items are at or above 80%")
-print("[coverage] WARN does not fail the build (report only, see PLAN-06 §8)")
+print("[coverage] WARN does not fail the build (report only)")
 PY

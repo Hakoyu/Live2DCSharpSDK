@@ -123,7 +123,7 @@ public abstract class CubismClippingManager
         ChannelColors.Clear();
         ClearedMaskBufferFlags.Clear();
 
-        // §2.F 漏点③: 官方 R5 会连遮罩用渲染目标一起销毁
+        // 官方 R5 析构会连遮罩使用的渲染目标一起销毁
         CurrentMaskBuffer?.DestroyRenderTarget();
         CurrentMaskBuffer = null!;
     }

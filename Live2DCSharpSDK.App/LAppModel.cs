@@ -550,8 +550,7 @@ public class LAppModel : CubismUserModel
     /// <summary>
     /// 开始播放参数指定的动作.
     /// </summary>
-    /// <param name="group">动作组名</param>
-    /// <param name="no">组内编号</param>
+    /// <param name="name">动作名, 格式为 "组名_编号", 组名本身允许包含下划线</param>
     /// <param name="priority">优先级</param>
     /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>

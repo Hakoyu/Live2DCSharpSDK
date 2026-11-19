@@ -217,12 +217,12 @@ public abstract class OpenGLApi
     );
 
     /// <summary>
-    /// 删除缓冲对象 (§2.F 漏点①, 官方 glDeleteBuffers)
+    /// 删除缓冲对象 (官方 glDeleteBuffers)
     /// </summary>
     public abstract void DeleteBuffer(int index);
 
     /// <summary>
-    /// 删除顶点数组对象 (§2.F 漏点①, 官方 glDeleteVertexArrays)
+    /// 删除顶点数组对象 (官方 glDeleteVertexArrays)
     /// </summary>
     public abstract void DeleteVertexArray(int index);
     public abstract void BlendFunc(int a, int b);

@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework.Math;
+using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Model;
 
 namespace Live2DCSharpSDK.Framework.Rendering;
@@ -73,7 +73,7 @@ public abstract class CubismRenderer
     /// </summary>
     public void DrawModel()
     {
-        /**
+        /*
          * 请在 DoDrawModel 的绘制前与绘制后调用以下函数.
          * - SaveProfile();
          * - RestoreProfile();

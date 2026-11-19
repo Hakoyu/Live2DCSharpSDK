@@ -16,7 +16,7 @@ namespace Live2DCSharpSDK.Tests;
 public static class GlobalStateFixture
 {
     /// <summary>
-    /// 模型夹具根目录的环境变量名 (moc3 不入库, 见 PLAN-06 §3).
+    /// 模型夹具根目录的环境变量名 (moc3 不入库).
     /// </summary>
     public const string ModelsRootVariable = "LIVE2D_TEST_MODELS";
 
@@ -78,7 +78,7 @@ public static class GlobalStateFixture
 
         // A 档必须完全不触碰原生库: 只有 core / all 档才解析并探测 Core,
         // 否则 A 档会通过 NativeLibrary.TryLoad 加载一次 Live2DCubismCore.dll,
-        // 与「A 档不加载 Core」的硬边界矛盾 (见 PLAN-06 §2).
+        // 与「A 档不加载 Core」的硬边界矛盾.
         bool needsCoreProbe =
             string.Equals(Tier, "core", StringComparison.OrdinalIgnoreCase)
             || string.Equals(Tier, "all", StringComparison.OrdinalIgnoreCase);
@@ -174,7 +174,7 @@ public static class GlobalStateFixture
 
     /// <summary>
     /// 在测试输出目录里定位 Core 原生库.
-    /// 平台不是 Windows x64 时返回 null, 因为仓库里的原生库只提供 win-x64 版本 (见 PLAN-06 §2).
+    /// 平台不是 Windows x64 时返回 null, 因为仓库里的原生库只提供 win-x64 版本.
     /// </summary>
     /// <returns>原生库路径, 找不到时为 null</returns>
     private static string? ResolveCoreLibraryPath()
@@ -234,7 +234,7 @@ public static class GlobalStateFixture
 
     /// <summary>
     /// B 档的运行前校验: 平台, 模型夹具与 Core 原生库都必须是可用的.
-    /// 用失败而不是跳过, 避免出现 "CI 绿但没跑" 的假象 (见 PLAN-06 §2).
+    /// 用失败而不是跳过, 避免出现 "CI 绿但没跑" 的假象.
     /// </summary>
     private static void RequireCoreEnvironment()
     {

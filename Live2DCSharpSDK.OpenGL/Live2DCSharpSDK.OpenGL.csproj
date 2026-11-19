@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -13,7 +13,49 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
+  <!--
+    NuGet 打包元数据（本地私有 feed 用，见 tools/pack.sh 与 PACKAGE.md）。
+    包内只有托管程序集与 XML 文档 + 自述文件；Live2D Cubism Core 原生库
+    （Live2DCubismCore.dll）不随包分发，由使用者自备——见 PACKAGE.md 第 2 节。
+    OpenGL 后端不直接引用任何 NuGet 包，唯一的包依赖是同版本的 Framework。
+  -->
+  <PropertyGroup>
+    <PackageId>Live2DCSharpSDK.OpenGL</PackageId>
+    <Authors>HKW</Authors>
+    <Description>Live2D Cubism 5 SDK for Native 的 C#/.NET 移植 —— OpenGL / OpenGL ES 2.0 渲染后端（着色器延迟编译、裁剪遮罩、离屏渲染）。依赖同版本 Live2DCSharpSDK.Framework；本包只含托管程序集，不含 Live2DCubismCore 原生库，需自行提供对应平台的 Core 二进制。</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Hakoyu/Live2DCSharpSDK</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>live2d;cubism;live2dcubismsdk;opengl;opengles2;graphics;net10.0</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+    <IsPackable>true</IsPackable>
+    <!--
+      GenerateDocumentationFile 让包内带 XML 文档（下游 IntelliSense），但本工程大量
+      P/Invoke 声明与内部实现并无 XML 注释，会触发 142 条 CS1591（缺少 XML 注释）。
+      门禁要求 0 warning，这里按"文档文件照常产出、缺注释不报警"的常规做法抑制；
+      补齐注释属于代码文档工作，不属于打包范围。
+    -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- 包内自述文件（PACKAGE.md 说明自备 Core 原生库，见 Description） -->
   <ItemGroup>
-    <ProjectReference Include="..\Live2DCSharpSDK.App\Live2DCSharpSDK.App.csproj" />
+    <None Include="PACKAGE.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      App：基础应用层，本工程必须引用它编译
+      （LAppDelegateOpenGL/LAppViewOpenGL 派生自 App 的 LAppDelegate/LAppView）。
+      App 同时是可发布包（Live2DCSharpSDK.App 0.1.0-preview），
+      因此这里用 PrivateAssets="none" 让它进入 nuspec 依赖清单并向下游传递。
+    -->
+    <ProjectReference Include="..\Live2DCSharpSDK.App\Live2DCSharpSDK.App.csproj" PrivateAssets="none" />
+    <!--
+      Framework：必须作为包依赖出现在 nuspec 里（而不是内联进包），
+      PrivateAssets="none" 让 pack 生成 dependency 并向下游传递。
+    -->
+    <ProjectReference Include="..\Live2DCSharpSDK.Framework\Live2DCSharpSDK.Framework.csproj" PrivateAssets="none" />
   </ItemGroup>
 </Project>

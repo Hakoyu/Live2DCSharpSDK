@@ -1982,7 +1982,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         // 若已创建离屏则释放
         // 不使用 mask 的模型中 _offscreenFrameBuffers 为 null,
-        // 旧实现会在此处产生 NullReferenceException(本任务 §2.4 已修正).
+        // 旧实现在此处会产生 NullReferenceException, 已加守卫.
         if (_offscreenFrameBuffers != null)
         {
             for (int i = 0; i < _offscreenFrameBuffers.Length; i++)

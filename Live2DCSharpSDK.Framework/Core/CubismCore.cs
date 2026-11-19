@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace Live2DCSharpSDK.Framework.Core;
@@ -579,9 +579,9 @@ public static partial class CubismCore
     /// <param name="model">Model to query.</param>
     /// <returns>Valid pointer on success; '0' otherwise.</returns>
     /// <remarks>
-    // R5 改名: 5-r.5 的 Core 头文件已删除旧的 csmGetDrawableRenderOrders,
-    // 新入口点为 csmGetRenderOrders(Live2DCubismCore.h:332). EntryPoint 是字符串,
-    // 改错不会编译报错, 但运行期首次调用会抛 EntryPointNotFoundException.
+    /// R5 改名: 5-r.5 的 Core 头文件已删除旧的 csmGetDrawableRenderOrders,
+    /// 新入口点为 csmGetRenderOrders(Live2DCubismCore.h:332). EntryPoint 是字符串,
+    /// 改错不会编译报错, 但运行期首次调用会抛 EntryPointNotFoundException.
     /// </remarks>
     [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetRenderOrders")]
     internal static unsafe partial int* GetRenderOrders(IntPtr model);

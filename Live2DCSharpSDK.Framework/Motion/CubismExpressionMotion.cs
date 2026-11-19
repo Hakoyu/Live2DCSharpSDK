@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Nodes;
+using System.Text.Json.Nodes;
 using Live2DCSharpSDK.Framework.Model;
 
 namespace Live2DCSharpSDK.Framework.Motion;
@@ -42,7 +42,7 @@ public class CubismExpressionMotion : ACubismMotion
     /// <summary>
     /// 创建实例.
     /// </summary>
-    /// <param name="buffer">已读取 exp 文件的缓冲区</param>
+    /// <param name="buf">已读取 exp 文件的缓冲区</param>
     /// <param name="context">上下文实例</param>
     /// <exception cref="ArgumentNullException">context 为 null 时抛出</exception>
     public CubismExpressionMotion(string buf, CubismContext context)

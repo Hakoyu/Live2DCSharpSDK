@@ -1,4 +1,4 @@
-# Live2D 样例模型夹具指纹 (moc3 本体不入库, 见 TestData/README.md 与 PLAN-06 §3).
+# Live2D 样例模型夹具指纹 (moc3 本体不入库, 见 TestData/README.md).
 # 夹具来源: Cubism 5 SDK for Native 5-r.5, 目录 Samples/Resources (Haru/, Ren/).
 # 记录环境: Live2D Cubism Core 6.0.0001 (0x06000001), csmGetLatestMocVersion = 6.
 # 格式: <相对路径> sha256=<小写十六进制> mocVersion=<n> drawables=<n> parts=<n> parameters=<n> offscreens=<n>

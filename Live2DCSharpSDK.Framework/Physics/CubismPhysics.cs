@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Text.Json;
 using Live2DCSharpSDK.Framework.Core;
 using Live2DCSharpSDK.Framework.Math;
@@ -464,10 +464,10 @@ public class CubismPhysics
     /// 该规格用于避免因超出插值范围而产生抖动外观.
     /// 该规格用于避免因超出插值范围而出现抖动外观.
     ///
-    /// ------------ 时间 -------------->
+    /// 时间方向: 向右
     ///
-    ///    　　　　　　　　|+++++|------| <- 权重
-    /// ==[1]====#=====[2]---(3)----(4)
+    ///    　　　　　　　　|+++++|——————| 　← 权重
+    /// ==[1]====#=====[2]———(3)————(4)
     ///          ^ 输出内容
     ///
     /// 1:_previousRigOutputs

@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework.Model;
+using Live2DCSharpSDK.Framework.Model;
 
 namespace Live2DCSharpSDK.Framework.Motion;
 
@@ -21,7 +21,6 @@ public class CubismMotionManager : CubismMotionQueueManager
     /// 设置优先级并开始动作.
     /// </summary>
     /// <param name="motion">动作</param>
-    /// <param name="autoDelete">若在播放结束后删除动作实例则为 true</param>
     /// <param name="priority">优先级</param>
     /// <returns>返回已开始动作的识别编号. 用于 IsFinished() 的参数, 判定各个动作是否结束. 无法开始时为 "-1"</returns>
     public CubismMotionQueueEntry StartMotionPriority(ACubismMotion motion, MotionPriority priority)

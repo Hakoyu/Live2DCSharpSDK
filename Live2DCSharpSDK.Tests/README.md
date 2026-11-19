@@ -17,7 +17,7 @@
 | B | `TestCategory=RequiresCore` | **仅 Windows x64** + `Live2DCubismCore.dll` + moc3 夹具 | moc3 解析 / Dispose 幂等 / Context StartUp 与隔离 |
 | C | - | 真实 GL | 不在单元测试层, 由 `verify/` 的 smoke + acceptance 集成门禁覆盖 |
 
-B 档缺少环境时**失败而不是 Skip** (见 PLAN-06 §2), 避免出现 "CI 绿但没跑" 的假象.
+B 档缺少环境时**失败而不是 Skip**, 避免出现 "CI 绿但没跑" 的假象.
 
 ## 2. 命令
 
@@ -41,7 +41,7 @@ bash tools/run-gate.sh          # 本地门禁: build -> 单元测试 -> 可选�
 ```
 
 `run-tests.sh` 在筛选器匹配 0 个用例时按失败处理 (读取 TRX 计数), 防止假绿.
-覆盖率低于 80% 只打印 WARN, 退出码仍为 0 (见 PLAN-06 §8).
+覆盖率低于 80% 只打印 WARN, 退出码仍为 0.
 
 ## 3. 环境变量
 
@@ -101,7 +101,7 @@ Live2DCSharpSDK.Tests/
 
 ## 7. 覆盖率与门禁
 
-- `tools/coverage-report.sh` 用 coverlet 生成 Cobertura, 按 PLAN-06 §8 的 allowlist
+- `tools/coverage-report.sh` 用 coverlet 生成 Cobertura, 按 allowlist
   (CubismMath / Matrix44 / TargetPoint / MaskGroupUtility / CsmBlendMode / IdManager /
   UpdateScheduler / Context / ModelResourceLocator / LAppAllocator / ModelSettingObj)
   输出行覆盖率与未覆盖行号; 低于 80% 只 WARN.

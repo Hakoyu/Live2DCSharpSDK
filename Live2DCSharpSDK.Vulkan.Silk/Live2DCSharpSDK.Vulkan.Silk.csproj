@@ -1,7 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -20,5 +21,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Live2DCSharpSDK.Vulkan\Live2DCSharpSDK.Vulkan.csproj" />
+    <!-- 本宿主直接使用 App 的类型（Program.cs 顶部 using Live2DCSharpSDK.App;），
+         因此显式声明本引用。宿主不打包，普通 ProjectReference 不产生包依赖。 -->
+    <ProjectReference Include="..\Live2DCSharpSDK.App\Live2DCSharpSDK.App.csproj" />
   </ItemGroup>
 </Project>

@@ -13,6 +13,29 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
+  <!--
+    NuGet 打包元数据（本地私有 feed，见 tools/pack.sh 与 Vulkan/PACKAGE.md）。
+      - 只打托管程序集 + XML 文档 + 自述文件；
+      - Live2D Cubism Core 原生库（Live2DCubismCore.dll）不随本包分发，由使用者自备
+        （见 Description / PACKAGE.md，与 Framework 包口径一致）；
+      - 包元数据与 Framework / OpenGL 保持同一套约定。
+  -->
+  <PropertyGroup>
+    <PackageId>Live2DCSharpSDK.Vulkan</PackageId>
+    <Authors>HKW</Authors>
+    <Description>Live2DCSharpSDK 的 Vulkan 渲染后端（基于 Silk.NET.Vulkan）：Cubism 渲染器抽象实现、管线/描述符/交换链管理、预编译 SPIR-V 着色器。本包只含托管程序集，不含 Live2DCubismCore 原生库，需自行提供对应平台的 Core 二进制。</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Hakoyu/Live2DCSharpSDK</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>live2d;cubism;live2dcubismsdk;vulkan;graphics;silk.net;net10.0</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 文档注释：本工程为逐行移植实现，部分公开 API 只有摘要或缺少 param 标记；
+         只为随包产出 XML 文档，不把 CS1591/1572/1573 计入构建警告。 -->
+    <NoWarn>$(NoWarn);1591;1572;1573</NoWarn>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="glsl\spv\**" />
     <EmbeddedResource Remove="glsl\spv\**" />
@@ -21,7 +44,7 @@
 
   <!-- 488 个预编译 SPIR-V（P8c / D-10）：14 基础 + 474 blend 组合。
        官方 Vulkan 为 494 个 program，其中 Add/Mult 复用 Normal 的 6 个基础 shader，
-       因此 spv 文件数 488，程序数 494（详见 work/P8c-report.md §1）。 -->
+       因此 spv 文件数 488，程序数 494。 -->
   <ItemGroup>
     <None Remove="spv\*.spv" />
   </ItemGroup>
@@ -36,7 +59,23 @@
     <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.23.0" />
   </ItemGroup>
 
+  <!--
+    包依赖声明：nuspec 里只允许出现真正的库，即 Framework。
+      - App（基础应用层 LApp*）：Vulkan 的公开类型（LAppDelegateVulkan / LAppViewVulkan /
+        TextureInfoVulkan）派生自 App，App 也是可发布包（Live2DCSharpSDK.App 0.1.0-preview），
+        这里用 PrivateAssets="none" 让它进入 nuspec 依赖清单。
+      - Framework（Cubism 核心抽象）：本工程只经 App 间接引用，这里显式声明一次并置
+        PrivateAssets="none"，使 pack 生成 <dependency id="Live2DCSharpSDK.Framework"
+        version="0.1.0-preview">（与 Framework 包同号，同号由 Framework 工程的 Version 决定）。
+  -->
   <ItemGroup>
-    <ProjectReference Include="..\Live2DCSharpSDK.App\Live2DCSharpSDK.App.csproj" />
+    <ProjectReference Include="..\Live2DCSharpSDK.App\Live2DCSharpSDK.App.csproj" PrivateAssets="none" />
+    <ProjectReference Include="..\Live2DCSharpSDK.Framework\Live2DCSharpSDK.Framework.csproj" PrivateAssets="none" />
+  </ItemGroup>
+
+  <!-- 包自述文件：PACKAGE.md 已是 SDK 默认 None 项（**/* 通配），这里只补 Pack/路径。
+       根路径 "\" 表示放在包根目录，与 PackageReadmeFile 对应。 -->
+  <ItemGroup>
+    <None Update="PACKAGE.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

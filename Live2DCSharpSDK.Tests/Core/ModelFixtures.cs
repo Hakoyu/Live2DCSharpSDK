@@ -10,7 +10,7 @@ namespace Live2DCSharpSDK.Tests.Core;
 /// moc3 本体不入库, 夹具根目录由 <see cref="GlobalStateFixture.ModelsRootVariable"/> 指定;
 /// 这里读取随测试输出复制的 TestData/models.sha256, 在加载模型之前校验 SHA-256.
 /// 环境变量缺失或哈希不符时用 <see cref="Assert.Fail(string)"/> 给出明确消息,
-/// 而不是让用例静默跳过 (见 PLAN-06 §2 / §3).
+/// 而不是让用例静默跳过.
 /// </summary>
 internal static class ModelFixtures
 {

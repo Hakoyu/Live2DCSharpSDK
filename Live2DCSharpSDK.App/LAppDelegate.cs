@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework;
+using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Model;
 using Live2DCSharpSDK.Framework.Rendering;
 
@@ -208,8 +208,7 @@ public abstract class LAppDelegate : IDisposable
     /// <summary>
     /// 供 OpenGL 使用的 glfwSetMouseButtonCallback 回调函数.
     /// </summary>
-    /// <param name="button">按钮种类</param>
-    /// <param name="action">执行结果</param>
+    /// <param name="press">是否按下</param>
     public void OnMouseCallBack(bool press)
     {
         if (press)

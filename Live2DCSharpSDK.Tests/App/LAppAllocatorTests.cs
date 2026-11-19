@@ -8,7 +8,7 @@ namespace Live2DCSharpSDK.Tests.App;
 /// A11: <see cref="LAppAllocator"/> 的对齐与非法输入契约.
 ///
 /// 每一条分配都在 finally 中释放, 避免测试自身泄漏; 不测真实 OOM (无法稳定注入),
-/// 也不把 0 字节分配的返回值当作契约 (见 PLAN-06 §4 A11).
+/// 也不把 0 字节分配的返回值当作契约.
 /// 旧实现用带符号 nint 做地址取余, 在地址最高位为 1 时得到负余数并把 preamble 写到区域之外,
 /// 对齐用例就是该缺陷的回归保护.
 /// </summary>

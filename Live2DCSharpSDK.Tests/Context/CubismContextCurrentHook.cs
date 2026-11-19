@@ -7,7 +7,7 @@ namespace Live2DCSharpSDK.Tests.Context;
 /// 不启动 Core 的 CubismContext.Current 测试钩子.
 /// 产品代码只在 StartUp 里设置 Current, 而 A 档不能调用 StartUp (会注册进程级 Core 回调);
 /// 这里直接读写 CubismContext 内部保存 Current 的 AsyncLocal, 从而在纯托管环境里验证日志隔离.
-/// 调用方必须用 try/finally 把旧值写回 (见 PLAN-06 §6).
+/// 调用方必须用 try/finally 把旧值写回.
 /// </summary>
 internal static class CubismContextCurrentHook
 {

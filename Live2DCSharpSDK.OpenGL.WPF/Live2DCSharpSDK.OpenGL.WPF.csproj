@@ -1,7 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <IsPackable>false</IsPackable>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -22,6 +23,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Live2DCSharpSDK.OpenGL\Live2DCSharpSDK.OpenGL.csproj" />
+    <!-- 宿主代码直接使用 App 的类型（LAppDelegate/LAppModel 等），因此显式声明本引用；
+         宿主工程不打包，普通 ProjectReference 不会产生包依赖。 -->
+    <ProjectReference Include="..\Live2DCSharpSDK.App\Live2DCSharpSDK.App.csproj" />
   </ItemGroup>
 
   <!--

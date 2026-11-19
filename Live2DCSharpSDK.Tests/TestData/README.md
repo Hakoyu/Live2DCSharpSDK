@@ -1,6 +1,6 @@
 # TestData
 
-夹具目录. moc3 模型本体**不入库** (许可与体积原因, 见 PLAN-06 §3).
+夹具目录. moc3 模型本体**不入库** (许可与体积原因).
 
 - 模型根目录由环境变量 `LIVE2D_TEST_MODELS` 指定, 例如:
   `D:/AgentGameWorkSpace/CubismSdkForNative-5-r.5/Samples/Resources`

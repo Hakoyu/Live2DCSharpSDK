@@ -1580,7 +1580,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     }
 
     /// <summary>
-    /// 释放渲染器持有的资源 (包含 §2.F 漏点①的修正).
+    /// 释放渲染器持有的资源 (含 GL 缓冲与顶点数组).
     /// </summary>
     public override void Dispose()
     {
@@ -1632,7 +1632,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         _offscreenList.Clear();
         OffscreenManager.Dispose();
 
-        // GL 对象 (§2.F 漏点①: 此前未被释放)
+        // GL 对象 (旧实现未释放)
         GL.DeleteBuffer(VertexBuffer);
         GL.DeleteBuffer(IndexBuffer);
         GL.DeleteBuffer(_quadVertexBuffer);

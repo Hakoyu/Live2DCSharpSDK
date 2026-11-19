@@ -9,7 +9,7 @@
 
   <!--
     测试程序集只引用托管层 (Framework / App), 不引用 OpenGL / Vulkan,
-    保证 A 档在任何平台都不触碰真实 GL (见 PLAN-06 §2 / §5).
+    保证 A 档在任何平台都不触碰真实 GL.
   -->
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.5.3" />
@@ -27,7 +27,7 @@
 
   <!--
     夹具元数据 (models.sha256 等文本) 随测试输出复制, 供 B 档校验使用;
-    moc3 本体不入库, 由 LIVE2D_TEST_MODELS 指向 (见 PLAN-06 §3).
+    moc3 本体不入库, 由 LIVE2D_TEST_MODELS 指向.
   -->
   <ItemGroup>
     <None Update="TestData\**\*" CopyToOutputDirectory="PreserveNewest" />

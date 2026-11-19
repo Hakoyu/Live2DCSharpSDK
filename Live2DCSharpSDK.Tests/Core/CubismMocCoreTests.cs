@@ -9,7 +9,7 @@ namespace Live2DCSharpSDK.Tests.Core;
 /// B1: moc3 夹具的指纹与 <see cref="CubismMoc"/> 的解析契约.
 ///
 /// 只在 Windows x64 运行, 需要 Live2DCubismCore.dll 与 LIVE2D_TEST_MODELS 指向的样例模型;
-/// 夹具缺失或哈希不符时用例失败而不是跳过 (见 PLAN-06 §2 / §3).
+/// 夹具缺失或哈希不符时用例失败而不是跳过.
 /// 用例只解析 moc3 与读取模型元数据, 不创建 renderer, 不调用任何绘制 API.
 /// </summary>
 [TestClass]

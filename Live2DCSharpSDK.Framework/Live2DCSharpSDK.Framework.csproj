@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <!--
+      方案 A（主人裁定）：保持 net10.0 单目标，不做 net8 多目标；
+      Framework 只补打包能力（NuGet 元数据 + 自述文件），代码与 TFM 不变。
+    -->
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -14,21 +18,58 @@
   </PropertyGroup>
 
   <!--
+    NuGet 打包元数据（本地私有 feed，不公开发布）。
+    包内只有托管程序集 + XML 文档 + 自述文件 PACKAGE.md。
+    Live2D Cubism Core 原生库（Live2DCubismCore.dll）不随包分发，由使用者自备
+    （见下方 None 项的 Pack="false" 与 PACKAGE.md §2）。
+    Framework / OpenGL / Vulkan 三个包的元数据保持一致，仅 PackageId/Description 不同。
+  -->
+  <PropertyGroup>
+    <PackageId>Live2DCSharpSDK.Framework</PackageId>
+    <Authors>HKW</Authors>
+    <Description>Live2D Cubism 5 SDK for Native 的 C#/.NET 框架层移植（Core P/Invoke、模型、动作、物理、特效、渲染抽象）。本包只含托管程序集，不含 Live2DCubismCore 原生库，使用前需自行准备对应平台的 Cubism Core 二进制。</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Hakoyu/Live2DCSharpSDK</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>live2d;cubism;sdk</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!--
+      只抑制「缺少/未文档化参数」类警告 (CS1591/CS1573): 移植遗留的注释缺口约 359 处,
+      补全属独立任务. 格式错误与 cref 错误 (CS1570/1571/1572/1574/1580/1581/1584/1587/1658)
+      一律不抑制, 它们会让生成的 XML 文档与 IntelliSense 出现错误内容.
+    -->
+    <NoWarn>$(NoWarn);CS1573;CS1591</NoWarn>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <!--
     Cubism Core 原生库（06.00.0001，对应 Cubism 5 SDK for Native R5）。
     源文件保存在 runtimes/win-x64/native/ 以便将来支持其它平台；
     同时 Link 到输出根目录，让 LibraryImport("Live2DCubismCore") 在任意宿主
     （App / OpenGL / OpenGL.Avalonia / OpenGL.OpenTK / OpenGL.WPF / Vulkan / Vulkan.Silk）
     的输出目录下都能直接解析。
+    Pack="false"：显式声明该原生库绝不进入 nupkg（nuget 默认不打包 None 项，
+    这里把"原生库不入包"固定成契约，避免将来被 Directory.Build.props 或 Pack=true 误纳入）。
   -->
   <ItemGroup>
     <None Include="runtimes\win-x64\native\Live2DCubismCore.dll" Link="Live2DCubismCore.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>false</Pack>
     </None>
   </ItemGroup>
 
   <!--
+    包自述文件：PACKAGE.md 已是 SDK 默认 None 项（**/* 通配），这里只补 Pack/路径，
+    避免用 Include 产生重复项。PackagePath "\" 表示放在包根目录，与 PackageReadmeFile 对应。
+  -->
+  <ItemGroup>
+    <None Update="PACKAGE.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!--
     单元测试需要访问 internal 钩子 (AsyncLocal 日志钩子, Scheduler 调用钩子,
-    IdManager 计数, MaskGroup 纯逻辑入口), 见 PLAN-06 §5.
+    IdManager 计数, MaskGroup 纯逻辑入口)
   -->
   <ItemGroup>
     <InternalsVisibleTo Include="Live2DCSharpSDK.Tests" />

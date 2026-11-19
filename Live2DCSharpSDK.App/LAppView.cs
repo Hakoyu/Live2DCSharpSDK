@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework;
+using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Math;
 
 namespace Live2DCSharpSDK.App;
@@ -126,8 +126,6 @@ public abstract class LAppView(LAppDelegate lapp)
     /// <summary>
     /// 触摸结束时调用.
     /// </summary>
-    /// <param name="pointX">屏幕 X 坐标</param>
-    /// <param name="pointY">屏幕 Y 坐标</param>
     public void OnTouchesEnded(float _, float __)
     {
         // 触摸结束

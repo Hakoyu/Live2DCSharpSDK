@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Model;
 
@@ -1098,7 +1098,7 @@ public class CubismMotion : ACubismMotion
     )
     {
         FiredEventValues.Clear();
-        /// 事件的触发检查
+        // 事件的触发检查
         for (int u = 0; u < _motionData.EventCount; ++u)
         {
             if (

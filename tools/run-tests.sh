@@ -35,7 +35,6 @@ TRX_FILE="$RESULT_DIR/unit-tests.trx"
 
 # 运行测试, 并用 TRX 报告确认确实执行了用例.
 # dotnet test 在筛选器匹配 0 个用例时仍然返回 0, 这里把 "一个都没跑" 变成失败,
-# 避免出现 "CI 绿但没跑" 的假象 (见 PLAN-06 §2).
 run_tier() {
     dotnet test "$PROJECT" "$@" \
         --logger "trx;LogFileName=unit-tests.trx" \

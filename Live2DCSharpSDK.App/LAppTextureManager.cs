@@ -163,7 +163,7 @@ public class LAppTextureManager(LAppDelegate lapp)
     /// <summary>
     /// 释放指定纹理 ID 的图像
     /// </summary>
-    /// <param name="textureId">要释放的纹理 ID</param>
+    /// <param name="info">要释放的纹理信息</param>
     public void ReleaseTexture(TextureInfo info)
     {
         TextureKey? key = null;
