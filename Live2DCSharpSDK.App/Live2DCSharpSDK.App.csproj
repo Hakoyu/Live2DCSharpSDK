@@ -22,4 +22,12 @@
     <ProjectReference Include="..\Live2DCSharpSDK.Framework\Live2DCSharpSDK.Framework.csproj" />
   </ItemGroup>
 
+  <!--
+    单元测试需要访问 internal 成员 (LAppDelegate.Latest / SetDeltaTime, LAppView.Render),
+    见 PLAN-06 §5.
+  -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Live2DCSharpSDK.Tests" />
+  </ItemGroup>
+
 </Project>

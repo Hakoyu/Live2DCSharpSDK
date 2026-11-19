@@ -26,4 +26,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <!--
+    单元测试需要访问 internal 钩子 (AsyncLocal 日志钩子, Scheduler 调用钩子,
+    IdManager 计数, MaskGroup 纯逻辑入口), 见 PLAN-06 §5.
+  -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Live2DCSharpSDK.Tests" />
+  </ItemGroup>
 </Project>

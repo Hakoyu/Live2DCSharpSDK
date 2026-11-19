@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <!--
+    测试程序集只引用托管层 (Framework / App), 不引用 OpenGL / Vulkan,
+    保证 A 档在任何平台都不触碰真实 GL (见 PLAN-06 §2 / §5).
+  -->
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="4.5.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="coverlet.collector" Version="10.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Live2DCSharpSDK.Framework\Live2DCSharpSDK.Framework.csproj" />
+    <ProjectReference Include="..\Live2DCSharpSDK.App\Live2DCSharpSDK.App.csproj" />
+  </ItemGroup>
+
+  <!--
+    夹具元数据 (models.sha256 等文本) 随测试输出复制, 供 B 档校验使用;
+    moc3 本体不入库, 由 LIVE2D_TEST_MODELS 指向 (见 PLAN-06 §3).
+  -->
+  <ItemGroup>
+    <None Update="TestData\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

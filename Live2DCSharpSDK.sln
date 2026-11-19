@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Vulkan", "Vulkan", "{61A921
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Live2DCSharpSDK.Vulkan.Silk", "Live2DCSharpSDK.Vulkan.Silk\Live2DCSharpSDK.Vulkan.Silk.csproj", "{39FF395F-C87A-4E3D-8F72-85B6A5A8FC03}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Live2DCSharpSDK.Tests", "Live2DCSharpSDK.Tests\Live2DCSharpSDK.Tests.csproj", "{5CDED721-9B3A-47F8-A847-B4617AF43ED8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,6 +68,10 @@ Global
 		{39FF395F-C87A-4E3D-8F72-85B6A5A8FC03}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39FF395F-C87A-4E3D-8F72-85B6A5A8FC03}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39FF395F-C87A-4E3D-8F72-85B6A5A8FC03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CDED721-9B3A-47F8-A847-B4617AF43ED8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CDED721-9B3A-47F8-A847-B4617AF43ED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CDED721-9B3A-47F8-A847-B4617AF43ED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CDED721-9B3A-47F8-A847-B4617AF43ED8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
