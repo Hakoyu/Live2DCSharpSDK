@@ -26,10 +26,10 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     public static readonly string[] validationLayers = ["VK_LAYER_KHRONOS_validation"];
 
     /// <summary>
-    /// 検証レイヤーを有効にするか
+    /// 是否启用验证层
     /// </summary>
     // 对应官方 VulkanManager.hpp 的 CSM_DEBUG 开关: Debug 构建启用, Release 关闭.
-    // 原实现无条件 true，Release 机器未装 Vulkan SDK 时 CheckValidationLayerSupport 会直接抛异常。
+    // 原实现无条件 true, Release 机器未装 Vulkan SDK 时 CheckValidationLayerSupport 会直接抛异常.
 #if DEBUG
     public const bool EnableValidationLayers = true;
 #else
@@ -37,7 +37,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
 #endif
 
     /// <summary>
-    /// イメージフォーマット
+    /// image 格式
     /// </summary>
     public const Format SurfaceFormat = Format.R8G8B8A8Unorm;
     private KhrSwapchain _khrs;
@@ -45,64 +45,64 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     public QueueFamilyIndices Indices = new();
 
     /// <summary>
-    /// ライブラリを初期化するインスタンス
+    /// 用于初始化库的 instance
     /// </summary>
     private Instance _instance;
     private KhrSurface khrSurface;
     /// <summary>
-    /// ウィンドウシステムに描画ために必要なサーフェス
+    /// 为在窗口系统中绘制所需的 surface
     /// </summary>
     public SurfaceKHR Surface { get; private set; }
     /// <summary>
-    /// 物理デバイス
+    /// 物理设备
     /// </summary>
     public PhysicalDevice PhysicalDevice { get; private set; }
     /// <summary>
-    /// 論理デバイス
+    /// 逻辑设备
     /// </summary>
     public Device Device => _device;
 
     private Device _device;
 
     /// <summary>
-    /// 描画コマンドを積むキュー
+    /// 用于提交绘制命令的队列
     /// </summary>
     public Queue GraphicQueue => _graphicQueue;
     private Queue _graphicQueue;
 
     /// <summary>
-    /// 表示コマンドに使用するキュー
+    /// 用于显示命令的队列
     /// </summary>
     public Queue PresentQueue => _presentQueue;
     private Queue _presentQueue;
     /// <summary>
-    /// コマンドバッファの作成に必要なコマンドプール
+    /// 创建命令缓冲区所需的命令池
     /// </summary>
     public CommandPool CommandPool => _commandPool;
 
     private CommandPool _commandPool;
     /// <summary>
-    /// セマフォ
+    /// semaphore
     /// </summary>
     private Semaphore _imageAvailableSemaphore;
     /// <summary>
-    /// スワップチェーンの管理を行うスワップチェーンマネージャー
+    /// 负责 swapchain 管理的 swapchain 管理器
     /// </summary>
     public SwapchainManager SwapchainManager { get; private set; }
     /// <summary>
-    /// ウィンドウサイズが変更されたかのフラグ
+    /// 窗口尺寸是否已变更的标志
     /// </summary>
     public bool IsSwapchainInvalid { get; set; }
     /// <summary>
-    ///  現在のイメージインデックス
+    ///  当前的 image 索引
     /// </summary>
     private uint _imageIndex = 0;
     /// <summary>
-    /// 深度フォーマット
+    /// 深度格式
     /// </summary>
     public Format DepthFormat { get; private set; }
     /// <summary>
-    /// フレームバッファのサイズが変わったか
+    /// framebuffer 尺寸是否已变更
     /// </summary>
     public bool FramebufferResized { get; set; }
 
@@ -110,7 +110,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     private DebugUtilsMessengerEXT debugMessenger;
 
     /// <summary>
-    /// 検証レイヤーのサポートを確認する
+    /// 确认验证层的支持情况
     /// </summary>
     /// <returns></returns>
     public unsafe bool CheckValidationLayerSupport()
@@ -130,9 +130,9 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// 必要な拡張機能を取得する
+    /// 获取所需的扩展功能
     /// </summary>
-    /// <returns>必要な拡張の配列</returns>
+    /// <returns>所需扩展的数组</returns>
     public unsafe string[] GetRequiredExtensions()
     {
         var glfwExtensions = api.GetRequiredExtensions(out var glfwExtensionCount);
@@ -154,9 +154,9 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// デバッグメッセージを有効にする
+    /// 启用调试消息
     /// </summary>
-    /// <param name="createInfo">デバッグメッセンジャーオブジェクトの情報</param>
+    /// <param name="createInfo">调试 messenger 对象的信息</param>
     public unsafe void PopulateDebugMessengerCreateInfo(ref DebugUtilsMessengerCreateInfoEXT createInfo)
     {
         createInfo.SType = StructureType.DebugUtilsMessengerCreateInfoExt;
@@ -170,11 +170,11 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// インスタンスを生成する
+    /// 创建 instance
     /// </summary>
     public unsafe void CreateInstance()
     {
-        //検証レイヤーが有効のときに使えるか確認
+        // 确认验证层启用时是否可用
         if (EnableValidationLayers && !CheckValidationLayerSupport())
         {
             CubismLog.Error("validation layers requested, but not available!");
@@ -233,7 +233,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// デバッグメッセージを有効にする
+    /// 启用调试消息
     /// </summary>
     public unsafe void SetupDebugMessenger()
     {
@@ -252,9 +252,9 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// デバイスの拡張をチェックする
+    /// 检查设备的扩展
     /// </summary>
-    /// <param name="physicalDevice">物理デバイス</param>
+    /// <param name="physicalDevice">物理设备</param>
     /// <returns></returns>
     public unsafe bool CheckDeviceExtensionSupport(PhysicalDevice physicalDevice)
     {
@@ -273,7 +273,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// サーフェスを作る
+    /// 创建 surface
     /// </summary>
     public unsafe void CreateSurface()
     {
@@ -286,9 +286,9 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// キューファミリを見つける
+    /// 查找队列族
     /// </summary>
-    /// <param name="device">物理デバイス</param>
+    /// <param name="device">物理设备</param>
     public unsafe void FindQueueFamilies(PhysicalDevice device)
     {
         uint queueFamilityCount = 0;
@@ -327,14 +327,14 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="device">デバイスが使えるか確認する</param>
-    /// <returns>物理デバイス</returns>
+    /// <param name="device">确认设备是否可用</param>
+    /// <returns>物理设备</returns>
     public bool IsDeviceSuitable(PhysicalDevice device)
     {
         FindQueueFamilies(device);
         bool extensionsSupported = CheckDeviceExtensionSupport(device);
         bool swapChainAdequate = false;
-        //デバイスの拡張機能がサポートされていたら、スワップチェインをサポートしているか確認する
+        // 设备扩展功能受支持时, 确认是否支持 swapchain
         if (extensionsSupported)
         {
             var swapchainSupport = SwapchainManager.QuerySwapchainSupport(khrSurface, device, Surface);
@@ -347,7 +347,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// 物理デバイスを取得する
+    /// 获取物理设备
     /// </summary>
     public void PickPhysicalDevice()
     {
@@ -369,7 +369,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// 論理デバイスを作成する
+    /// 创建逻辑设备
     /// </summary>
     public unsafe void CreateLogicalDevice()
     {
@@ -402,7 +402,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
             PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions)
         };
 
-        // Vulkan 1.0 以降、デバイスレイヤーは無効。インスタンスレイヤーのみ使用する（validation VUID 対応）。
+        // Vulkan 1.0 起设备层已禁用. 仅使用实例层(对应 validation VUID).
         createInfo.EnabledLayerCount = 0;
         createInfo.PpEnabledLayerNames = null;
 
@@ -439,7 +439,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// 深度フォーマットを作成する
+    /// 创建深度格式
     /// </summary>
     public void ChooseSupportedDepthFormat()
     {
@@ -466,7 +466,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// コマンドプールを作成する
+    /// 创建命令池
     /// </summary>
     public unsafe void CreateCommandPool()
     {
@@ -484,7 +484,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// 同期オブジェクトを作成する
+    /// 创建同步对象
     /// </summary>
     public unsafe void CreateSyncObjects()
     {
@@ -496,7 +496,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// 初期化する
+    /// 初始化
     /// </summary>
     public void Initialize()
     {
@@ -522,7 +522,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// コマンドの記録を開始する
+    /// 开始记录命令
     /// </summary>
     /// <returns></returns>
     public unsafe CommandBuffer BeginSingleTimeCommands()
@@ -549,10 +549,10 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// コマンドを提出する
+    /// 提交命令
     /// </summary>
-    /// <param name="commandBuffer">コマンドバッファ</param>
-    /// <param name="isFirstDraw">最初の描画コマンドか</param>
+    /// <param name="commandBuffer">命令缓冲区</param>
+    /// <param name="isFirstDraw">是否为首次绘制命令</param>
     public unsafe void SubmitCommand(CommandBuffer commandBuffer, bool isFirstDraw = false)
     {
         vk.EndCommandBuffer(commandBuffer);
@@ -573,13 +573,13 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
             submitInfo.PWaitDstStageMask = waitStages;
         }
         vk.QueueSubmit(_graphicQueue, 1, &submitInfo, default);
-        // コマンドの実行終了まで待機
+        // 等待命令执行结束
         vk.QueueWaitIdle(_graphicQueue);
         vk.FreeCommandBuffers(_device, _commandPool, 1, &commandBuffer);
     }
 
     /// <summary>
-    /// 描画する
+    /// 绘制
     /// </summary>
     public void UpdateDrawFrame()
     {
@@ -597,7 +597,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// 描画する
+    /// 绘制
     /// </summary>
     public void PostDraw()
     {
@@ -614,7 +614,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// スワップチェーンを再構成する
+    /// 重建 swapchain
     /// </summary>
     public void RecreateSwapchain()
     {
@@ -626,7 +626,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// リソースを破棄する
+    /// 销毁资源
     /// </summary>
     public unsafe void Destroy()
     {
@@ -641,7 +641,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
 
         vk.DestroyCommandPool(_device, _commandPool, default);
 
-        // デバイスに紐づくパイプライン／オフスクリーンをデバイス破棄前に解放する（官方 ReleaseAllDeviceInfo）
+        // 在销毁设备前释放绑定到设备的 pipeline 与离屏资源(对应官方 ReleaseAllDeviceInfo)
         CubismDeviceInfo_Vulkan.ReleaseAllDeviceInfo();
 
         vk.DestroyDevice(_device, null);
@@ -650,15 +650,15 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// スワップチェーンイメージを取得する
+    /// 获取 swapchain image
     /// </summary>
-    /// <returns>スワップチェーンイメージ</returns>
+    /// <returns>swapchain image</returns>
     public Image GetSwapchainImage() { return SwapchainManager.Images[_imageIndex]; }
 
     /// <summary>
-    /// スワップチェーンイメージを取得する
+    /// 获取 swapchain image
     /// </summary>
-    /// <returns>スワップチェーンイメージ</returns>
+    /// <returns>swapchain image</returns>
     public ImageView GetSwapchainImageView() { return SwapchainManager.ImageViews[_imageIndex]; }
 
     public void Dispose()

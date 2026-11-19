@@ -31,18 +31,18 @@ public class CubismRenderer_Vulkan : CubismRenderer
     public static ImageView RenderTargetImageView { get; set; }
 
     /// <summary>
-    /// レンダラを作成するための各種設定
-    /// モデルを読み込む前に一度だけ呼び出す
+    /// 创建渲染器所需的各种设置
+    /// 在加载模型之前只调用一次
     /// </summary>
-    /// <param name="device">論理デバイス</param>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="commandPool">コマンドプール</param>
-    /// <param name="queue">キュー</param>
-    /// <param name="extent">描画解像度</param>
-    /// <param name="depthFormat">深度フォーマット</param>
-    /// <param name="surfaceFormat">フレームバッファのフォーマット</param>
+    /// <param name="device">逻辑设备</param>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="commandPool">命令池</param>
+    /// <param name="queue">队列</param>
+    /// <param name="extent">绘制分辨率</param>
+    /// <param name="depthFormat">深度格式</param>
+    /// <param name="surfaceFormat">framebuffer 的格式</param>
     /// <param name="swapchainImage"></param>
-    /// <param name="swapchainImageView">スワップチェーンのイメージビュー</param>
+    /// <param name="swapchainImageView">swapchain 的 image view</param>
     /// <param name="dFormat"></param>
     public static void SetConstantSettings(Device device, PhysicalDevice physicalDevice,
                                            CommandPool commandPool, Queue queue,
@@ -64,7 +64,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// レンダーターゲット変更を有効にする
+    /// 启用渲染目标变更
     /// </summary>
     public static void EnableChangeRenderTarget()
     {
@@ -72,10 +72,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// レンダーターゲットを変更した際にレンダラを作成するための各種設定
+    /// 变更渲染目标时创建渲染器所需的各种设置
     /// </summary>
-    /// <param name="image">イメージ</param>
-    /// <param name="imageview">イメージビュー</param>
+    /// <param name="image">image</param>
+    /// <param name="imageview">image view</param>
     public static void SetRenderTarget(Image image, ImageView imageview)
     {
         RenderTargetImage = image;
@@ -83,10 +83,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// 行列を更新する
+    /// 更新矩阵
     /// </summary>
-    /// <param name="vkMat4">更新する行列</param>
-    /// <param name="cubismMat">新しい値</param>
+    /// <param name="vkMat4">要更新的矩阵</param>
+    /// <param name="cubismMat">新值</param>
     public static unsafe void UpdateMatrix(float* vkMat4, CubismMatrix44 cubismMat)
     {
         for (int i = 0; i < 16; i++)
@@ -96,13 +96,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// カラーベクトルを更新する
+    /// 更新颜色向量
     /// </summary>
-    /// <param name="vkVec4">更新するカラーベクトル</param>
-    /// <param name="r">新しい値</param>
-    /// <param name="g">新しい値</param>
-    /// <param name="b">新しい値</param>
-    /// <param name="a">新しい値</param>
+    /// <param name="vkVec4">要更新的颜色向量</param>
+    /// <param name="r">新值</param>
+    /// <param name="g">新值</param>
+    /// <param name="b">新值</param>
+    /// <param name="a">新值</param>
     public static unsafe void UpdateColor(float* vkVec4, float r, float g, float b, float a)
     {
         vkVec4[0] = r;
@@ -129,19 +129,19 @@ public class CubismRenderer_Vulkan : CubismRenderer
     private readonly Vk _vk;
 
     /// <summary>
-    /// デバイスごとのパイプライン／オフスクリーンマネージャ（官方 CubismDeviceInfo_Vulkan）
+    /// 每个设备的 pipeline 与离屏管理器(官方 CubismDeviceInfo_Vulkan)
     /// </summary>
     private CubismDeviceInfo_Vulkan _deviceInfo;
 
     /// <summary>
-    /// Dispose の二重実行を防ぐ
+    /// 防止 Dispose 重复执行
     /// </summary>
     private bool _disposed;
 
     private FvkCmdSetCullMode vkCmdSetCullModeEXT;
 
     /// <summary>
-    /// クリッピングマスク管理オブジェクト
+    /// 裁剪遮罩管理对象
     /// </summary>
     private CubismClippingManager_Vulkan _clippingManager;
     /// <summary>
@@ -153,58 +153,58 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     public CubismClippingContext_Vulkan? ClippingContextBufferForOffscreen { get; set; }
     /// <summary>
-    /// モデルのオフスクリーン一覧（官方 _offscreenList）
+    /// 模型的离屏列表(官方 _offscreenList)
     /// </summary>
     private readonly List<CubismOffscreenRenderTarget_Vulkan> _offscreenList = [];
     /// <summary>
-    /// 現在描画中のオフスクリーン（官方 _currentOffscreen）
+    /// 当前正在绘制的离屏(官方 _currentOffscreen)
     /// </summary>
     private CubismOffscreenRenderTarget_Vulkan? _currentOffscreen;
     /// <summary>
-    /// 現在の描画先レンダーターゲット（官方 _currentRenderTarget）
+    /// 当前的绘制目标渲染目标(官方 _currentRenderTarget)
     /// </summary>
     private CubismRenderTarget_Vulkan? _currentRenderTarget;
     /// <summary>
-    /// モデル全体を描画するレンダーターゲット（官方 _modelRenderTargets）
+    /// 绘制整个模型的渲染目标(官方 _modelRenderTargets)
     /// </summary>
     private readonly List<CubismRenderTarget_Vulkan> _modelRenderTargets = [];
     /// <summary>
-    /// blend shader 用のスナップショット（描画中 RT を直接サンプルすると validation error になるため）
+    /// blend shader 用的快照(直接采样绘制中的 RT 会导致 validation error)
     /// </summary>
     private CubismRenderTarget_Vulkan? _blendSnapshot;
     private bool _blendSnapshotInitialized;
     /// <summary>
-    /// オフスクリーン用マスクバッファ（官方 _offscreenMaskBuffers）
+    /// 离屏用遮罩缓冲区(官方 _offscreenMaskBuffers)
     /// </summary>
     private readonly List<CubismRenderTarget_Vulkan> _offscreenMaskBuffers = [];
     /// <summary>
-    /// blend / offscreen を使用するためモデル RT 経由で描画するか
+    /// 是否因使用 blend / offscreen 而经由模型 RT 绘制
     /// </summary>
     private bool _useModelRenderTarget;
     /// <summary>
-    /// モデル RT をクリア済みか（官方 _isClearedModelRenderTarget）
+    /// 模型 RT 是否已清除(官方 _isClearedModelRenderTarget)
     /// </summary>
     private bool _isClearedModelRenderTarget;
     /// <summary>
-    /// オフスクリーンを描画中か（マスクバッファ選択に使用）
+    /// 是否正在绘制离屏(用于选择遮罩缓冲区)
     /// </summary>
     private bool _isDrawingOffscreen;
     /// <summary>
-    /// オフスクリーン合成用ディスクリプタ（index = offscreenIndex）
+    /// 离屏合成用 descriptor(index = offscreenIndex)
     /// </summary>
     private readonly List<Descriptor> _offscreenDescriptors = [];
     /// <summary>
-    /// モデル RT / オフスクリーン合成用コピーディスクリプタ
+    /// 模型 RT / 离屏合成用拷贝 descriptor
     /// </summary>
     private Descriptor? _copyDescriptor;
     /// <summary>
-    /// 合成用フルスクリーンクワッドの頂点/インデックスバッファ
+    /// 合成用全屏 quad 的顶点/索引 buffer
     /// </summary>
     private CubismBufferVulkan? _quadVertexBuffer;
     private CubismBufferVulkan? _quadStagingBuffer;
     private CubismBufferVulkan? _quadIndexBuffer;
     /// <summary>
-    /// 描画オブジェクトのインデックスを描画順に並べたリスト
+    /// 按绘制顺序排列的绘制对象索引列表
     /// </summary>
     private readonly int[] _sortedObjectsIndexList;
     /// <summary>
@@ -212,64 +212,64 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     private readonly CsmEnum.DrawableObjectType[] _sortedObjectsTypeList;
     /// <summary>
-    /// マスクテクスチャに描画するためのクリッピングコンテキスト
+    /// 用于绘制到遮罩纹理的裁剪上下文
     /// </summary>
     public CubismClippingContext_Vulkan? ClippingContextBufferForMask { get; set; }
     /// <summary>
-    /// 画面上描画するためのクリッピングコンテキスト
+    /// 用于在画面上绘制的裁剪上下文
     /// </summary>
     public CubismClippingContext_Vulkan? ClippingContextBufferForDraw { get; set; }
     /// <summary>
-    /// マスク描画用のフレームバッファ
+    /// 遮罩绘制用的 framebuffer
     /// </summary>
     private CubismRenderTarget_Vulkan[]? _offscreenFrameBuffers;
     /// <summary>
-    /// 頂点バッファ
+    /// 顶点 buffer
     /// </summary>
     private CubismBufferVulkan[] _vertexBuffers;
     /// <summary>
-    /// 頂点バッファを更新する際に使うステージングバッファ
+    /// 更新顶点 buffer 时使用的 staging buffer
     /// </summary>
     private readonly List<CubismBufferVulkan> _stagingBuffers = [];
     /// <summary>
-    /// インデックスバッファ
+    /// 索引 buffer
     /// </summary>
     private CubismBufferVulkan[] _indexBuffers;
     /// <summary>
-    /// ディスクリプタプール
+    /// descriptor pool
     /// </summary>
     private DescriptorPool _descriptorPool;
     /// <summary>
-    /// ディスクリプタセットのレイアウト
+    /// descriptor set 的布局
     /// </summary>
     private DescriptorSetLayout _descriptorSetLayout;
     /// <summary>
-    /// ディスクリプタ管理オブジェクト
+    /// descriptor 管理对象
     /// </summary>
     private readonly List<Descriptor> _descriptorSets = [];
     /// <summary>
-    /// モデルが使うテクスチャ
+    /// 模型使用的纹理
     /// </summary>
     private readonly List<CubismImageVulkan> _textures = [];
     /// <summary>
-    /// オフスクリーンの色情報を保持する深度画像
+    /// 保存离屏颜色信息的深度 image
     /// </summary>
     private readonly CubismImageVulkan _depthImage;
     /// <summary>
-    /// セマフォ
+    /// semaphore
     /// </summary>
     private Semaphore _updateFinishedSemaphore;
     /// <summary>
-    /// 更新用コマンドバッファ
+    /// 更新用命令缓冲区
     /// </summary>
     private CommandBuffer _updateCommandBuffer;
     /// <summary>
-    /// 描画用コマンドバッファ
+    /// 绘制用命令缓冲区
     /// </summary>
     private CommandBuffer _drawCommandBuffer;
 
     /// <summary>
-    /// swapchain / 深度イメージの現在レイアウト（validation 用の簡易トラッキング）
+    /// swapchain / 深度 image 的当前布局(供 validation 的简易跟踪)
     /// </summary>
     private readonly Dictionary<ulong, ImageLayout> _imageLayouts = [];
 
@@ -297,7 +297,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         }
 
         // 实测: csmGetRenderOrders 的数组长度 = drawableCount + offscreenCount.
-        // drawable / offscreen を合わせた順序配列を確保する（官方 DrawObjectLoop:2714-2727）。
+        // 确保同时容纳 drawable / offscreen 的顺序数组(官方 DrawObjectLoop:2714-2727).
         int childCount = model.GetDrawableCount() + model.GetOffscreenCount();
         _sortedObjectsIndexList = new int[childCount];
         _sortedObjectsTypeList = new CsmEnum.DrawableObjectType[childCount];
@@ -309,7 +309,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         if (model.IsUsingMasking())
         {
-            //モデルがマスクを使用している時のみにする
+            // 仅在模型使用遮罩时执行
             _clippingManager = new CubismClippingManager_Vulkan(_vk);
             _clippingManager.Initialize(model, maskBufferCount);
 
@@ -317,7 +317,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             var bufferHeight = (uint)_clippingManager.ClippingMaskBufferSize.Y;
 
             _offscreenFrameBuffers = new CubismRenderTarget_Vulkan[maskBufferCount];
-            // バックバッファ分確保
+            // 按后备缓冲区数量确保空间
             for (int i = 0; i < maskBufferCount; i++)
             {
                 _offscreenFrameBuffers[i] = new(_vk);
@@ -371,8 +371,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// マスクバッファを初期レイアウト（ShaderReadOnly）へ遷移させる。
-    /// 未使用のマスクを descriptor に束縛した際の validation error を避ける。
+    /// 把遮罩缓冲区转换到初始布局(ShaderReadOnly).
+    /// 避免把未使用的遮罩绑定到 descriptor 时产生 validation error.
     /// </summary>
     private unsafe void InitializeMaskBufferLayout(CubismRenderTarget_Vulkan mask)
     {
@@ -381,8 +381,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
             return;
         }
 
-        // 描画パスを開かず、レイアウト遷移だけで初期化する
-        // （dynamicRenderingUnusedAttachments の validation error を避ける）。
+        // 不开启绘制通道, 仅通过布局转换完成初始化
+        // (避免 dynamicRenderingUnusedAttachments 的 validation error).
         var commandBuffer = BeginSingleTimeCommands();
         var barrier = new ImageMemoryBarrier
         {
@@ -401,7 +401,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// オフスクリーンの親を探して設定する（官方 SetupParentOffscreens）。
+    /// 查找并设置离屏的父级(对应官方 SetupParentOffscreens).
     /// </summary>
     private unsafe void SetupParentOffscreens(CubismModel model, int offscreenCount)
     {
@@ -439,11 +439,11 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// スワップチェーンを再作成したときに変更されるリソースを更新する
+    /// 更新重建 swapchain 时会变化的资源
     /// </summary>
-    /// <param name="extent">クリッピングマスクバッファのサイズ</param>
+    /// <param name="extent">裁剪遮罩缓冲区的大小</param>
     /// <param name="image"></param>
-    /// <param name="imageView">イメージビュー</param>
+    /// <param name="imageView">image view</param>
     public static void UpdateSwapchainVariable(Extent2D extent, Image image, ImageView imageView)
     {
         SwapchainExtent = extent;
@@ -452,10 +452,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// スワップチェーンイメージを更新する
+    /// 更新 swapchain image
     /// </summary>
-    /// <param name="image">イメージ</param>
-    /// <param name="imageView">イメージビュー</param>
+    /// <param name="image">image</param>
+    /// <param name="imageView">image view</param>
     public static void UpdateRendererSettings(Image image, ImageView imageView)
     {
         SwapchainImage = image;
@@ -491,9 +491,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// コマンドの記録を開始する。
+    /// 开始记录命令.
     /// </summary>
-    /// <returns>記録を開始したコマンドバッファ</returns>
+    /// <returns>已开始记录的命令缓冲区</returns>
     public CommandBuffer BeginSingleTimeCommands()
     {
         var allocInfo = new CommandBufferAllocateInfo
@@ -518,10 +518,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// コマンドを実行する。
+    /// 执行命令.
     /// </summary>
-    /// <param name="commandBuffer">コマンドバッファ</param>
-    /// <param name="signalUpdateFinishedSemaphore">フェンス</param>
+    /// <param name="commandBuffer">命令缓冲区</param>
+    /// <param name="signalUpdateFinishedSemaphore">fence</param>
     /// <param name="waitUpdateFinishedSemaphore"></param>
     public unsafe void SubmitCommand(CommandBuffer commandBuffer, Semaphore? signalUpdateFinishedSemaphore = null,
         Semaphore? waitUpdateFinishedSemaphore = null)
@@ -564,7 +564,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// コマンドバッファを作成する。
+    /// 创建命令缓冲区.
     /// </summary>
     public unsafe void CreateCommandBuffer()
     {
@@ -584,7 +584,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// 空の頂点バッファを作成する。
+    /// 创建空的顶点 buffer.
     /// </summary>
     public void CreateVertexBuffer()
     {
@@ -596,9 +596,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
             int vcount = Model.GetDrawableVertexCount(drawAssign);
             if (vcount != 0)
             {
-                //頂点データは初期化できない
+                // 顶点数据无法初始化
 
-                var bufferSize = (ulong)(Unsafe.SizeOf<ModelVertex>() * vcount); // 総長 構造体サイズ*個数
+                var bufferSize = (ulong)(Unsafe.SizeOf<ModelVertex>() * vcount); // 总长度 = 结构体大小 * 个数
                 var stagingBuffer = new CubismBufferVulkan(_vk);
                 stagingBuffer.CreateBuffer(Device, PhysicalDevice, bufferSize, BufferUsageFlags.TransferSrcBit,
                                           MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
@@ -616,7 +616,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// インデックスバッファを作成する。
+    /// 创建索引 buffer.
     /// </summary>
     public unsafe void CreateIndexBuffer()
     {
@@ -658,18 +658,18 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// ユニフォームバッファとディスクリプタセットを作成する。
-    /// ディスクリプタセットレイアウトはユニフォームバッファ1つとモデル用テクスチャ1つとマスク用テクスチャ1つを指定する。
+    /// 创建 uniform buffer 与 descriptor set.
+    /// descriptor set 布局指定 1 个 uniform buffer, 1 个模型用纹理与 1 个遮罩用纹理.
     /// </summary>
     public unsafe void CreateDescriptorSets()
     {
-        // ディスクリプタプールの作成
+        // 创建 descriptor pool
         int drawableCount = Model.GetDrawableCount();
         int offscreenCount = Model.GetOffscreenCount();
         // 共 3 张纹理: binding1=模型, binding2=遮罩, binding3=blend 用.
         int textureCount = 3;
-        int drawModeCount = 2; // マスクされる描画と通常の描画
-        // drawable 用 + offscreen 合成用（masked/unmasked）+ copy 用
+        int drawModeCount = 2; // 被遮罩绘制与通常绘制
+        // drawable 用 + 离屏合成用(masked/unmasked) + copy 用
         int descriptorSetCount = drawableCount * drawModeCount + offscreenCount * drawModeCount + 1;
 
         var poolSizes = new DescriptorPoolSize[]
@@ -682,7 +682,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             new()
             {
                 Type = DescriptorType.CombinedImageSampler,
-                DescriptorCount = (uint)(descriptorSetCount * textureCount) // drawableCount * 描画方法の数 * テクスチャの数
+                DescriptorCount = (uint)(descriptorSetCount * textureCount) // drawableCount * 绘制方式数量 * 纹理数量
             }
         };
 
@@ -701,7 +701,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             }
         }
 
-        // ディスクリプタセットレイアウトの作成
+        // 创建 descriptor set 布局
         var bindings = new DescriptorSetLayoutBinding[]
         {
             new()
@@ -730,7 +730,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             },
             new()
             {
-                // 5.3 以降の blend shader 用（s_blendTexture）
+                // 5.3 以后的 blend shader 用(s_blendTexture)
                 Binding = 3,
                 DescriptorCount = 1,
                 DescriptorType = DescriptorType.CombinedImageSampler,
@@ -770,7 +770,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             _descriptorSets.Add(desc);
         }
 
-        // オフスクリーン合成用（offscreen ごとに masked/unmasked の 2 セット）
+        // 离屏合成用(每个 offscreen 各有 masked/unmasked 两套)
         _offscreenDescriptors.Clear();
         for (int offscreenIndex = 0; offscreenIndex < offscreenCount; ++offscreenIndex)
         {
@@ -785,7 +785,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             _offscreenDescriptors.Add(desc);
         }
 
-        // Copy 合成用（モデル RT → swapchain）
+        // Copy 合成用(模型 RT -> swapchain)
         _copyDescriptor = new Descriptor
         {
             UniformBuffer = new CubismBufferVulkan(_vk)
@@ -836,7 +836,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// モデル RT / オフスクリーン合成用のフルスクリーンクワッドバッファを作成する。
+    /// 创建模型 RT / 离屏合成用的全屏 quad buffer.
     /// 与官方 modelRenderTargetVertexArray / modelRenderTargetIndexArray 相同的顶点列.
     /// </summary>
     private unsafe void CreateQuadBuffers()
@@ -895,7 +895,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// 深度バッファを作成する。
+    /// 创建深度 buffer.
     /// </summary>
     public void CreateDepthBuffer()
     {
@@ -907,11 +907,11 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// レンダラーを初期化する。
+    /// 初始化渲染器.
     /// </summary>
     public unsafe void InitializeRenderer()
     {
-        // デバイスごとのパイプライン／オフスクリーンマネージャを取得（官方 InitializeRenderer: _deviceInfo = GetDeviceInfo(s_device)）
+        // 获取每个设备的 pipeline 与离屏管理器(官方 InitializeRenderer: _deviceInfo = GetDeviceInfo(s_device))
         _deviceInfo = CubismDeviceInfo_Vulkan.GetDeviceInfo(Device);
 
         vkCmdSetCullModeEXT = Marshal.GetDelegateForFunctionPointer<FvkCmdSetCullMode>(_vk.GetDeviceProcAddr(Device, "vkCmdSetCullModeEXT"));
@@ -933,13 +933,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// 頂点バッファを更新する。
+    /// 更新顶点 buffer.
     /// </summary>
-    /// <param name="drawAssign">描画インデックス</param>
-    /// <param name="vcount">頂点数</param>
-    /// <param name="varray">頂点配列</param>
-    /// <param name="uvarray">uv配列</param>
-    /// <param name="commandBuffer">コマンドバッファ</param>
+    /// <param name="drawAssign">绘制索引</param>
+    /// <param name="vcount">顶点数</param>
+    /// <param name="varray">顶点数组</param>
+    /// <param name="uvarray">uv 数组</param>
+    /// <param name="commandBuffer">命令缓冲区</param>
     public unsafe void CopyToBuffer(int drawAssign, int vcount, float* varray, float* uvarray,
                       CommandBuffer commandBuffer)
     {
@@ -947,7 +947,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         for (int ct = 0, ct1 = 0; ct < vcount; ct++, ct1 += 2)
         {
-            // モデルデータからのコピー
+            // 从模型数据复制
             vertices[ct] = new()
             {
                 Pos = new()
@@ -979,15 +979,15 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// ディスクリプタセットを更新する
+    /// 更新 descriptor set
     /// </summary>
-    /// <param name="descriptor">1つのシェーダーが使用するディスクリプタセットとUBO</param>
-    /// <param name="textureIndex">テクスチャインデックス</param>
+    /// <param name="descriptor">一个 shader 使用的 descriptor set 与 UBO</param>
+    /// <param name="textureIndex">纹理索引</param>
     /// <param name="isMasked"></param>
     public unsafe void UpdateDescriptorSet(Descriptor descriptor, int textureIndex, bool isMasked)
     {
         var uniformBuffer = descriptor.UniformBuffer.Buffer;
-        // descriptorが更新されていない最初の1回のみ行う
+        // 仅在 descriptor 尚未更新的第一次执行
         DescriptorSet descriptorSet;
         if (isMasked && !descriptor.IsDescriptorSetMaskedUpdated)
         {
@@ -1023,8 +1023,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
         };
         descriptorWrites[0] = ubo;
 
-        // テクスチャ1はキャラクターのテクスチャ、テクスチャ2はマスク用、
-        // テクスチャ3は 5.3 以降の blend shader 用（s_blendTexture）。
+        // 纹理 1 为角色的纹理, 纹理 2 为遮罩用,
+        // 纹理 3 为 5.3 以后的 blend shader 用(s_blendTexture).
         var imageInfo1 = new DescriptorImageInfo
         {
             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
@@ -1042,8 +1042,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
         };
         descriptorWrites[1] = image1;
 
-        // blending 用テクスチャの初期値（モデルテクスチャ）。実際の blend 時は
-        // UpdateBlendTexture() で描画先テクスチャに差し替える。
+        // blending 用纹理的初始值(模型纹理). 实际 blend 时
+        // 由 UpdateBlendTexture() 替换为绘制目标的纹理.
         var imageInfo3 = new DescriptorImageInfo
         {
             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
@@ -1092,13 +1092,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// blend shader 用テクスチャ（binding 3）を更新する。
-    /// 通常は描画先レンダーターゲットのテクスチャを渡す。未使用時はモデルテクスチャで埋める。
+    /// 更新 blend shader 用的纹理(binding 3).
+    /// 通常传入绘制目标渲染目标的纹理. 未使用时以模型纹理填充.
     /// </summary>
-    /// <param name="descriptor">対象ディスクリプタ</param>
-    /// <param name="isMasked">マスク用セットか</param>
-    /// <param name="imageView">ブレンド用テクスチャビュー</param>
-    /// <param name="sampler">サンプラー</param>
+    /// <param name="descriptor">目标 descriptor</param>
+    /// <param name="isMasked">是否为遮罩用 set</param>
+    /// <param name="imageView">blend 用 texture view</param>
+    /// <param name="sampler">sampler</param>
     public unsafe void UpdateBlendTexture(Descriptor descriptor, bool isMasked, ImageView imageView, Sampler sampler)
     {
         DescriptorSet descriptorSet = isMasked ? descriptor.DescriptorSetMasked : descriptor.DescriptorSet;
@@ -1123,23 +1123,23 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// メッシュ描画を実行する
+    /// 执行 mesh 绘制
     /// </summary>
-    /// <param name="model">描画対象のモデル</param>
-    /// <param name="index">描画オブジェクトのインデックス</param>
-    /// <param name="cmdBuffer">フレームバッファ関連のコマンドバッファ</param>
+    /// <param name="model">绘制目标的模型</param>
+    /// <param name="index">绘制对象的索引</param>
+    /// <param name="cmdBuffer">framebuffer 相关的命令缓冲区</param>
     public unsafe void ExecuteDrawForDraw(CubismModel model, int index, CommandBuffer cmdBuffer)
     {
-        // パイプラインレイアウト設定用のインデックスを取得
+        // 获取用于设置 pipeline layout 的索引
         int blendIndex;
         int shaderIndex;
-        bool masked = ClippingContextBufferForDraw != null; // この描画オブジェクトはマスク対象か
+        bool masked = ClippingContextBufferForDraw != null; // 该绘制对象是否为遮罩对象
         bool invertedMask = model.GetDrawableInvertedMask(index);
         int offset = (masked ? (invertedMask ? 2 : 1) : 0) + (IsPremultipliedAlpha ? 3 : 0);
 
-        // 5-r.5: GetDrawableBlendModeType()（CsmBlendMode）から shader を選択する。
-        // 5.2 以前の AddCompatible / MultiplyCompatible は Add / Mult（Normal shader 共用）に割り当て、
-        // 5.3 以降は GetShaderNamesBegin() が返す blend shader 群（494 項）から選ぶ。
+        // 5-r.5: 从 GetDrawableBlendModeType()(CsmBlendMode) 选择 shader.
+        // 5.2 以前的 AddCompatible / MultiplyCompatible 分配给 Add / Mult(共用 Normal shader),
+        // 5.3 以后从 GetShaderNamesBegin() 返回的 blend shader 组(494 项)中选择.
         CsmBlendMode blendMode = model.GetDrawableBlendModeType(index);
         shaderIndex = ShaderNames.GetShaderNamesBegin(blendMode) + offset;
         blendIndex = blendMode.GetColorBlendType() switch
@@ -1153,36 +1153,36 @@ public class CubismRenderer_Vulkan : CubismRenderer
         var ubo = new ModelUBO();
         if (masked)
         {
-            // クリッピング用行列の設定
-            UpdateMatrix(ubo.ClipMatrix, ClippingContextBufferForDraw!.MatrixForDraw); // テクスチャ座標の変換に使用するのでy軸の向きは反転しない
+            // 设置裁剪用矩阵
+            UpdateMatrix(ubo.ClipMatrix, ClippingContextBufferForDraw!.MatrixForDraw); // 用于纹理坐标转换, 因此不反转 y 轴方向
 
-            // カラーチャンネルの設定
+            // 设置颜色通道
             SetColorChannel(&ubo, ClippingContextBufferForDraw);
         }
 
-        // MVP行列の設定
+        // 设置 MVP 矩阵
         UpdateMatrix(ubo.ProjectionMatrix, GetMvpMatrix());
 
-        // 色定数バッファの設定
+        // 设置颜色常量缓冲区
         var baseColor = GetModelColorWithOpacity(model.GetDrawableOpacity(index));
         var multiplyColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableMultiplyColor(index);
         var screenColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableScreenColor(index);
         SetColorUniformBuffer(&ubo, baseColor, multiplyColor, screenColor);
 
-        // ディスクリプタにユニフォームバッファをコピー
+        // 把 uniform buffer 复制到 descriptor
         descriptor.UniformBuffer.MemCpy(&ubo, (ulong)Unsafe.SizeOf<ModelUBO>());
 
-        // 頂点バッファの設定
+        // 设置顶点 buffer
         BindVertexAndIndexBuffers(index, cmdBuffer);
 
-        // テクスチャインデックス取得
+        // 获取纹理索引
         int textureIndex = model.GetDrawableTextureIndex(index);
 
-        // ディスクリプタセットのバインド
+        // 绑定 descriptor set
         UpdateDescriptorSet(descriptor, textureIndex, masked);
 
-        // blend shader 用テクスチャ（binding3）: OpenGL texture2 相当。
-        // 描画中 RT を直接サンプルできないため、5.3 以降の blend ではスナップショットをコピーして使う。
+        // blend shader 用纹理(binding3): 相当于 OpenGL texture2.
+        // 无法直接采样绘制中的 RT, 因此 5.3 以后的 blend 复制快照后再使用.
         bool advancedBlend = shaderIndex >= ShaderNames.NormalAtop && Model.IsBlendModeEnabled();
         if (advancedBlend)
         {
@@ -1204,21 +1204,21 @@ public class CubismRenderer_Vulkan : CubismRenderer
                                     _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex), 0, 1,
                                     ref descriptorSet, 0, null);
 
-        // パイプラインのバインド
+        // 绑定 pipeline
         _vk.CmdBindPipeline(cmdBuffer, PipelineBindPoint.Graphics,
                           _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex));
 
-        // 5.3 以降の blend は PrepareBlendSnapshot() で RT を再開済み
-        // 描画
+        // 5.3 以后的 blend 已由 PrepareBlendSnapshot() 重新开启 RT
+        // 绘制
         _vk.CmdDrawIndexed(cmdBuffer, (uint)model.GetDrawableVertexIndexCount(index), 1, 0, 0, 0);
     }
 
     /// <summary>
-    /// マスク描画を実行する
+    /// 执行遮罩绘制
     /// </summary>
-    /// <param name="model">描画対象のモデル</param>
-    /// <param name="index">描画オブジェクトのインデックス</param>
-    /// <param name="cmdBuffer">フレームバッファ関連のコマンドバッファ</param>
+    /// <param name="model">绘制目标的模型</param>
+    /// <param name="index">绘制对象的索引</param>
+    /// <param name="cmdBuffer">framebuffer 相关的命令缓冲区</param>
     public unsafe void ExecuteDrawForMask(CubismModel model, int index, CommandBuffer cmdBuffer)
     {
         int shaderIndex = ShaderNames.SetupMask;
@@ -1227,67 +1227,67 @@ public class CubismRenderer_Vulkan : CubismRenderer
         var descriptor = _descriptorSets[index];
         var ubo = new ModelUBO();
 
-        // クリッピング用行列の設定
+        // 设置裁剪用矩阵
         UpdateMatrix(ubo.ClipMatrix, ClippingContextBufferForMask!.MatrixForMask);
 
-        // カラーチャンネルの設定
+        // 设置颜色通道
         SetColorChannel(&ubo, ClippingContextBufferForMask);
 
-        // 色定数バッファの設定
+        // 设置颜色常量缓冲区
         var rect = ClippingContextBufferForMask.LayoutBounds;
         var baseColor = new CubismTextureColor(rect.X * 2.0f - 1.0f, rect.Y * 2.0f - 1.0f, rect.GetRight() * 2.0f - 1.0f, rect.GetBottom() * 2.0f - 1.0f);
         var multiplyColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableMultiplyColor(index);
         var screenColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableScreenColor(index);
         SetColorUniformBuffer(&ubo, baseColor, multiplyColor, screenColor);
 
-        // ディスクリプタにユニフォームバッファをコピー
+        // 把 uniform buffer 复制到 descriptor
         descriptor.UniformBuffer.MemCpy(&ubo, (ulong)Unsafe.SizeOf<ModelUBO>());
 
-        // 頂点バッファの設定
+        // 设置顶点 buffer
         BindVertexAndIndexBuffers(index, cmdBuffer);
 
-        // テクスチャインデックス取得
+        // 获取纹理索引
         int textureIndex = model.GetDrawableTextureIndex(index);
 
-        // ディスクリプタセットのバインド
+        // 绑定 descriptor set
         UpdateDescriptorSet(descriptor, textureIndex, false);
         _vk.CmdBindDescriptorSets(cmdBuffer, PipelineBindPoint.Graphics,
                                 _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex), 0, 1,
                                 ref _descriptorSets[index].DescriptorSet, 0, null);
 
-        // パイプラインのバインド
+        // 绑定 pipeline
         _vk.CmdBindPipeline(cmdBuffer, PipelineBindPoint.Graphics,
                           _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex));
 
-        // 描画
+        // 绘制
         _vk.CmdDrawIndexed(cmdBuffer, (uint)model.GetDrawableVertexIndexCount(index), 1, 0, 0, 0);
     }
 
     /// <summary>
-    /// [オーバーライド]
+    /// [override]
     /// <para></para>
-    /// 描画オブジェクト（アートメッシュ）を描画する。
+    /// 绘制绘制对象(art mesh).
     /// </summary>
-    /// <param name="model">描画対象のモデル</param>
-    /// <param name="index">描画メッシュのインデックス</param>
-    /// <param name="commandBuffer">コマンドバッファ</param>
-    /// <param name="updateCommandBuffer">更新用コマンドバッファ</param>
+    /// <param name="model">绘制目标的模型</param>
+    /// <param name="index">绘制 mesh 的索引</param>
+    /// <param name="commandBuffer">命令缓冲区</param>
+    /// <param name="updateCommandBuffer">更新用命令缓冲区</param>
     public unsafe void DrawMeshVulkan(CubismModel model, int index,
                         CommandBuffer commandBuffer, CommandBuffer updateCommandBuffer)
     {
         if (Device.Handle == 0)
         {
-            // デバイス未設定
+            // 未设置设备
             return;
         }
         if (model.GetDrawableVertexIndexCount(index) == 0)
         {
-            // 描画物無し
+            // 无绘制对象
             return;
         }
         if (model.GetDrawableOpacity(index) <= 0.0f && ClippingContextBufferForMask == null)
         {
-            // 描画不要なら描画処理をスキップする
+            // 无需绘制时跳过绘制处理
             return;
         }
 
@@ -1297,7 +1297,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             return;
         }
 
-        // 裏面描画の有効・無効
+        // 背面绘制的启用与禁用
         if (IsCulling)
         {
             vkCmdSetCullModeEXT(commandBuffer, CullModeFlags.BackBit);
@@ -1307,13 +1307,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
             vkCmdSetCullModeEXT(commandBuffer, CullModeFlags.None);
         }
 
-        // 頂点バッファにコピー
+        // 复制到顶点 buffer
         CopyToBuffer(index, model.GetDrawableVertexCount(index),
                      model.GetDrawableVertices(index),
                      (float*)model.GetDrawableVertexUvs(index),
                      updateCommandBuffer);
 
-        if (ClippingContextBufferForMask != null) // マスク生成時
+        if (ClippingContextBufferForMask != null) // 生成遮罩时
         {
             ExecuteDrawForMask(model, index, commandBuffer);
         }
@@ -1327,10 +1327,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// レンダリング開始
+    /// 开始渲染
     /// </summary>
-    /// <param name="drawCommandBuffer">コマンドバッファ</param>
-    /// <param name="isResume">レンダリング再開かのフラグ</param>
+    /// <param name="drawCommandBuffer">命令缓冲区</param>
+    /// <param name="isResume">是否为渲染恢复的标志</param>
     public unsafe void BeginRendering(CommandBuffer drawCommandBuffer, bool isResume)
     {
         Image colorImage = UseRenderTarget ? RenderTargetImage : SwapchainImage;
@@ -1393,7 +1393,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         else
         {
             colorAttachment.ImageView = SwapchainImageView;
-            // 非モデル RT パスではこの BeginRendering がフレーム先頭なので背景をクリアする
+            // 非模型 RT 通道中此 BeginRendering 位于帧首, 因此清除背景
             colorAttachment.LoadOp = isResume ? AttachmentLoadOp.Load : AttachmentLoadOp.Clear;
         }
         colorAttachment.ImageLayout = ImageLayout.AttachmentOptimal;
@@ -1428,14 +1428,14 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// レンダリング終了
+    /// 结束渲染
     /// </summary>
-    /// <param name="drawCommandBuffer">コマンドバッファ</param>
+    /// <param name="drawCommandBuffer">命令缓冲区</param>
     public unsafe void EndRendering(CommandBuffer drawCommandBuffer)
     {
         _vk.CmdEndRendering(drawCommandBuffer);
 
-        // レイアウト変更
+        // 变更布局
         Image colorImage = UseRenderTarget ? RenderTargetImage : SwapchainImage;
         ImageLayout newLayout = UseRenderTarget ? ImageLayout.ShaderReadOnlyOptimal : ImageLayout.PresentSrcKhr;
         var memoryBarrier = new ImageMemoryBarrier
@@ -1461,16 +1461,16 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// クリッピングマスクバッファのサイズを設定する
+    /// 设置裁剪遮罩缓冲区的大小
     /// </summary>
-    /// <param name="width">クリッピングマスクバッファの横幅</param>
-    /// <param name="height">クリッピングマスクバッファの立幅</param>
+    /// <param name="width">裁剪遮罩缓冲区的宽度</param>
+    /// <param name="height">裁剪遮罩缓冲区的高度</param>
     public void SetClippingMaskBufferSize(float width, float height)
     {
-        // インスタンス破棄前にレンダーテクスチャの数を保存
+        // 在销毁实例前保存渲染纹理的数量
         var renderTextureCount = _clippingManager.RenderTextureCount;
 
-        //FrameBufferのサイズを変更するためにインスタンスを破棄・再作成する
+        // 为变更 FrameBuffer 尺寸而销毁并重建实例
         _clippingManager.Dispose();
 
         _clippingManager = new CubismClippingManager_Vulkan(_vk);
@@ -1481,9 +1481,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// クリッピングマスクバッファのサイズを取得する
+    /// 获取裁剪遮罩缓冲区的大小
     /// </summary>
-    /// <returns>クリッピングマスクバッファのサイズ</returns>
+    /// <returns>裁剪遮罩缓冲区的大小</returns>
     public Vector2 GetClippingMaskBufferSize()
     {
         return _clippingManager.ClippingMaskBufferSize;
@@ -1500,7 +1500,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// クリッピングマネージャの Type に応じてマスクバッファを返す（drawable / offscreen の 2 系統）。
+    /// 按裁剪管理器的 Type 返回遮罩缓冲区(drawable / offscreen 两套).
     /// </summary>
     public CubismRenderTarget_Vulkan GetMaskBufferForType(CsmEnum.DrawableObjectType type, int index)
     {
@@ -1533,9 +1533,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
         }
         _disposed = true;
 
-        // オフスクリーンを作成していたのなら開放
-        // mask を使わないモデルでは _offscreenFrameBuffers が null のため、
-        // 旧実装はここで NullReferenceException になっていた（本タスク §2.4 で修正）。
+        // 若已创建离屏则释放
+        // 不使用 mask 的模型中 _offscreenFrameBuffers 为 null,
+        // 旧实现会在此处产生 NullReferenceException(本任务 §2.4 已修正).
         if (_offscreenFrameBuffers != null)
         {
             for (int i = 0; i < _offscreenFrameBuffers.Length; i++)
@@ -1606,13 +1606,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _quadVertexBuffer = null;
         _quadIndexBuffer = null;
 
-        // テクスチャは TextureInfoVulkan / LAppTextureManager が所有しており、
-        // ここで Destroy すると共有キャッシュの二重解放になる。参照だけ切る
-        // （官方 CubismRenderer_Vulkan のデストラクタも _textures を破棄しない）。
+        // 纹理由 TextureInfoVulkan / LAppTextureManager 持有,
+        // 在此处 Destroy 会导致共享缓存的双重释放. 只解除引用
+        // (官方 CubismRenderer_Vulkan 的析构函数同样不销毁 _textures).
         _textures.Clear();
 
-        // デバイス情報の参照を解放する。最後のレンダラが消えた時点で
-        // パイプラインとオフスクリーンマネージャも解放される。
+        // 释放设备信息的引用. 最后一个渲染器消失时
+        // pipeline 与离屏管理器也会被释放.
         if (_deviceInfo != null)
         {
             CubismDeviceInfo_Vulkan.ReleaseDeviceInfo(Device);
@@ -1621,8 +1621,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// モデル描画直前のオフスクリーン設定（官方 BeforeDrawModelRenderTarget）。
-    /// blend / offscreen 使用時はモデル RT を描画先にし、最後に Copy で swapchain へ合成する。
+    /// 绘制模型前的离屏设置(对应官方 BeforeDrawModelRenderTarget).
+    /// 使用 blend / offscreen 时以模型 RT 为绘制目标, 最后用 Copy 合成到 swapchain.
     /// </summary>
     protected override void BeforeDrawModelRenderTarget()
     {
@@ -1647,7 +1647,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             _isClearedModelRenderTarget = false;
         }
 
-        // vkCmdCopyImage 合成では alpha blend できないため、モデル RT 自体を背景色でクリアする
+        // 由于 vkCmdCopyImage 合成无法做 alpha blend, 因此用背景色清除模型 RT 本身
         var bgColor = _vulkanManager.LApp.BGColor;
         modelRenderTarget.BeginDraw(_drawCommandBuffer, bgColor.R, bgColor.G, bgColor.B, bgColor.A,
             !_isClearedModelRenderTarget);
@@ -1658,8 +1658,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// モデル描画後のオフスクリーン設定（官方 AfterDrawModelRenderTarget）。
-    /// モデル RT を終了し、Copy シェーダで swapchain へ合成する。
+    /// 绘制模型后的离屏设置(对应官方 AfterDrawModelRenderTarget).
+    /// 结束模型 RT, 并用 Copy shader 合成到 swapchain.
     /// </summary>
     protected override void AfterDrawModelRenderTarget()
     {
@@ -1668,7 +1668,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             return;
         }
 
-        // 念のため未フラッシュのオフスクリーンを親へ伝搬
+        // 为保险起见把未刷新的离屏传递到父级
         while (_currentOffscreen != null)
         {
             DrawOffscreen(_currentOffscreen);
@@ -1685,7 +1685,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// 現在の描画先を終了して次のレンダーターゲットへ切り替える（官方 EnsurePreviousRenderFinished）。
+    /// 结束当前绘制目标并切换到下一个渲染目标(对应官方 EnsurePreviousRenderFinished).
     /// </summary>
     private void EnsurePreviousRenderFinished(CubismRenderTarget_Vulkan nextRenderTarget)
     {
@@ -1700,7 +1700,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// レンダーターゲット描画開始（blend/offscreen 時はモデル RT、それ以外は swapchain）。
+    /// 渲染目标绘制开始(blend/offscreen 时为模型 RT, 否则为 swapchain).
     /// </summary>
     private void BeginRenderTarget(bool isResume)
     {
@@ -1715,7 +1715,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// レンダーターゲット描画終了（blend/offscreen 時は Copy 合成）。
+    /// 渲染目标绘制结束(blend/offscreen 时为 Copy 合成).
     /// </summary>
     private void EndRenderTarget()
     {
@@ -1730,7 +1730,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// レンダーターゲットの内容を Copy シェーダで現在の swapchain へ合成する。
+    /// 使用 Copy shader 把渲染目标的内容合成到当前 swapchain.
     /// </summary>
     private unsafe void CopyRenderTarget(CubismRenderTarget_Vulkan src)
     {
@@ -1740,8 +1740,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
         }
 
         // 与 glBlitFramebuffer 等价的图像拷贝(Vulkan 中作为 texture barrier 的替代).
-        // Copy シェーダ（ExecuteDrawForRenderTarget）はクワッド経由の代替実装として残すが、
-        // モデル RT → swapchain の合成はレイアウト遷移込みの vkCmdCopyImage で行う。
+        // Copy shader(ExecuteDrawForRenderTarget) 保留为经由 quad 的替代实现,
+        // 模型 RT -> swapchain 的合成使用带布局转换的 vkCmdCopyImage 进行.
         var srcImage = src.GetTextureImage();
         var dstImage = SwapchainImage;
 
@@ -1774,7 +1774,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TopOfPipeBit,
             PipelineStageFlags.TransferBit, 0, 0, null, 0, null, 1, ref dstToTransfer);
 
-        // swapchain を背景色でクリアしてからモデル RT をコピーする
+        // 用背景色清除 swapchain 后再复制模型 RT
         var bgColor = _vulkanManager.LApp.BGColor;
         var clearColor = new ClearColorValue(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
         var clearRange = new ImageSubresourceRange(ImageAspectFlags.ColorBit, 0, 1, 0, 1);
@@ -1804,7 +1804,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             PipelineStageFlags.BottomOfPipeBit, 0, 0, null, 0, null, 1, ref dstToPresent);
         _imageLayouts[dstImage.Handle] = ImageLayout.PresentSrcKhr;
 
-        // コピー元 RT を ShaderReadOnly に戻し、次フレームの BeginDraw と整合させる
+        // 把拷贝源 RT 恢复为 ShaderReadOnly, 与下一帧的 BeginDraw 保持一致
         var srcToRead = new ImageMemoryBarrier
         {
             SType = StructureType.ImageMemoryBarrier,
@@ -1821,7 +1821,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// Copy シェーダで src の内容を全画面クワッドに描画する（官方 ExecuteDrawForRenderTarget）。
+    /// 使用 Copy shader 把 src 的内容绘制到全屏 quad(对应官方 ExecuteDrawForRenderTarget).
     /// </summary>
     private unsafe void ExecuteDrawForRenderTarget(CubismRenderTarget_Vulkan src)
     {
@@ -1858,7 +1858,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// Copy 用ディスクリプタ（UBO + 合成元テクスチャ）を更新する。
+    /// 更新 Copy 用的 descriptor(UBO + 合成源纹理).
     /// </summary>
     private unsafe void UpdateCopyDescriptor(CubismRenderTarget_Vulkan src)
     {
@@ -1907,7 +1907,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// フルスクリーンクワッドの頂点/インデックスバッファをバインドする。
+    /// 绑定全屏 quad 的顶点/索引 buffer.
     /// </summary>
     private unsafe void BindQuadBuffers(CommandBuffer cmdBuffer)
     {
@@ -1923,7 +1923,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// オフスクリーンを追加する（官方 AddOffscreen）。
+    /// 添加离屏(对应官方 AddOffscreen).
     /// </summary>
     private unsafe void AddOffscreen(int offscreenIndex)
     {
@@ -1986,7 +1986,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// オフスクリーンを親へ伝搬する（官方 SubmitDrawToParentOffscreen）。
+    /// 把离屏传递到父级(对应官方 SubmitDrawToParentOffscreen).
     /// </summary>
     private unsafe void SubmitDrawToParentOffscreen(int objectIndex, CsmEnum.DrawableObjectType objectType)
     {
@@ -2030,7 +2030,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// オフスクリーンを描画して親のレンダーターゲットへ合成する（官方 DrawOffscreen）。
+    /// 绘制离屏并合成到父级的渲染目标(对应官方 DrawOffscreen).
     /// </summary>
     private unsafe void DrawOffscreen(CubismOffscreenRenderTarget_Vulkan offscreen)
     {
@@ -2057,7 +2057,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             : null;
         ClippingContextBufferForOffscreen = clipContext;
 
-        // 親のレンダーターゲットを再開（なければモデル RT）
+        // 重新开启父级的渲染目标(没有则使用模型 RT)
         if (parent?.GetRenderTarget() is { } parentTarget)
         {
             if (!parentTarget.IsRendering())
@@ -2094,7 +2094,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// オフスクリーン合成用クワッドを描画する（官方 ExecuteDrawForOffscreen）。
+    /// 绘制离屏合成用的 quad(对应官方 ExecuteDrawForOffscreen).
     /// </summary>
     private unsafe void ExecuteDrawForOffscreen(CubismOffscreenRenderTarget_Vulkan offscreen,
         CubismClippingContext_Vulkan? clipContext)
@@ -2201,7 +2201,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// オフスクリーン合成用ディスクリプタを更新する。
+    /// 更新离屏合成用的 descriptor.
     /// </summary>
     private unsafe void UpdateOffscreenDescriptor(Descriptor descriptor, bool masked,
         CubismOffscreenRenderTarget_Vulkan offscreen, CubismClippingContext_Vulkan? clipContext,
@@ -2292,9 +2292,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// blend shader 用に現在の描画先 RT をスナップショットへコピーし、RT を再開する。
-    /// Vulkan では描画中アタッチメントを同時にサンプルできないため、
-    /// 直前内容を別テクスチャへコピーして binding3 にバインドする（validation 対応）。
+    /// 为 blend shader 把当前绘制目标 RT 复制到快照, 并重新开启 RT.
+    /// Vulkan 中无法同时采样正在绘制的 attachment,
+    /// 因此把上一刻的内容复制到另一纹理并绑定到 binding3(为通过 validation).
     /// </summary>
     private unsafe bool PrepareBlendSnapshot()
     {
@@ -2376,7 +2376,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             PipelineStageFlags.FragmentShaderBit, 0, 0, null, 0, null, 1, ref toRead);
         _blendSnapshotInitialized = true;
 
-        // target を TransferSrc から描画用レイアウトへ戻してから再開する
+        // 把 target 从 TransferSrc 恢复到绘制用布局后再重新开启
         var toColor = new ImageMemoryBarrier
         {
             SType = StructureType.ImageMemoryBarrier,
@@ -2396,11 +2396,11 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// モデルを描画する実際の処理
+    /// 绘制模型的实际处理
     /// </summary>
     protected unsafe override void DoDrawModel()
     {
-        //------------ クリッピングマスク・バッファ前処理方式の場合 ------------
+        //------------ 使用裁剪遮罩缓冲区预处理方式时 ------------
         var beginInfo = new CommandBufferBeginInfo
         {
             SType = StructureType.CommandBufferBeginInfo
@@ -2410,7 +2410,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         if (_clippingManager != null)
         {
-            // サイズが違う場合はここで作成しなおし
+            // 尺寸不同时在此处重新创建
             for (int i = 0; i < _clippingManager.RenderTextureCount; ++i)
             {
                 if (_offscreenFrameBuffers![i].BufferWidth != _clippingManager.ClippingMaskBufferSize.X
@@ -2467,7 +2467,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         SubmitCommand(_updateCommandBuffer, _updateFinishedSemaphore);
         SubmitCommand(_drawCommandBuffer, null, _updateFinishedSemaphore);
 
-        // スワップチェーンを再作成した際に深度バッファのサイズを更新する
+        // 重建 swapchain 时更新深度 buffer 的尺寸
         if (_depthImage.Width != SwapchainExtent.Width || _depthImage.Height != SwapchainExtent.Height)
         {
             _depthImage.Destroy(Device);
@@ -2478,7 +2478,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         var offscreenCount = Model.GetOffscreenCount();
         var totalCount = drawableCount + offscreenCount;
         var renderOrder = Model.GetRenderOrders();
-        // インデックスを描画順でソート
+        // 按绘制顺序排序索引
         // 实测: renderOrder 的数组长度是 totalCount, 只遍历 drawable 会
         // 破坏 offscreen 的顺序(以及 order 值大于等于 drawableCount 的情况).
         // 与官方 DrawObjectLoop(CubismRenderer_Vulkan.cpp:2714-2727)一样使用双重排序.
@@ -2497,7 +2497,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             }
         }
 
-        //描画
+        // 绘制
         _vk.BeginCommandBuffer(_updateCommandBuffer, &beginInfo);
         _vk.BeginCommandBuffer(_drawCommandBuffer, &beginInfo);
         BeginRenderTarget(false);
@@ -2508,33 +2508,33 @@ public class CubismRenderer_Vulkan : CubismRenderer
             // 这里只先准备好顺序数组, 本阶段仅绘制 drawable(保持既有语义).
             if (_sortedObjectsTypeList[i] == CsmEnum.DrawableObjectType.Offscreen)
             {
-                // インデックスは AddOffscreen 内で offscreen 空間として検証する
+                // 索引在 AddOffscreen 内作为 offscreen 空间进行校验
                 AddOffscreen(_sortedObjectsIndexList[i]);
                 continue;
             }
 
             int drawableIndex = _sortedObjectsIndexList[i];
-            // Drawableが表示状態でなければ処理をパスする
+            // Drawable 非显示状态时跳过处理
             if (!Model.GetDrawableDynamicFlagIsVisible(drawableIndex))
             {
                 continue;
             }
 
-            // 現在のオフスクリーンの描画対象外なら、親オフスクリーンへ伝搬する
+            // 若不在当前离屏的绘制范围内, 则传递到父级离屏
             SubmitDrawToParentOffscreen(drawableIndex, CsmEnum.DrawableObjectType.Drawable);
 
-            // クリッピングマスクをセットする
+            // 设置裁剪遮罩
             var clipContext = (_clippingManager != null) ? _clippingManager.ClippingContextListForDraw[drawableIndex]
                 as CubismClippingContext_Vulkan : null;
 
-            if (clipContext != null && UseHighPrecisionMask) // マスクを書く必要がある
+            if (clipContext != null && UseHighPrecisionMask) // 需要绘制遮罩
             {
-                if (clipContext.IsUsing) // 書くことになっていた
+                if (clipContext.IsUsing) // 已确定需要绘制
                 {
-                    // 一旦オフスクリーン描画に移る（blend/offscreen 時はモデル RT を終了）
+                    // 先切换到离屏绘制(blend/offscreen 时结束模型 RT)
                     EnsurePreviousRenderFinished(_offscreenFrameBuffers![clipContext.BufferIndex]);
 
-                    // 描画順を考慮して今までに積んだコマンドを実行する
+                    // 按绘制顺序执行此前累积的命令
                     SubmitCommand(_updateCommandBuffer, _updateFinishedSemaphore);
                     SubmitCommand(_drawCommandBuffer, null, _updateFinishedSemaphore);
                     _vk.BeginCommandBuffer(_updateCommandBuffer, &beginInfo);
@@ -2543,7 +2543,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
                     var currentHighPrecisionMaskColorBuffer = _offscreenFrameBuffers![clipContext.BufferIndex];
                     currentHighPrecisionMaskColorBuffer.BeginDraw(_drawCommandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
 
-                    // 生成したFrameBufferと同じサイズでビューポートを設定
+                    // 以与生成的 FrameBuffer 相同的尺寸设置 viewport
                     var viewport1 = GetViewport(_clippingManager!.ClippingMaskBufferSize.X, _clippingManager.ClippingMaskBufferSize.Y,
                         0.0f, 1.0f);
                     _vk.CmdSetViewport(_drawCommandBuffer, 0, 1, ref viewport1);
@@ -2556,7 +2556,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
                     {
                         int clipDrawIndex = clipContext.ClippingIdList[ctx];
 
-                        // 頂点情報が更新されておらず、信頼性がない場合は描画をパスする
+                        // 顶点信息未更新, 不可靠时跳过绘制
                         if (!Model.GetDrawableDynamicFlagVertexPositionsDidChange(clipDrawIndex))
                         {
                             continue;
@@ -2567,15 +2567,15 @@ public class CubismRenderer_Vulkan : CubismRenderer
                         ClippingContextBufferForMask = clipContext;
                         DrawMeshVulkan(Model, clipDrawIndex, _drawCommandBuffer, _updateCommandBuffer);
                     }
-                    // --- 後処理 ---
-                    currentHighPrecisionMaskColorBuffer.EndDraw(_drawCommandBuffer); // オフスクリーン描画終了
+                    // --- 后处理 ---
+                    currentHighPrecisionMaskColorBuffer.EndDraw(_drawCommandBuffer); // 结束离屏绘制
                     ClippingContextBufferForMask = null;
                     SubmitCommand(_updateCommandBuffer, _updateFinishedSemaphore);
                     SubmitCommand(_drawCommandBuffer, null, _updateFinishedSemaphore);
                     _vk.BeginCommandBuffer(_updateCommandBuffer, &beginInfo);
                     _vk.BeginCommandBuffer(_drawCommandBuffer, &beginInfo);
 
-                    // 描画再開
+                    // 恢复绘制
                     if (_currentRenderTarget != null)
                     {
                         _currentRenderTarget.BeginDraw(_drawCommandBuffer, 0.0f, 0.0f, 0.0f, 0.0f, false);
@@ -2587,20 +2587,20 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 }
             }
 
-            // ビューポートを設定する
+            // 设置 viewport
             var viewport = GetViewport(SwapchainExtent.Width, SwapchainExtent.Height, 0.0f, 1.0f);
             _vk.CmdSetViewport(_drawCommandBuffer, 0, 1, &viewport);
 
             var rect = GetScissor(0.0f, 0.0f, SwapchainExtent.Width, SwapchainExtent.Height);
             _vk.CmdSetScissor(_drawCommandBuffer, 0, 1, &rect);
 
-            // クリッピングマスクをセットする
+            // 设置裁剪遮罩
             ClippingContextBufferForDraw = clipContext;
             IsCulling = Model.GetDrawableCulling(drawableIndex) != 0;
             DrawMeshVulkan(Model, drawableIndex, _drawCommandBuffer, _updateCommandBuffer);
         }
 
-        // 残っているオフスクリーンを親へ伝搬してから合成
+        // 把剩余的离屏传递到父级后再合成
         while (_currentOffscreen != null)
         {
             DrawOffscreen(_currentOffscreen);
@@ -2612,7 +2612,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// モデル描画直前のステートを保持する
+    /// 保持绘制模型前的状态
     /// </summary>
     protected override void SaveProfile()
     {
@@ -2620,7 +2620,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     }
 
     /// <summary>
-    /// モデル描画直前のステートを保持する
+    /// 保持绘制模型前的状态
     /// </summary>
     protected override void RestoreProfile()
     {

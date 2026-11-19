@@ -64,12 +64,12 @@ internal class Program : VulkanApi
             BGColor = new(0, 1, 0, 1)
         };
 
-        // モデルのパスはハードコードせず、App 層の ModelResourceLocator で解決する
-        // （Avalonia / OpenTK / WPF の三宿主と同じ規則:
-        //   環境変数 LIVE2D_MODEL_DIR / LIVE2D_MODEL_NAME を最優先 → 実行ファイル位置から親方向へ
-        //   公式 SDK パッケージの CubismSdkForNative-5-r.5/Samples/Resources を相対探索
-        //   → 実行ファイル隣の Resources）。
-        // 見つからない場合も例外にせず、空のシーンで起動を続ける。
+        // 模型路径不硬编码, 而由 App 层的 ModelResourceLocator 解析
+        // (与 Avalonia / OpenTK / WPF 三个宿主相同的规则:
+        //   环境变量 LIVE2D_MODEL_DIR / LIVE2D_MODEL_NAME 优先 → 从可执行文件位置向上层目录
+        //   相对查找官方 SDK 包的 CubismSdkForNative-5-r.5/Samples/Resources
+        //   → 可执行文件旁的 Resources).
+        // 未找到时也不抛异常, 以空场景继续启动.
         LAppModel? model = null;
         if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
         {
@@ -93,8 +93,8 @@ internal class Program : VulkanApi
             live2d.Resize();
         };
 
-        // 【仅验收用】V-d（Ren offscreen 探针）: 默认关闭，仅当 L2D_PROBE_OFFSCREEN=1 时启用。
-        // 30 帧後に offscreen 数と DrawOffscreen 回数を出力して終了する。
+        // [仅验收用] V-d(Ren offscreen 探针): 默认关闭, 仅当 L2D_PROBE_OFFSCREEN=1 时启用.
+        // 30 帧后输出 offscreen 数量与 DrawOffscreen 次数并退出.
         // 输出格式固定, 与既有的验收流程保持一致.
         int probeFrames = 0;
         bool probeOffscreen = Environment.GetEnvironmentVariable("L2D_PROBE_OFFSCREEN") == "1";

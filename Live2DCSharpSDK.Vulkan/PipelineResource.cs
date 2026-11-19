@@ -31,12 +31,12 @@ public class PipelineResource(Vk vk, Device device)
     {
         var assm = Assembly.GetExecutingAssembly();
         string name = "Live2DCSharpSDK.Vulkan.spv." + filename;
-        // 内嵌 shader 资源缺失时必须立刻失败：原实现先对返回值加 ! 再判空，
+        // 内嵌 shader 资源缺失时必须立刻失败: 原实现先对返回值加 ! 再判空,
         // 判空分支永远不成立, 随后 item.CopyTo 抛 NullReferenceException.
         using var item = assm.GetManifestResourceStream(name);
         if (item == null)
         {
-            // CubismLog.Error 内部会抛异常；后面的 throw 仅用于让编译器的空值分析确认 item 非空
+            // CubismLog.Error 内部会抛异常; 后面的 throw 仅用于让编译器的空值分析确认 item 非空
             CubismLog.Error("failed to open file! {0}", name);
             throw new InvalidOperationException($"内嵌 shader 资源不存在: {name}");
         }
