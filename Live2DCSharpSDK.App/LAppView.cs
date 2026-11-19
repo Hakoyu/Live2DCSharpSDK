@@ -30,10 +30,14 @@ public abstract class LAppView(LAppDelegate lapp)
     /// <summary>
     /// 初期化する。
     /// </summary>
-    public void Initialize()
+    /// <param name="width">ウィンドウ幅</param>
+    /// <param name="height">ウィンドウ高さ</param>
+    /// <remarks>
+    /// 官方 5-r.5 の LAppView::Initialize(int width, int height)（LAppView.cpp）に合わせて引数化した。
+    /// 呼び出し元は LAppDelegate（InitApp / Resize）のみで、ホストからは触らない。
+    /// </remarks>
+    public void Initialize(int width, int height)
     {
-        int width = lapp.WindowWidth;
-        int height = lapp.WindowHeight;
         if (width == 0 || height == 0)
         {
             return;
@@ -179,7 +183,8 @@ public abstract class LAppView(LAppDelegate lapp)
     public static float GetSpriteAlpha(int assign)
     {
         // assignの数値に応じて適当に決定
-        float alpha = 0.25f + assign * 0.5f; // サンプルとしてαに適当な差をつける
+        // 官方 5-r.5 の LAppView.cpp:307 は基値 0.4f（R1 は 0.25f）。本移植にスプライト描画は無いが値だけ公式に合わせる。
+        float alpha = 0.4f + assign * 0.5f; // サンプルとしてαに適当な差をつける
         if (alpha > 1.0f)
         {
             alpha = 1.0f;

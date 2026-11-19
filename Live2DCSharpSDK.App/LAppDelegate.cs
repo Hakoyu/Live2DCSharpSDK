@@ -59,7 +59,7 @@ public abstract class LAppDelegate : IDisposable
         WindowWidth = width;
         WindowHeight = height;
         //AppViewの初期化
-        View.Initialize();
+        View.Initialize(width, height);
 
         //load model
         Live2dManager = new LAppLive2DManager(this);
@@ -84,7 +84,12 @@ public abstract class LAppDelegate : IDisposable
             WindowWidth = width;
             WindowHeight = height;
             //AppViewの初期化
-            View.Initialize();
+            View.Initialize(width, height);
+
+            // モデルのレンダーターゲットサイズを実サイズに合わせる（官方 LAppDelegate.cpp:148。
+            // サンプル層で USE_RENDER_TARGET は有効にしていないが、CubismRenderer.SetRenderTargetSize は
+            // Blend モデルが使う model render target の解像度決定に効くため、公式同様に伝播させる。PLAN D-06）
+            Live2dManager?.SetRenderTargetSize(width, height);
         }
     }
 
@@ -145,13 +150,16 @@ public abstract class LAppDelegate : IDisposable
     /// <param name="y">x座標</param>
     public void OnMouseCallBack(float x, float y)
     {
+        // 押下時のタップ判定（OnTouchesBegan/Ended）は直前の座標を使うため、
+        // 捕捉前でも座標は常に更新する（R1 からの移植では捕捉後のみ更新しており、
+        // ホストが押下時に座標を渡しても (0,0) で判定される不具合があった）。
+        _mouseX = x;
+        _mouseY = y;
+
         if (!_captured)
         {
             return;
         }
-
-        _mouseX = x;
-        _mouseY = y;
 
         View.OnTouchesMoved(_mouseX, _mouseY);
     }

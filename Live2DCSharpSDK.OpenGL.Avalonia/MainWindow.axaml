@@ -13,18 +13,45 @@
     mc:Ignorable="d">
     <DockPanel>
         <TextBlock DockPanel.Dock="Top" Text="{Binding #GL.Info}" />
-        <Button
-            Name="Button1"
-            Width="100"
-            Height="30"
-            Padding="0"
-            VerticalAlignment="Bottom"
-            HorizontalContentAlignment="Center"
-            VerticalContentAlignment="Center"
-            Content="刷新" />
+        <TextBlock DockPanel.Dock="Top" Text="{Binding #GL.Status}" />
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="4">
+            <Button
+                Name="Button1"
+                Width="80"
+                Height="30"
+                Padding="0"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Content="刷新" />
+            <Button
+                Name="MotionButton"
+                Width="80"
+                Height="30"
+                Padding="0"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Content="动作" />
+            <Button
+                Name="ExpressionButton"
+                Width="80"
+                Height="30"
+                Padding="0"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Content="表情" />
+            <Button
+                Name="PhysicsButton"
+                Width="80"
+                Height="30"
+                Padding="0"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                Content="物理 ON" />
+        </StackPanel>
         <Panel>
             <pages:OpenGlPageControl Name="GL" />
-            <Panel Name="GLTop" />
+            <!-- 入力の受け皿。Background が null だとヒットテストされないため Transparent を指定する -->
+            <Panel Name="GLTop" Background="Transparent" />
         </Panel>
     </DockPanel>
 </Window>

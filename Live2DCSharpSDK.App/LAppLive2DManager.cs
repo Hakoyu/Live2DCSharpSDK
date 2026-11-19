@@ -17,6 +17,11 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
     public event Action<CubismModel, ACubismMotion>? MotionFinished;
 
     /// <summary>
+    /// モーション再生開始時に発火する（官方 5-r.5 の BeganMotionCallback に対応）
+    /// </summary>
+    public event Action<ACubismMotion>? MotionBegan;
+
+    /// <summary>
     /// モデル描画に用いるView行列
     /// </summary>
     public CubismMatrix44 ViewMatrix { get; } = new();
@@ -83,7 +88,7 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
             else if (_models[i].HitTest(LAppDefine.HitAreaNameBody, x, y))
             {
                 CubismLog.Debug($"[Live2D App]hit area: [{LAppDefine.HitAreaNameBody}]");
-                _models[i].StartRandomMotion(LAppDefine.MotionGroupTapBody, MotionPriority.PriorityNormal, OnFinishedMotion);
+                _models[i].StartRandomMotion(LAppDefine.MotionGroupTapBody, MotionPriority.PriorityNormal, OnFinishedMotion, OnBeganMotion);
             }
         }
     }
@@ -92,6 +97,25 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
     {
         CubismLog.Info($"[Live2D App]Motion Finished: {self}");
         MotionFinished?.Invoke(model, self);
+    }
+
+    private void OnBeganMotion(ACubismMotion self)
+    {
+        CubismLog.Info($"[Live2D App]Motion Began: {self}");
+        MotionBegan?.Invoke(self);
+    }
+
+    /// <summary>
+    /// モデルが使うレンダーターゲットのサイズを設定する（官方 LAppLive2DManager::SetRenderTargetSize）。
+    /// </summary>
+    /// <param name="width">幅</param>
+    /// <param name="height">高さ</param>
+    public void SetRenderTargetSize(int width, int height)
+    {
+        for (int i = 0; i < _models.Count; i++)
+        {
+            GetModel(i).SetRenderTargetSize((uint)width, (uint)height);
+        }
     }
 
     private readonly CubismMatrix44 _projection = new();
