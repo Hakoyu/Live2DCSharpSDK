@@ -1,17 +1,17 @@
 namespace Live2DCSharpSDK.Framework.Model;
 
 /// <summary>
-/// パーツの子描画オブジェクト情報（官方 CubismModel.hpp:59-93 の PartChildDrawObjects）。
-/// 官方は csmVector&lt;csmUint32&gt; だが、C# 側は既存コードに合わせて int の List で持つ。
+/// 部件的子绘制对象信息 (官方 CubismModel.hpp:59-93 的 PartChildDrawObjects).
+/// 官方为 csmVector&lt;csmUint32&gt;, 但 C# 侧配合既有代码使用 int 的 List.
 /// </summary>
 public class PartChildDrawObjects
 {
     /// <summary>
-    /// 子 Drawable のインデックス一覧
+    /// 子 Drawable 的索引列表
     /// </summary>
     public List<int> DrawableIndices { get; } = [];
     /// <summary>
-    /// 子 Offscreen のインデックス一覧
+    /// 子 Offscreen 的索引列表
     /// </summary>
     public List<int> OffscreenIndices { get; } = [];
 }

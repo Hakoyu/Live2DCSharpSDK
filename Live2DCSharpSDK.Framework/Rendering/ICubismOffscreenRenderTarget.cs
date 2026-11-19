@@ -1,45 +1,45 @@
 ﻿namespace Live2DCSharpSDK.Framework.Rendering;
 
 /// <summary>
-/// オフスクリーン用のレンダーターゲットを管理するクラス
-/// （官方 Framework/src/Rendering/ICubismOffscreenRenderTarget.hpp:19-141）。
-/// C++ の CRTP（T = 継承先の子クラス自身、U = レンダーターゲット型）を
+/// 管理 Offscreen 用渲染目标的类
+/// (官方 Framework/src/Rendering/ICubismOffscreenRenderTarget.hpp:19-141).
+/// 把 C++ 的 CRTP (T = 继承目标的子类自身, U = 渲染目标类型)
 /// 用自引用泛型约束模拟.
 /// </summary>
-/// <typeparam name="TSelf">継承先の子クラス自身</typeparam>
-/// <typeparam name="TRenderTarget">レンダーターゲットの型</typeparam>
+/// <typeparam name="TSelf">继承目标的子类自身</typeparam>
+/// <typeparam name="TRenderTarget">渲染目标的类型</typeparam>
 public abstract class ICubismOffscreenRenderTarget<TSelf, TRenderTarget>
     where TSelf : ICubismOffscreenRenderTarget<TSelf, TRenderTarget>
     where TRenderTarget : CubismRenderTarget
 {
     /// <summary>
-    /// レンダーターゲット（官方 _renderTarget）
+    /// 渲染目标 (官方 _renderTarget)
     /// </summary>
     protected TRenderTarget? _renderTarget;
     /// <summary>
-    /// _offscreens の Index（官方 _offscreenIndex、初期値 -1）
+    /// _offscreens 的 Index (官方 _offscreenIndex, 初始值 -1)
     /// </summary>
     private int _offscreenIndex = -1;
     /// <summary>
-    /// 親のオフスクリーンレンダーターゲット（官方 _parentRenderTarget）
+    /// 父级 Offscreen 渲染目标 (官方 _parentRenderTarget)
     /// </summary>
     private TSelf? _parentRenderTarget;
     /// <summary>
-    /// 以前のオフスクリーンレンダーターゲット（官方 _oldOffscreen）
+    /// 之前的 Offscreen 渲染目标 (官方 _oldOffscreen)
     /// </summary>
     private TSelf? _oldOffscreen;
 
     /// <summary>
-    /// オフスクリーンの Index を設定する
+    /// 设置 Offscreen 的 Index
     /// </summary>
-    /// <param name="offscreenIndex">オフスクリーンの Index</param>
+    /// <param name="offscreenIndex">Offscreen 的 Index</param>
     public void SetOffscreenIndex(int offscreenIndex)
     {
         _offscreenIndex = offscreenIndex;
     }
 
     /// <summary>
-    /// オフスクリーンの Index を取得する
+    /// 获取 Offscreen 的 Index
     /// </summary>
     public int GetOffscreenIndex()
     {
@@ -47,16 +47,16 @@ public abstract class ICubismOffscreenRenderTarget<TSelf, TRenderTarget>
     }
 
     /// <summary>
-    /// 以前のオフスクリーンレンダーターゲットを設定する
+    /// 设置之前的 Offscreen 渲染目标
     /// </summary>
-    /// <param name="oldOffscreen">以前のオフスクリーンレンダーターゲット</param>
+    /// <param name="oldOffscreen">之前的 Offscreen 渲染目标</param>
     public void SetOldOffscreen(TSelf? oldOffscreen)
     {
         _oldOffscreen = oldOffscreen;
     }
 
     /// <summary>
-    /// 以前のオフスクリーンレンダーターゲットを取得する
+    /// 获取之前的 Offscreen 渲染目标
     /// </summary>
     public TSelf? GetOldOffscreen()
     {
@@ -64,16 +64,16 @@ public abstract class ICubismOffscreenRenderTarget<TSelf, TRenderTarget>
     }
 
     /// <summary>
-    /// 親のオフスクリーンレンダーターゲットを設定する
+    /// 设置父级 Offscreen 渲染目标
     /// </summary>
-    /// <param name="parentRenderTarget">親のオフスクリーンレンダーターゲット</param>
+    /// <param name="parentRenderTarget">父级 Offscreen 渲染目标</param>
     public void SetParentPartOffscreen(TSelf? parentRenderTarget)
     {
         _parentRenderTarget = parentRenderTarget;
     }
 
     /// <summary>
-    /// 親のオフスクリーンレンダーターゲットを取得する
+    /// 获取父级 Offscreen 渲染目标
     /// </summary>
     public TSelf? GetParentPartOffscreen()
     {
@@ -81,7 +81,7 @@ public abstract class ICubismOffscreenRenderTarget<TSelf, TRenderTarget>
     }
 
     /// <summary>
-    /// レンダーターゲットを取得する
+    /// 获取渲染目标
     /// </summary>
     public TRenderTarget? GetRenderTarget()
     {

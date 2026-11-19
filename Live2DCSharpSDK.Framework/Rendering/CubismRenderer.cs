@@ -4,43 +4,43 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Rendering;
 
 /// <summary>
-/// モデル描画を処理するレンダラ
-/// サブクラスに環境依存の描画命令を記述する
+/// 处理模型绘制的渲染器
+/// 在子类中描述与环境相关的绘制指令
 /// </summary>
 public abstract class CubismRenderer
 {
     /// <summary>
-    /// テクスチャの異方性フィルタリングのパラメータ
+    /// 纹理各向异性过滤的参数
     /// </summary>
     public float Anisotropy { get; set; }
     /// <summary>
-    /// レンダリング対象のモデル
+    /// 渲染目标的模型
     /// </summary>
     public CubismModel Model { get; private set; }
     /// <summary>
-    /// 乗算済みαならtrue
+    /// 如果已预乘 α 则为 true
     /// </summary>
     public bool IsPremultipliedAlpha { get; set; }
     /// <summary>
-    /// カリングが有効ならtrue
+    /// 如果剔除有效则为 true
     /// </summary>
     public bool IsCulling { get; set; }
     /// <summary>
-    /// falseの場合、マスクを纏めて描画する trueの場合、マスクはパーツ描画ごとに書き直す
+    /// 为 false 时, 汇总绘制遮罩; 为 true 时, 每次绘制部件都重写遮罩
     /// </summary>
     public bool UseHighPrecisionMask { get; set; }
 
     /// <summary>
-    /// モデル自体のカラー(RGBA)
+    /// 模型本身的颜色(RGBA)
     /// </summary>
     public CubismTextureColor ModelColor = new();
 
     /// <summary>
-    /// オフスクリーンの幅（官方 _modelRenderTargetWidth、SetRenderTargetSize で更新）
+    /// Offscreen 的宽度 (官方 _modelRenderTargetWidth, 由 SetRenderTargetSize 更新)
     /// </summary>
     protected uint _modelRenderTargetWidth;
     /// <summary>
-    /// オフスクリーンの高さ（官方 _modelRenderTargetHeight、SetRenderTargetSize で更新）
+    /// Offscreen 的高度 (官方 _modelRenderTargetHeight, 由 SetRenderTargetSize 更新)
     /// </summary>
     protected uint _modelRenderTargetHeight;
 
@@ -50,7 +50,7 @@ public abstract class CubismRenderer
     private readonly CubismMatrix44 _mvpMatrix4x4 = new();
 
     /// <summary>
-    /// レンダラのインスタンスを生成して取得する
+    /// 生成并获取渲染器的实例
     /// </summary>
     public CubismRenderer(CubismModel model)
     {
@@ -59,21 +59,21 @@ public abstract class CubismRenderer
     }
 
     /// <summary>
-    /// レンダラのインスタンスを解放する
+    /// 释放渲染器的实例
     /// </summary>
     public abstract void Dispose();
 
     /// <summary>
-    /// モデルを描画する
+    /// 绘制模型
     /// </summary>
     public void DrawModel()
     {
         /**
-         * DoDrawModelの描画前と描画後に以下の関数を呼んでください。
-         * ・SaveProfile();
-         * ・RestoreProfile();
-         * これはレンダラの描画設定を保存・復帰させることで、
-         * モデル描画直前の状態に戻すための処理です。
+         * 请在 DoDrawModel 的绘制前与绘制后调用以下函数.
+         * - SaveProfile();
+         * - RestoreProfile();
+         * 这是通过保存与复原渲染器的绘制设置,
+         * 用于恢复到模型绘制直前状态的处理.
          */
 
         SaveProfile();
@@ -84,8 +84,8 @@ public abstract class CubismRenderer
     }
 
     /// <summary>
-    /// Model-View-Projection 行列をセットする
-    /// 配列は複製されるので元の配列は外で破棄して良い
+    /// 设置 Model-View-Projection 矩阵
+    /// 数组会被复制, 因此原数组可在外部销毁
     /// </summary>
     /// <param name="matrix4x4">Model-View-Projection 行列</param>
     public void SetMvpMatrix(CubismMatrix44 matrix4x4)
@@ -94,7 +94,7 @@ public abstract class CubismRenderer
     }
 
     /// <summary>
-    /// Model-View-Projection 行列を取得する
+    /// 获取 Model-View-Projection 矩阵
     /// </summary>
     /// <returns>Model-View-Projection 行列</returns>
     public CubismMatrix44 GetMvpMatrix()
@@ -103,10 +103,10 @@ public abstract class CubismRenderer
     }
 
     /// <summary>
-    /// 透明度を考慮したモデルの色を計算する。
+    /// 计算考虑透明度的模型颜色.
     /// </summary>
     /// <param name="opacity">透明度</param>
-    /// <returns>RGBAのカラー情報</returns>
+    /// <returns>RGBA 的颜色信息</returns>
     public CubismTextureColor GetModelColorWithOpacity(float opacity)
     {
         CubismTextureColor modelColorRGBA = new(ModelColor);
@@ -121,13 +121,13 @@ public abstract class CubismRenderer
     }
 
     /// <summary>
-    /// モデルの色をセットする。
-    /// 各色0.0f～1.0fの間で指定する(1.0fが標準の状態）。
+    /// 设置模型的颜色.
+    /// 各颜色在 0.0f 到 1.0f 之间指定(1.0f 为标准状态).
     /// </summary>
-    /// <param name="red">赤チャンネルの値</param>
-    /// <param name="green">緑チャンネルの値</param>
-    /// <param name="blue">青チャンネルの値</param>
-    /// <param name="alpha">αチャンネルの値</param>
+    /// <param name="red">红色通道的值</param>
+    /// <param name="green">绿色通道的值</param>
+    /// <param name="blue">蓝色通道的值</param>
+    /// <param name="alpha">α 通道的值</param>
     public void SetModelColor(float red, float green, float blue, float alpha)
     {
         if (red < 0.0f) red = 0.0f;
@@ -149,12 +149,12 @@ public abstract class CubismRenderer
     }
 
     /// <summary>
-    /// オフスクリーンのサイズを設定する（官方 CubismRenderer::SetRenderTargetSize、CubismRenderer.cpp:76-80）。
+    /// 设置 Offscreen 的尺寸 (官方 CubismRenderer::SetRenderTargetSize, CubismRenderer.cpp:76-80).
     /// 本地在创建模型时由宿主生成渲染器, 因此由宿主的 OnRender
     /// 每帧按实际尺寸调用.
     /// </summary>
-    /// <param name="width">モデルを描画するバッファの幅</param>
-    /// <param name="height">モデルを描画するバッファの高さ</param>
+    /// <param name="width">绘制模型的缓冲区宽度</param>
+    /// <param name="height">绘制模型的缓冲区高度</param>
     public void SetRenderTargetSize(uint width, uint height)
     {
         _modelRenderTargetWidth = width;
@@ -162,12 +162,12 @@ public abstract class CubismRenderer
     }
 
     /// <summary>
-    /// blend モード使用時のマスク高精度化（官方 CubismRenderer.cpp:42-52）。
+    /// 使用 blend 模式时提高遮罩精度 (官方 CubismRenderer.cpp:42-52).
     /// 官方在 Initialize 内引用 model->IsBlendModeEnabled(), 但本地的
     /// CubismModel.IsBlendModeEnabled() 判定结果改由此处作为参数传入,
     /// 由宿主在初始化时提供.
     /// </summary>
-    /// <param name="isBlendModeEnabled">モデルが blend モードを使用するなら true</param>
+    /// <param name="isBlendModeEnabled">如果模型使用 blend 模式则为 true</param>
     protected void ApplyBlendModeMaskPrecision(bool isBlendModeEnabled)
     {
         if (!isBlendModeEnabled)
@@ -180,29 +180,29 @@ public abstract class CubismRenderer
     }
 
     /// <summary>
-    /// モデル描画の実装
+    /// 模型绘制的实现
     /// </summary>
     protected abstract void DoDrawModel();
 
     /// <summary>
-    /// モデル描画直前のレンダラのステートを保持する
+    /// 保持模型绘制直前渲染器的状态
     /// </summary>
     protected abstract void SaveProfile();
 
     /// <summary>
-    /// モデル描画直前のレンダラのステートを復帰させる
+    /// 恢复模型绘制直前渲染器的状态
     /// </summary>
     protected abstract void RestoreProfile();
 
     /// <summary>
-    /// モデル描画直前のオフスクリーン設定（官方 pure virtual、CubismRenderer.hpp:284）。
-    /// 派生クラスの DoDrawModel 冒頭で呼ぶ（官方 OpenGL 実装は CubismRenderer_OpenGLES2.cpp:724）。
+    /// 模型绘制直前的 Offscreen 设置 (官方 pure virtual, CubismRenderer.hpp:284).
+    /// 在派生类的 DoDrawModel 开头调用 (官方 OpenGL 实现为 CubismRenderer_OpenGLES2.cpp:724).
     /// </summary>
     protected abstract void BeforeDrawModelRenderTarget();
 
     /// <summary>
-    /// モデル描画後のオフスクリーン設定（官方 pure virtual、CubismRenderer.hpp:289）。
-    /// 派生クラスの DoDrawModel 末尾で呼ぶ（官方 OpenGL 実装は CubismRenderer_OpenGLES2.cpp:788）。
+    /// 模型绘制后的 Offscreen 设置 (官方 pure virtual, CubismRenderer.hpp:289).
+    /// 在派生类的 DoDrawModel 末尾调用 (官方 OpenGL 实现为 CubismRenderer_OpenGLES2.cpp:788).
     /// </summary>
     protected abstract void AfterDrawModelRenderTarget();
 }

@@ -381,7 +381,7 @@ public abstract class CubismUserModel : IDisposable
 
         if (drawIndex < 0)
         {
-            return false; // 存在しない場合はfalse
+            return false; // 不存在时返回 false
         }
 
         var count = Model.GetDrawableVertexCount(drawIndex);

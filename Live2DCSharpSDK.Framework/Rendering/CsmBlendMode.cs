@@ -3,14 +3,14 @@
 namespace Live2DCSharpSDK.Framework.Rendering;
 
 /// <summary>
-/// ブレンドモードを定義するクラス（官方 Framework/src/Rendering/csmBlendMode.hpp:20-87 / csmBlendMode.cpp:13-111）。
+/// 定义混合模式的类 (官方 Framework/src/Rendering/csmBlendMode.hpp:20-87 / csmBlendMode.cpp:13-111).
 /// 与既有的 CubismBlendMode 枚举并存, 不做替换.
 /// 官方返回的 csmString 改为 static readonly string[] 的索引引用.
 /// </summary>
 public struct CsmBlendMode
 {
     /// <summary>
-    /// カラーブレンド種別の文字列テーブル（index = CsmEnum.CsmColorBlendType_*）
+    /// 颜色混合种类的字符串表 (index = CsmEnum.CsmColorBlendType_*)
     /// </summary>
     private static readonly string[] ColorBlendTypeStrings =
     [
@@ -35,7 +35,7 @@ public struct CsmBlendMode
     ];
 
     /// <summary>
-    /// アルファブレンド種別の文字列テーブル（index = CsmEnum.CsmAlphaBlendType_*）
+    /// Alpha 混合种类的字符串表 (index = CsmEnum.CsmAlphaBlendType_*)
     /// </summary>
     private static readonly string[] AlphaBlendTypeStrings =
     [
@@ -47,16 +47,16 @@ public struct CsmBlendMode
     ];
 
     /// <summary>
-    /// カラーブレンド種別
+    /// 颜色混合种类
     /// </summary>
     private int _colorBlendType;
     /// <summary>
-    /// アルファブレンド種別
+    /// Alpha 混合种类
     /// </summary>
     private int _alphaBlendType;
 
     /// <summary>
-    /// コンストラクタ（Normal / Over で初期化）
+    /// 构造函数 (用 Normal / Over 初始化)
     /// </summary>
     public CsmBlendMode()
     {
@@ -65,7 +65,7 @@ public struct CsmBlendMode
     }
 
     /// <summary>
-    /// blendMode 値から生成する（下位 8 bit = カラー、次の 8 bit = アルファ）
+    /// 从 blendMode 值生成 (低 8 bit = 颜色, 接下来的 8 bit = Alpha)
     /// </summary>
     /// <param name="blendMode">blendMode 値</param>
     public CsmBlendMode(int blendMode) : this()
@@ -74,29 +74,29 @@ public struct CsmBlendMode
     }
 
     /// <summary>
-    /// カラーブレンド種別を文字列に変換する（官方 csmBlendMode::ColorBlendModeToString）
+    /// 把颜色混合种类转换为字符串 (官方 csmBlendMode::ColorBlendModeToString)
     /// </summary>
-    /// <param name="type">カラーブレンド種別</param>
-    /// <returns>ブレンド名。未知の値は空文字列</returns>
+    /// <param name="type">颜色混合种类</param>
+    /// <returns>混合名. 未知的值返回空字符串</returns>
     public static string ColorBlendModeToString(int type)
     {
         return (uint)type < (uint)ColorBlendTypeStrings.Length ? ColorBlendTypeStrings[type] : string.Empty;
     }
 
     /// <summary>
-    /// アルファブレンド種別を文字列に変換する（官方 csmBlendMode::AlphaBlendModeToString）
+    /// 把 Alpha 混合种类转换为字符串 (官方 csmBlendMode::AlphaBlendModeToString)
     /// </summary>
-    /// <param name="type">アルファブレンド種別</param>
-    /// <returns>ブレンド名。未知の値は空文字列</returns>
+    /// <param name="type">Alpha 混合种类</param>
+    /// <returns>混合名. 未知的值返回空字符串</returns>
     public static string AlphaBlendModeToString(int type)
     {
         return (uint)type < (uint)AlphaBlendTypeStrings.Length ? AlphaBlendTypeStrings[type] : string.Empty;
     }
 
     /// <summary>
-    /// blendMode 値を設定する（官方 csmBlendMode::SetBlendMode）
+    /// 设置 blendMode 值 (官方 csmBlendMode::SetBlendMode)
     /// </summary>
-    /// <param name="blendMode">下位 8 bit がカラー、次の 8 bit がアルファ</param>
+    /// <param name="blendMode">低 8 bit 为颜色, 接下来的 8 bit 为 Alpha</param>
     public void SetBlendMode(int blendMode)
     {
         _colorBlendType = blendMode & 0xFF;
@@ -104,7 +104,7 @@ public struct CsmBlendMode
     }
 
     /// <summary>
-    /// カラーブレンド種別を取得する
+    /// 获取颜色混合种类
     /// </summary>
     public readonly int GetColorBlendType()
     {
@@ -112,7 +112,7 @@ public struct CsmBlendMode
     }
 
     /// <summary>
-    /// アルファブレンド種別を取得する
+    /// 获取 Alpha 混合种类
     /// </summary>
     public readonly int GetAlphaBlendType()
     {
@@ -120,7 +120,7 @@ public struct CsmBlendMode
     }
 
     /// <summary>
-    /// カラーブレンド種別の文字列を取得する
+    /// 获取颜色混合种类的字符串
     /// </summary>
     public readonly string GetColorBlendTypeString()
     {
@@ -128,7 +128,7 @@ public struct CsmBlendMode
     }
 
     /// <summary>
-    /// アルファブレンド種別の文字列を取得する
+    /// 获取 Alpha 混合种类的字符串
     /// </summary>
     public readonly string GetAlphaBlendTypeString()
     {

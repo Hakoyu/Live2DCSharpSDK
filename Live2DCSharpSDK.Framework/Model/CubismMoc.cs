@@ -4,16 +4,16 @@ using Live2DCSharpSDK.Framework.Core;
 namespace Live2DCSharpSDK.Framework.Model;
 
 /// <summary>
-/// Mocデータの管理を行うクラス。
+/// 进行 Moc 数据管理的类.
 /// </summary>
 public class CubismMoc : IDisposable
 {
     /// <summary>
-    /// Mocデータ（官方 5-r.5 で private → protected に変更）
+    /// Moc 数据 (官方 5-r.5 中由 private 改为 protected)
     /// </summary>
     protected readonly IntPtr _moc;
     /// <summary>
-    /// 読み込んだモデルの.moc3 Version
+    /// 已读入模型的 .moc3 Version
     /// </summary>
     public uint MocVersion { get; }
 
@@ -25,10 +25,10 @@ public class CubismMoc : IDisposable
     private bool _disposed;
 
     /// <summary>
-    /// バッファからMocファイルを読み取り、Mocデータを作成する。
+    /// 从缓冲区读取 Moc 文件, 并创建 Moc 数据.
     /// </summary>
-    /// <param name="mocBytes"> Mocファイルのバッファ</param>
-    /// <param name="shouldCheckMocConsistency">MOCの整合性チェックフラグ(初期値 : false)</param>
+    /// <param name="mocBytes"> Moc 文件的缓冲区</param>
+    /// <param name="shouldCheckMocConsistency">MOC 一致性检查标志(初始值 : false)</param>
     /// <returns></returns>
     public CubismMoc(byte[] mocBytes, bool shouldCheckMocConsistency = false)
     {
@@ -37,13 +37,13 @@ public class CubismMoc : IDisposable
 
         if (shouldCheckMocConsistency)
         {
-            // .moc3の整合性を確認
+            // 确认 .moc3 的一致性
             bool consistency = HasMocConsistency(alignedBuffer, mocBytes.Length);
             if (!consistency)
             {
                 CubismFramework.DeallocateAligned(alignedBuffer);
 
-                // 整合性が確認できなければ処理しない
+                // 如果无法确认一致性则不处理
                 throw new Exception("Inconsistent MOC3.");
             }
         }
@@ -73,7 +73,7 @@ public class CubismMoc : IDisposable
     }
 
     /// <summary>
-    /// 最新の.moc3 Versionを取得する。
+    /// 获取最新的 .moc3 Version.
     /// </summary>
     /// <returns></returns>
     public static uint GetLatestMocVersion()
@@ -82,16 +82,16 @@ public class CubismMoc : IDisposable
     }
 
     /// <summary>
-    /// 未復元の Moc バッファから .moc3 のバージョンを取得する（官方 5-r.5 の新規 API GetMocVersionFromBuffer）。
-    /// 未対応の新しい MOC3 でもバージョンだけは取得できる。
+    /// 从未还原的 Moc 缓冲区获取 .moc3 的版本 (官方 5-r.5 的新增 API GetMocVersionFromBuffer).
+    /// 即使是尚未支持的新 MOC3, 也能只取得版本.
     /// </summary>
-    /// <param name="mocBytes">Mocファイルのバッファ</param>
-    /// <returns>.moc3 Version。不正な引数の場合は 0</returns>
+    /// <param name="mocBytes">Moc 文件的缓冲区</param>
+    /// <returns>.moc3 Version. 参数非法时为 0</returns>
     public static uint GetMocVersionFromBuffer(byte[] mocBytes)
     {
         if (mocBytes == null || mocBytes.Length == 0)
         {
-            // 官方は CubismLogError を出して 0 を返す（C# の CubismLog.Error は例外を投げるため Warning で代替）
+            // 官方会输出 CubismLogError 并返回 0 (C# 的 CubismLog.Error 会抛出异常, 因此用 Warning 代替)
             CubismLog.Warning("Invalid mocBytes or size.");
             return 0;
         }
@@ -120,7 +120,7 @@ public class CubismMoc : IDisposable
     /// <summary>
     /// Checks consistency of a moc.
     /// </summary>
-    /// <param name="mocBytes">Mocファイルのバッファ</param>
+    /// <param name="mocBytes">Moc 文件的缓冲区</param>
     /// <returns>'true' if Moc is valid; 'false' otherwise.</returns>
     public static bool HasMocConsistencyFromUnrevivedMoc(byte[] data)
     {
@@ -146,7 +146,7 @@ public class CubismMoc : IDisposable
 
         _disposed = true;
 
-        // Model.Dispose() 自体も冪等なので、CubismModel を先に破棄していても二重解放にならない。
+        // Model.Dispose() 本身也是幂等的, 因此即使先销毁 CubismModel 也不会重复释放.
         Model.Dispose();
         CubismFramework.DeallocateAligned(_moc);
         GC.SuppressFinalize(this);

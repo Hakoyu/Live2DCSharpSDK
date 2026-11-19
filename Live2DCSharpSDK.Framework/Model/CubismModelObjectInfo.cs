@@ -1,9 +1,9 @@
 namespace Live2DCSharpSDK.Framework.Model;
 
 /// <summary>
-/// モデルのオブジェクト種別（官方 CubismModelObjectInfo::ObjectType）。
-/// C# はメンバー名と入れ子型名を同一にできない（CS0102）ため、列挙型のみトップレベルに置く。
-/// 値名は官方の ObjectType_Drawable / ObjectType_Parts をそのまま使う。
+/// 对象的类别 (官方 CubismModelObjectInfo::ObjectType).
+/// 由于 C# 不能使成员名与嵌套类型名相同 (CS0102), 因此只把枚举类型放在顶层.
+/// 值名直接使用官方的 ObjectType_Drawable / ObjectType_Parts.
 /// </summary>
 public enum CubismModelObjectType
 {
@@ -14,25 +14,25 @@ public enum CubismModelObjectType
 }
 
 /// <summary>
-/// モデルのオブジェクト情報（官方 CubismModel.hpp:25-57 の CubismModelObjectInfo）。
-/// パーツ階層の子オブジェクト（Drawable / Part）を表す。
+/// 模型的对象信息 (官方 CubismModel.hpp:25-57 的 CubismModelObjectInfo).
+/// 表示部件层级的子对象 (Drawable / Part).
 /// </summary>
 public struct CubismModelObjectInfo
 {
     /// <summary>
-    /// オブジェクトの種別
+    /// 对象的类别
     /// </summary>
     public CubismModelObjectType ObjectType;
     /// <summary>
-    /// オブジェクトのインデックス
+    /// 对象的索引
     /// </summary>
     public int ObjectIndex;
 
     /// <summary>
-    /// コンストラクタ。
+    /// 构造函数.
     /// </summary>
-    /// <param name="objectIndex">オブジェクトのインデックス</param>
-    /// <param name="type">オブジェクトの種別</param>
+    /// <param name="objectIndex">对象的索引</param>
+    /// <param name="type">对象的类别</param>
     public CubismModelObjectInfo(int objectIndex, CubismModelObjectType type)
     {
         ObjectIndex = objectIndex;
