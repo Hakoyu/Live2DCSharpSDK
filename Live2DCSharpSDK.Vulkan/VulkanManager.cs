@@ -108,6 +108,10 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
 
     private ExtDebugUtils? debugUtils;
     private DebugUtilsMessengerEXT debugMessenger;
+    /// <summary>
+    /// 是否已完成销毁, 防止退出路径重复释放
+    /// </summary>
+    private bool _destroyed;
 
     /// <summary>
     /// 确认验证层的支持情况
@@ -627,26 +631,64 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
 
     /// <summary>
     /// 销毁资源
+    /// 可重复调用: 已释放的句柄会被跳过, 不会重复释放.
     /// </summary>
     public unsafe void Destroy()
     {
-        SwapchainManager.Cleanup(_device);
-
-        vk.DestroySemaphore(_device, _imageAvailableSemaphore, default);
-
-        if (EnableValidationLayers)
+        if (_destroyed)
         {
-            debugUtils!.DestroyDebugUtilsMessenger(_instance, debugMessenger, null);
+            return;
         }
 
-        vk.DestroyCommandPool(_device, _commandPool, default);
+        _destroyed = true;
 
-        // 在销毁设备前释放绑定到设备的 pipeline 与离屏资源(对应官方 ReleaseAllDeviceInfo)
+        // 先等待 GPU 空闲, 避免销毁仍在使用的交换链/命令池资源(退出路径).
+        if (_device.Handle != 0)
+        {
+            vk.DeviceWaitIdle(_device);
+        }
+
+        SwapchainManager.Cleanup(_device);
+
+        if (_imageAvailableSemaphore.Handle != 0)
+        {
+            vk.DestroySemaphore(_device, _imageAvailableSemaphore, default);
+            _imageAvailableSemaphore = default;
+        }
+
+        if (EnableValidationLayers && debugMessenger.Handle != 0)
+        {
+            debugUtils?.DestroyDebugUtilsMessenger(_instance, debugMessenger, null);
+            debugMessenger = default;
+        }
+
+        if (_commandPool.Handle != 0)
+        {
+            vk.DestroyCommandPool(_device, _commandPool, default);
+            _commandPool = default;
+        }
+
+        // 在销毁设备前释放绑定到设备的 pipeline 与离屏资源(对应官方 ReleaseAllDeviceInfo).
+        // 渲染器释放后此处通常已为空, 仅作为兜底, 重复调用安全.
         CubismDeviceInfo_Vulkan.ReleaseAllDeviceInfo();
 
-        vk.DestroyDevice(_device, null);
-        khrSurface!.DestroySurface(_instance, Surface, null);
-        vk.DestroyInstance(_instance, null);
+        if (_device.Handle != 0)
+        {
+            vk.DestroyDevice(_device, null);
+            _device = default;
+        }
+
+        if (Surface.Handle != 0 && khrSurface is not null)
+        {
+            khrSurface.DestroySurface(_instance, Surface, null);
+            Surface = default;
+        }
+
+        if (_instance.Handle != 0)
+        {
+            vk.DestroyInstance(_instance, null);
+            _instance = default;
+        }
     }
 
     /// <summary>

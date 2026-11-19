@@ -17,6 +17,11 @@ public class LAppDelegateVulkan : LAppDelegate
     public readonly Vk _vk;
     public readonly VulkanManager VulkanManager;
 
+    /// <summary>
+    /// 是否已完成关停, 防止重复释放
+    /// </summary>
+    private bool _shutdown;
+
     public LAppDelegateVulkan(VulkanApi api)
     {
         _api = api;
@@ -122,6 +127,36 @@ public class LAppDelegateVulkan : LAppDelegate
         VulkanManager.UpdateDrawFrame();
 
         return RecreateSwapchain();
+    }
+
+    /// <summary>
+    /// 按序关停宿主: 等待 GPU 空闲 -> 释放模型/渲染器/纹理 -> 释放 Vulkan 设备与实例.
+    /// 与 OpenGL 宿主的释放顺序一致, 重复调用安全.
+    /// </summary>
+    public void Shutdown()
+    {
+        if (_shutdown)
+        {
+            return;
+        }
+
+        _shutdown = true;
+        CubismLog.Debug("[Live2D Vulkan]shutdown: dispose models/renderers, then device/instance.");
+
+        // 1) 等待 GPU 空闲, 避免销毁仍在使用的命令缓冲与交换链资源.
+        if (VulkanManager.Device.Handle != 0)
+        {
+            _vk.DeviceWaitIdle(VulkanManager.Device);
+        }
+
+        // 2) 释放模型: 依次释放纹理(TextureInfoVulkan)与渲染器(CubismRenderer_Vulkan),
+        //    渲染器释放时会把 CubismDeviceInfo 的引用计数减到 0.
+        base.Dispose();
+
+        // 3) 释放设备侧资源: 交换链 -> 命令池 -> 管线/离屏(ReleaseAllDeviceInfo 作为兜底)
+        //    -> 设备 -> surface -> instance.
+        VulkanManager.Dispose();
+        CubismLog.Debug("[Live2D Vulkan]shutdown: done.");
     }
 
     private bool RecreateSwapchain()

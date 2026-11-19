@@ -59,56 +59,71 @@ internal class Program : VulkanApi
             throw new Exception("Windowing platform doesn't support Vulkan.");
         }
         vk = Vk.GetApi();
-        var live2d = new LAppDelegateVulkan(this)
-        {
-            BGColor = new(0, 1, 0, 1)
-        };
 
-        // 模型路径不硬编码, 而由 App 层的 ModelResourceLocator 解析
-        // (与 Avalonia / OpenTK / WPF 三个宿主相同的规则:
-        //   环境变量 LIVE2D_MODEL_DIR / LIVE2D_MODEL_NAME 优先 → 从可执行文件位置向上层目录
-        //   相对查找官方 SDK 包的 CubismSdkForNative-5-r.5/Samples/Resources
-        //   → 可执行文件旁的 Resources).
-        // 未找到时也不抛异常, 以空场景继续启动.
-        LAppModel? model = null;
-        if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
+        LAppDelegateVulkan? live2d = null;
+        try
         {
-            try
+            var app = new LAppDelegateVulkan(this)
             {
-                model = live2d.Live2dManager.LoadModel(modelDir, modelName);
-                Console.WriteLine($"[Live2D App]model loaded: {Path.Combine(modelDir, modelName)}");
-            }
-            catch (Exception e)
+                BGColor = new(0, 1, 0, 1)
+            };
+            live2d = app;
+
+            // 模型路径不硬编码, 而由 App 层的 ModelResourceLocator 解析
+            // (与 Avalonia / OpenTK / WPF 三个宿主相同的规则:
+            //   环境变量 LIVE2D_MODEL_DIR / LIVE2D_MODEL_NAME 优先 → 从可执行文件位置向上层目录
+            //   相对查找官方 SDK 包的 CubismSdkForNative-5-r.5/Samples/Resources
+            //   → 可执行文件旁的 Resources).
+            // 未找到时也不抛异常, 以空场景继续启动.
+            LAppModel? model = null;
+            if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
             {
-                Console.WriteLine($"[Live2D App]model load failed: {e.GetType().Name}: {e.Message}");
+                try
+                {
+                    model = app.Live2dManager.LoadModel(modelDir, modelName);
+                    Console.WriteLine($"[Live2D App]model loaded: {Path.Combine(modelDir, modelName)}");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"[Live2D App]model load failed: {e.GetType().Name}: {e.Message}");
+                }
             }
+            else
+            {
+                Console.WriteLine($"[Live2D App]未检测到模型, 以空场景启动: {modelName}");
+            }
+
+            window.Resize += (size) =>
+            {
+                app.Resize();
+            };
+
+            // [仅验收用] V-d(Ren offscreen 探针): 默认关闭, 仅当 L2D_PROBE_OFFSCREEN=1 时启用.
+            // 30 帧后输出 offscreen 数量与 DrawOffscreen 次数并退出.
+            // 输出格式固定, 与既有的验收流程保持一致.
+            int probeFrames = 0;
+            bool probeOffscreen = Environment.GetEnvironmentVariable("L2D_PROBE_OFFSCREEN") == "1";
+            window.Render += (time) =>
+            {
+                app.Run((float)time);
+
+                if (probeOffscreen && ++probeFrames >= 30)
+                {
+                    var renderer = model?.Renderer as CubismRenderer_Vulkan;
+                    Console.WriteLine($"OFFSCREEN_PROBE offscreens={renderer?.OffscreenCount} draws={renderer?.OffscreenDrawCount}");
+                    window.Close();
+                }
+            };
+
+            window.Run();
         }
-        else
+        finally
         {
-            Console.WriteLine($"[Live2D App]未检测到模型, 以空场景启动: {modelName}");
+            // 退出路径: 先关停 live2d(模型 -> 渲染器 -> 纹理 -> 设备/实例), 再销毁窗口与 Framework.
+            // 顺序与 OpenGL 宿主一致, 且各层均为幂等实现, 不会重复释放.
+            live2d?.Shutdown();
+            window.Dispose();
+            CubismFramework.CleanUp();
         }
-
-        window.Resize += (size) =>
-        {
-            live2d.Resize();
-        };
-
-        // [仅验收用] V-d(Ren offscreen 探针): 默认关闭, 仅当 L2D_PROBE_OFFSCREEN=1 时启用.
-        // 30 帧后输出 offscreen 数量与 DrawOffscreen 次数并退出.
-        // 输出格式固定, 与既有的验收流程保持一致.
-        int probeFrames = 0;
-        bool probeOffscreen = Environment.GetEnvironmentVariable("L2D_PROBE_OFFSCREEN") == "1";
-        window.Render += (time) =>
-        {
-            live2d.Run((float)time);
-
-            if (probeOffscreen && ++probeFrames >= 30)
-            {
-                var renderer = model?.Renderer as CubismRenderer_Vulkan;
-                Console.WriteLine($"OFFSCREEN_PROBE offscreens={renderer?.OffscreenCount} draws={renderer?.OffscreenDrawCount}");
-                window.Close();
-            }
-        };
-        window.Run();
     }
 }

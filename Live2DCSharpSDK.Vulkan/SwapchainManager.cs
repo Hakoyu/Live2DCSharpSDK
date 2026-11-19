@@ -368,6 +368,9 @@ public class SwapchainManager
             Images = [];
             ImageViews = [];
             _khrs.DestroySwapchain(device, _swapchain, null);
+            // 置空句柄: 退出路径可能重复调用 Cleanup, 避免二次销毁
+            _swapchain = default;
+            Extent = new(0, 0);
         }
     }
 }
