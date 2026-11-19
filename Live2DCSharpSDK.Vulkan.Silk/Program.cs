@@ -66,7 +66,9 @@ internal class Program : VulkanApi
 
         // モデルのパスはハードコードせず、App 層の ModelResourceLocator で解決する
         // （Avalonia / OpenTK / WPF の三宿主と同じ規則:
-        //   LIVE2D_MODEL_DIR / LIVE2D_MODEL_NAME → 既知候補 → 実行ファイル隣の Resources）。
+        //   環境変数 LIVE2D_MODEL_DIR / LIVE2D_MODEL_NAME を最優先 → 実行ファイル位置から親方向へ
+        //   公式 SDK パッケージの CubismSdkForNative-5-r.5/Samples/Resources を相対探索
+        //   → 実行ファイル隣の Resources）。
         // 見つからない場合も例外にせず、空のシーンで起動を続ける。
         LAppModel? model = null;
         if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
