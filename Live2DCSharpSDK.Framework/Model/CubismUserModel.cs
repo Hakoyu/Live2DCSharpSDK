@@ -263,9 +263,10 @@ public abstract class CubismUserModel : IDisposable
             return null;
         }
 
+        // 目录可能带或不带尾分隔符, 统一用 Path.Combine 拼接 (与 App 层 LAppModel / LAppLive2DManager 一致).
         var path = string.IsNullOrEmpty(modelHomeDir)
             ? Path.GetFullPath(fileName)
-            : Path.GetFullPath(modelHomeDir + fileName);
+            : Path.GetFullPath(Path.Combine(modelHomeDir, fileName));
 
         // 负值表示 "不覆盖 motion3.json 侧的值" (与官方相同)
         var fadeInTime = modelSetting.GetMotionFadeInTimeValue(group, index);
