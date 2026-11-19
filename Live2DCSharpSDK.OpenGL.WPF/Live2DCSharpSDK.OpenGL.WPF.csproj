@@ -25,10 +25,11 @@
     <ProjectReference Include="..\Live2DCSharpSDK.OpenGL\Live2DCSharpSDK.OpenGL.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Live2DCubismCore.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+  <!--
+    Live2DCubismCore.dll 的复制项由 Live2DCSharpSDK.Framework.csproj 统一提供
+    （runtimes/win-x64/native 下的原生库以 Link=Live2DCubismCore.dll 复制到输出目录，
+     并经 ProjectReference 传递到本工程输出目录）。
+    C4 清理：此处原有重复的 None Update="Live2DCubismCore.dll" 项，已删除。
+  -->
 
 </Project>
