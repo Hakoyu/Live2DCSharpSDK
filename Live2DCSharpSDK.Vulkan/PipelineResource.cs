@@ -38,7 +38,7 @@ public class PipelineResource(Vk vk, Device device)
         {
             // CubismLog.Error 内部会抛异常; 后面的 throw 仅用于让编译器的空值分析确认 item 非空
             CubismLog.Error("failed to open file! {0}", name);
-            throw new InvalidOperationException($"内嵌 shader 资源不存在: {name}");
+            throw new InvalidOperationException($"Embedded shader resource not found: {name}");
         }
         using var mem = new MemoryStream();
         item.CopyTo(mem);

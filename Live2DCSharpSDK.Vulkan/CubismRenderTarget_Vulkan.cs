@@ -70,18 +70,21 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     /// <param name="b">蓝色(0.0~1.0)</param>
     /// <param name="a">α(0.0~1.0)</param>
     /// <param name="isClear">是否清除渲染目标(官方 R5 新增参数)</param>
-    public unsafe void BeginDraw(CommandBuffer commandBuffer, float r, float g, float b, float a, bool isClear = true)
+    /// <returns>渲染通道已开启时返回 true, 渲染目标无效时返回 false(后续绘制应跳过)</returns>
+    public unsafe bool BeginDraw(CommandBuffer commandBuffer, float r, float g, float b, float a, bool isClear = true)
     {
         // 渲染通道处于活动状态时跳过(官方 R5)
         if (_isRendering)
         {
-            return;
+            return true;
         }
 
-        if (_colorImage == null)
+        // 附件缺失(例如分配失败导致的降级目标)时直接失败, 不再使用未初始化的句柄开启渲染通道.
+        if (_colorImage is null || _depthImage is null
+            || _colorImage.IsValid is false || _depthImage.IsValid is false)
         {
-            CubismLog.Error("colorImage is null.");
-            return;
+            CubismLog.Warning("[Live2D Vulkan]begin draw on invalid render target ({0}x{1}).", BufferWidth, BufferHeight);
+            return false;
         }
 
         _colorImage.SetImageLayout(commandBuffer, ImageLayout.ColorAttachmentOptimal, 1, ImageAspectFlags.ColorBit);
@@ -95,12 +98,6 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
             StoreOp = AttachmentStoreOp.Store,
             ClearValue = new(new(r, g, b, a))
         };
-
-        if (_depthImage == null)
-        {
-            CubismLog.Error("depthImage is null.");
-            return;
-        }
 
         _depthImage.SetImageLayout(commandBuffer, ImageLayout.DepthStencilAttachmentOptimal,
             1, ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit);
@@ -127,6 +124,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
 
         _vk.CmdBeginRendering(commandBuffer, ref renderingInfo);
         _isRendering = true;
+        return true;
     }
 
     /// <summary>
@@ -144,9 +142,9 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
 
         _isRendering = false;
 
-        if (_colorImage == null)
+        if (_colorImage is null || _colorImage.IsValid is false)
         {
-            CubismLog.Error("colorImage is null.");
+            CubismLog.Warning("[Live2D Vulkan]end draw on invalid color image.");
             return;
         }
 
@@ -169,9 +167,9 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
 
         _colorImage.SetCurrentLayout(ImageLayout.ShaderReadOnlyOptimal);
 
-        if (_depthImage == null)
+        if (_depthImage is null || _depthImage.IsValid is false)
         {
-            CubismLog.Error("depthImage is null.");
+            CubismLog.Warning("[Live2D Vulkan]end draw on invalid depth image.");
             return;
         }
 
@@ -202,28 +200,64 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     /// <param name="displayBufferHeight">离屏的高度</param>
     /// <param name="surfaceFormat">surface 格式</param>
     /// <param name="depthFormat">深度格式</param>
-    public void CreateRenderTarget(Device device, PhysicalDevice physicalDevice,
+    /// <returns>成功返回 true, 失败时已回收部分资源并返回 false(此时 IsValid() 为 false)</returns>
+    public bool CreateRenderTarget(Device device, PhysicalDevice physicalDevice,
         uint displayBufferWidth, uint displayBufferHeight, Format surfaceFormat, Format depthFormat)
     {
+        DestroyRenderTarget();
+
+        if (displayBufferWidth == 0 || displayBufferHeight == 0)
+        {
+            CubismLog.Warning("[Live2D Vulkan]create render target with zero extent ({0}x{1}).",
+                displayBufferWidth, displayBufferHeight);
+            return false;
+        }
+
         _device = device;
 
         _colorImage = new(_vk);
-        _colorImage.CreateImage(device, physicalDevice, displayBufferWidth, displayBufferHeight,
+        if (_colorImage.CreateImage(device, physicalDevice, displayBufferWidth, displayBufferHeight,
                                  1, surfaceFormat, ImageTiling.Optimal,
                                  ImageUsageFlags.ColorAttachmentBit | ImageUsageFlags.SampledBit |
-                                 ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit);
-        _colorImage.CreateView(device, surfaceFormat, ImageAspectFlags.ColorBit, 1);
-        _colorImage.CreateSampler(device, 1.0f, 1);
+                                 ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit) is false)
+        {
+            CubismLog.Warning("[Live2D Vulkan]failed to create render target color image ({0}x{1}).",
+                displayBufferWidth, displayBufferHeight);
+            DestroyRenderTarget();
+            return false;
+        }
+
+        if (_colorImage.CreateView(device, surfaceFormat, ImageAspectFlags.ColorBit, 1) is false
+            || _colorImage.CreateSampler(device, 1.0f, 1) is false)
+        {
+            CubismLog.Warning("[Live2D Vulkan]failed to create render target color image view/sampler ({0}x{1}).",
+                displayBufferWidth, displayBufferHeight);
+            DestroyRenderTarget();
+            return false;
+        }
 
         _depthImage = new(_vk);
-        _depthImage.CreateImage(device, physicalDevice, displayBufferWidth, displayBufferHeight,
+        if (_depthImage.CreateImage(device, physicalDevice, displayBufferWidth, displayBufferHeight,
                                  1, depthFormat, ImageTiling.Optimal,
-                                ImageUsageFlags.DepthStencilAttachmentBit);
+                                ImageUsageFlags.DepthStencilAttachmentBit) is false)
+        {
+            CubismLog.Warning("[Live2D Vulkan]failed to create render target depth image ({0}x{1}).",
+                displayBufferWidth, displayBufferHeight);
+            DestroyRenderTarget();
+            return false;
+        }
 
-        _depthImage.CreateView(device, depthFormat, ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit, 1);
+        if (_depthImage.CreateView(device, depthFormat, ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit, 1) is false)
+        {
+            CubismLog.Warning("[Live2D Vulkan]failed to create render target depth image view ({0}x{1}).",
+                displayBufferWidth, displayBufferHeight);
+            DestroyRenderTarget();
+            return false;
+        }
 
         BufferWidth = displayBufferWidth;
         BufferHeight = displayBufferHeight;
+        return true;
     }
 
     /// <summary>
@@ -243,6 +277,8 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
         }
 
         _device = default;
+        BufferWidth = 0;
+        BufferHeight = 0;
     }
 
     /// <summary>
@@ -250,9 +286,9 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     /// </summary>
     public Image GetTextureImage()
     {
-        if (_colorImage == null)
+        if (_colorImage is null || _colorImage.IsValid is false)
         {
-            CubismLog.Error("colorImage is null.");
+            CubismLog.Warning("[Live2D Vulkan]texture image is not available.");
             return default;
         }
 
@@ -264,9 +300,9 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     /// </summary>
     public ImageView GetTextureView()
     {
-        if (_colorImage == null)
+        if (_colorImage is null || _colorImage.IsValid is false)
         {
-            CubismLog.Error("colorImage is null.");
+            CubismLog.Warning("[Live2D Vulkan]texture view is not available.");
             return default;
         }
 
@@ -278,9 +314,9 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     /// </summary>
     public Sampler GetTextureSampler()
     {
-        if (_colorImage == null)
+        if (_colorImage is null || _colorImage.IsValid is false)
         {
-            CubismLog.Error("colorImage is null.");
+            CubismLog.Warning("[Live2D Vulkan]texture sampler is not available.");
             return default;
         }
 

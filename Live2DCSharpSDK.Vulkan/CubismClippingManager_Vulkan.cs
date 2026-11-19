@@ -1,3 +1,4 @@
+using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Model;
 using Live2DCSharpSDK.Framework.Rendering;
 using Silk.NET.Vulkan;
@@ -56,7 +57,12 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
         var buffer = (CubismRenderTarget_Vulkan)CurrentMaskBuffer;
 
         // 1 为无效(不绘制)区域, 0 为有效(绘制)区域. (在 shader 中用 Cd*Cs 乘以接近 0 的值生成遮罩. 乘以 1 则不会发生任何变化)
-        buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
+        if (buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f) is false)
+        {
+            // 遮罩缓冲区分配失败时为无效目标, 跳过本帧遮罩生成而不是在未开启的渲染通道里提交绘制.
+            CubismLog.Warning("[Live2D Vulkan]mask render target is invalid, skip clipping mask setup.");
+            return;
+        }
 
         // 以与生成的 FrameBuffer 相同的尺寸设置 viewport
         var viewport = CubismRenderer_Vulkan.GetViewport(ClippingMaskBufferSize.X, ClippingMaskBufferSize.Y, 0.0f, 1.0f);
@@ -106,7 +112,11 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
                 CurrentMaskBuffer = clipContextOffscreenSurface;
                 buffer = (CubismRenderTarget_Vulkan)CurrentMaskBuffer;
                 // 把遮罩用 RenderTexture 设为 active
-                buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
+                if (buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f) is false)
+                {
+                    CubismLog.Warning("[Live2D Vulkan]mask render target is invalid, skip clipping mask setup.");
+                    return;
+                }
             }
 
             // 使用模型坐标上的矩形, 并适当附加 margin

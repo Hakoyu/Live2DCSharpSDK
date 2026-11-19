@@ -85,7 +85,7 @@ internal class Program : VulkanApi
         }
         else
         {
-            Console.WriteLine($"[Live2D App]モデル未検出のため空のシーンで起動します: {modelName}");
+            Console.WriteLine($"[Live2D App]未检测到模型, 以空场景启动: {modelName}");
         }
 
         window.Resize += (size) =>

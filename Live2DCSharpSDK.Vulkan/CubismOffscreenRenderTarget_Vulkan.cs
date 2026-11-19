@@ -1,3 +1,4 @@
+using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Rendering;
 using Silk.NET.Vulkan;
 
@@ -26,8 +27,12 @@ public class CubismOffscreenRenderTarget_Vulkan
                 _renderTarget.GetBufferHeight() != displayBufferHeight)
             {
                 _renderTarget.DestroyRenderTarget();
-                _renderTarget.CreateRenderTarget(device, physicalDevice,
-                    displayBufferWidth, displayBufferHeight, surfaceFormat, depthFormat);
+                if (_renderTarget.CreateRenderTarget(device, physicalDevice,
+                    displayBufferWidth, displayBufferHeight, surfaceFormat, depthFormat) is false)
+                {
+                    CubismLog.Warning("[Live2D Vulkan]recreate offscreen render target failed ({0}x{1}).",
+                        displayBufferWidth, displayBufferHeight);
+                }
             }
             return;
         }

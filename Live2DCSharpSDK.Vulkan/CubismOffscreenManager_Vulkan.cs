@@ -1,3 +1,4 @@
+using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Rendering;
 using Silk.NET.Vulkan;
 
@@ -37,8 +38,13 @@ public class CubismOffscreenManager_Vulkan : ICubismOffscreenManager<CubismRende
                 offscreenRenderTarget.GetBufferHeight() != displayBufferHeight)
             {
                 offscreenRenderTarget.DestroyRenderTarget();
-                offscreenRenderTarget.CreateRenderTarget(device, physicalDevice,
-                    displayBufferWidth, displayBufferHeight, surfaceFormat, depthFormat);
+                if (offscreenRenderTarget.CreateRenderTarget(device, physicalDevice,
+                    displayBufferWidth, displayBufferHeight, surfaceFormat, depthFormat) is false)
+                {
+                    // 降级: 返回无效目标, 由调用方通过 IsValid() 判断并跳过绘制, 下次调用会重新尝试创建.
+                    CubismLog.Warning("[Live2D Vulkan]recreate offscreen render target failed ({0}x{1}).",
+                        displayBufferWidth, displayBufferHeight);
+                }
             }
             // 返回已有的未使用渲染目标
             return offscreenRenderTarget;
@@ -46,8 +52,13 @@ public class CubismOffscreenManager_Vulkan : ICubismOffscreenManager<CubismRende
 
         // 新建渲染目标并登记
         offscreenRenderTarget = CreateOffscreenRenderTarget();
-        offscreenRenderTarget.CreateRenderTarget(device, physicalDevice,
-            displayBufferWidth, displayBufferHeight, surfaceFormat, depthFormat);
+        if (offscreenRenderTarget.CreateRenderTarget(device, physicalDevice,
+            displayBufferWidth, displayBufferHeight, surfaceFormat, depthFormat) is false)
+        {
+            // 降级: 返回无效目标, 由调用方通过 IsValid() 判断并跳过绘制.
+            CubismLog.Warning("[Live2D Vulkan]create offscreen render target failed ({0}x{1}).",
+                displayBufferWidth, displayBufferHeight);
+        }
 
         return offscreenRenderTarget;
     }

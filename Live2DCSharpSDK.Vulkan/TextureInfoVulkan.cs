@@ -31,27 +31,57 @@ public class TextureInfoVulkan : TextureInfo
         Device device = lapp.VulkanManager.Device;
         PhysicalDevice physicalDevice = lapp.VulkanManager.PhysicalDevice;
 
-        ulong imageSize = width * height * 4;
+        ulong imageSize = (ulong)width * height * 4;
 
+        // 纹理解算是模型加载的必经步骤, 任一步失败都抛出明确异常,
+        // 且抛出前先释放已创建的 staging buffer / image, 避免泄漏与无效句柄外泄.
         var stagingBuffer = new CubismBufferVulkan(vk);
-        stagingBuffer.CreateBuffer(device, physicalDevice, imageSize, BufferUsageFlags.TransferSrcBit,
-                                   MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
-        stagingBuffer.Map(device, imageSize);
-        stagingBuffer.MemCpy((void*)data, imageSize);
+        if (stagingBuffer.CreateBuffer(device, physicalDevice, imageSize, BufferUsageFlags.TransferSrcBit,
+                                   MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit) is false)
+        {
+            throw new InvalidOperationException(
+                $"failed to create texture staging buffer ({width}x{height}, {imageSize} bytes).");
+        }
+
+        if (stagingBuffer.Map(device, imageSize) is false
+            || stagingBuffer.MemCpy((void*)data, imageSize) is false)
+        {
+            stagingBuffer.Destroy(device);
+            throw new InvalidOperationException($"failed to upload texture data ({width}x{height}).");
+        }
+
         stagingBuffer.UnMap(device);
 
-        uint _mipLevels = (uint)Math.Floor(Math.Log2(Math.Max(width, height))) + 1;
+        uint mipLevels = (uint)Math.Floor(Math.Log2(Math.Max(width, height))) + 1;
 
         _image = new CubismImageVulkan(vk);
-        _image.CreateImage(device, physicalDevice, width, height, _mipLevels, format, tiling, usage);
+        if (_image.CreateImage(device, physicalDevice, width, height, mipLevels, format, tiling, usage) is false)
+        {
+            stagingBuffer.Destroy(device);
+            throw new InvalidOperationException($"failed to create texture image ({width}x{height}).");
+        }
+
         CommandBuffer commandBuffer = lapp.VulkanManager.BeginSingleTimeCommands();
-        _image.SetImageLayout(commandBuffer, ImageLayout.TransferDstOptimal, _mipLevels, ImageAspectFlags.ColorBit);
+        _image.SetImageLayout(commandBuffer, ImageLayout.TransferDstOptimal, mipLevels, ImageAspectFlags.ColorBit);
         CopyBufferToImage(commandBuffer, stagingBuffer.Buffer, _image.Image, width, height);
         lapp.VulkanManager.SubmitCommand(commandBuffer);
-        GenerateMipmaps(_image, width, height, _mipLevels);
-        _image.CreateView(device, format, ImageAspectFlags.ColorBit, _mipLevels);
+        GenerateMipmaps(_image, width, height, mipLevels);
+
+        if (_image.CreateView(device, format, ImageAspectFlags.ColorBit, mipLevels) is false)
+        {
+            stagingBuffer.Destroy(device);
+            _image.Destroy(device);
+            throw new InvalidOperationException($"failed to create texture image view ({width}x{height}).");
+        }
+
         vk.GetPhysicalDeviceProperties(physicalDevice, out var properties);
-        _image.CreateSampler(device, properties.Limits.MaxSamplerAnisotropy, _mipLevels);
+        if (_image.CreateSampler(device, properties.Limits.MaxSamplerAnisotropy, mipLevels) is false)
+        {
+            stagingBuffer.Destroy(device);
+            _image.Destroy(device);
+            throw new InvalidOperationException($"failed to create texture sampler ({width}x{height}).");
+        }
+
         stagingBuffer.Destroy(device);
 
         (model.Renderer as CubismRenderer_Vulkan)?.BindTexture(_image);
