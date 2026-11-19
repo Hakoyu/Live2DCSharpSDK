@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Live2DCSharpSDK.Framework;
 
 namespace Live2DCSharpSDK.App;
@@ -138,7 +138,9 @@ public class LAppAllocator : ICubismAllocator
     /// </remarks>
     private static void LogErrorNoThrow(string message)
     {
-        if (CubismFramework.GetLoggingLevel() < LogLevel.Error)
+        // 出力条件は CubismLog と同じ（N-1: 旧実装は不等号が逆で、既定の LoggingLevel では
+        // エラーログが一切出なかった。LogLevel は重大度が大きいほど値が大きい）。
+        if (LogLevel.Error < CubismFramework.GetLoggingLevel())
         {
             return;
         }
