@@ -19,7 +19,7 @@ public abstract class LAppDelegate : IDisposable
     /// 本次运行使用的 Cubism 上下文.
     /// 宿主用 <see cref="CubismContext.Create"/> 创建并 <see cref="CubismContext.StartUp"/> 后,
     /// 在构造表达式(对象初始化器)中传入; 加载模型之前必须设置.
-    /// 生命周期归本对象管理: <see cref="Dispose"/> 时统一释放.
+    /// 所有权归创建它的宿主: 本对象只使用它创建模型, <see cref="Dispose"/> 不释放它.
     /// </summary>
     /// <exception cref="InvalidOperationException">尚未设置上下文时读取</exception>
     public CubismContext Context
@@ -141,7 +141,7 @@ public abstract class LAppDelegate : IDisposable
 
     /// <summary>
     /// 释放资源.
-    /// 顺序: 模型与渲染器 -> Cubism 上下文(宿主创建后在构造时交给本对象管理).
+    /// 只释放本对象创建的模型与渲染器; Cubism 上下文由创建它的宿主在完成全部清理后释放.
     /// </summary>
     public void Dispose()
     {
@@ -153,7 +153,9 @@ public abstract class LAppDelegate : IDisposable
 
         Live2dManager?.Dispose();
 
-        _context?.Dispose();
+        // 上下文所有权属于创建者(宿主): 这里只解除引用, 不调用 Dispose.
+        // 若在此释放, CubismLog 会立即回退到全局默认(LogLevel.Off), 退出阶段的日志
+        // (例如 Vulkan 的 shutdown: done 与 vkDestroy* 的 validation 消息)会被静默过滤.
         _context = null;
     }
 

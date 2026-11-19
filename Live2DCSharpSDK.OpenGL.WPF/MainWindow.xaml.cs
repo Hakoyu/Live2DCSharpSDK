@@ -19,7 +19,7 @@ public partial class MainWindow : Window
     private LAppDelegate lapp;
 
     /// <summary>
-    /// 本次运行使用的 Cubism 上下文. 窗口构造时创建, 关闭时由 delegate(或本窗口的清理路径)释放.
+    /// 本次运行使用的 Cubism 上下文. 窗口构造时创建, 关闭时由本窗口在完成全部清理后释放.
     /// </summary>
     private CubismContext? _context;
 
@@ -45,7 +45,7 @@ public partial class MainWindow : Window
             LogFunction = Log,
             LoggingLevel = LAppDefine.CubismLoggingLevel,
         };
-        // 上下文在模型加载前创建并 StartUp, 生命周期交给 delegate(关闭时统一释放).
+        // 上下文在模型加载前创建并 StartUp, 生命周期由本窗口持有, 关闭清理的最后一步才释放.
         _context = CubismContext.Create(cubismAllocator, cubismOption);
         _context.StartUp();
 
@@ -61,7 +61,7 @@ public partial class MainWindow : Window
         lapp = new LAppDelegateOpenGL(new OpenTKWPFApi(GLControl))
         {
             BGColor = new(0, 1, 0, 1),
-            // 上下文交给 delegate 管理, 关闭时由 delegate 统一释放.
+            // delegate 只使用上下文, 不释放它; 释放由本窗口在关闭清理的最后一步完成.
             Context = _context,
         };
         // 模型路径不硬编码, 由 App 层的 ModelResourceLocator 解析
@@ -189,10 +189,6 @@ public partial class MainWindow : Window
             lapp?.Dispose();
             Log($"[Live2D App]models after dispose: {lapp?.Live2dManager?.GetModelNum() ?? 0}");
 
-            // 防御: delegate 未创建时也释放上下文(Dispose 幂等, 已释放时为空操作).
-            _context?.Dispose();
-            _context = null;
-
             CubismOffscreenManager_OpenGLES2.ReleaseInstance();
             Log("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
 
@@ -211,6 +207,12 @@ public partial class MainWindow : Window
             );
 
             context?.MakeNoneCurrent();
+
+            // 3) 最后释放上下文(所有权属于创建它的窗口):
+            //    先释放会让 CubismLog 回退到全局默认, 后续 GL 清理与退出日志会被过滤.
+            _context?.Dispose();
+            _context = null;
+            Log("[Live2D App]CubismContext disposed.");
 
             // 注: 不调用 GLControl.Dispose(). GLWpfControlRenderer.Dispose 会继续调用
             // DxGlContext.Dispose -> Wgl.DXCloseDeviceNV, 历史上实测引发 AccessViolation(0xC0000005);

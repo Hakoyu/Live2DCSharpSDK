@@ -190,14 +190,14 @@ public class OpenGlPageControl : OpenGlControlBase
             lapp = new LAppDelegateOpenGL(new AvaloniaApi(this, gl))
             {
                 BGColor = new(0, 0, 0, 0),
-                // 上下文交给 delegate 管理, 反初始化时由 delegate 统一释放.
+                // 上下文由本窗口持有, 反初始化清理的最后一步才释放; delegate 只使用, 不释放.
                 Context = _context,
             };
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            // delegate 未构造成功时上下文不会再被它释放, 在这里收尾.
+            // delegate 未构造成功时, 由创建者(本窗口)在这里收尾释放上下文.
             _context?.Dispose();
             _context = null;
             Status = $"初期化失敗: {e.Message}";
@@ -230,20 +230,23 @@ public class OpenGlPageControl : OpenGlControlBase
 
     protected override void OnOpenGlDeinit(GlInterface GL)
     {
+        // 1) App 侧: 模型 -> 渲染器 -> 纹理(这些步骤需要上下文仍然存活).
         lapp?.Dispose();
         lapp = null;
         _model = null;
 
-        // 应用退出时释放进程共享的 offscreen manager
+        // 2) 应用退出时释放进程共享的 offscreen manager
         // (官方 Samples/OpenGL/Demo/proj.win.cmake/src/LAppLive2DManager.cpp:77
         //   相当于 LAppLive2DManager::ReleaseInstance() 中的 CubismOffscreenManager_OpenGLES2::ReleaseInstance()).
         // 这里是 GL 上下文为 current 的唯一收尾点, 因此必须在 lapp.Dispose() (= 各 renderer 的释放) 之后调用.
         CubismOffscreenManager_OpenGLES2.ReleaseInstance();
         Console.WriteLine("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
 
-        // 防御: delegate 未创建时也释放上下文(Dispose 幂等, 已释放时为空操作).
+        // 3) 最后释放上下文(所有权属于创建它的窗口):
+        //    先释放会让 CubismLog 回退到全局默认, 退出阶段的日志被过滤.
         _context?.Dispose();
         _context = null;
+        Console.WriteLine("[Live2D App]CubismContext disposed.");
     }
 
     /// <summary>

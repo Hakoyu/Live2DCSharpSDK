@@ -78,7 +78,7 @@ internal class Program : VulkanApi
             var app = new LAppDelegateVulkan(this)
             {
                 BGColor = new(0, 1, 0, 1),
-                // 上下文交给 delegate 管理, Shutdown 时由 delegate 统一释放.
+                // delegate 只使用上下文, 不释放它; 由本宿主在 Shutdown 之后统一释放.
                 Context = _context,
             };
             live2d = app;
@@ -139,12 +139,13 @@ internal class Program : VulkanApi
         }
         finally
         {
-            // 退出路径: 先关停 live2d(模型 -> 渲染器 -> 纹理 -> 设备/实例), 再销毁窗口与 Framework.
-            // 顺序与 OpenGL 宿主一致, 且各层均为幂等实现, 不会重复释放.
+            // 退出路径: 1) 关停 live2d(模型 -> 渲染器 -> 纹理 -> Vulkan 设备/实例);
+            // 2) 销毁窗口; 3) 最后释放上下文(所有权属于 Main, 放在最后才能保留退出阶段的日志).
+            // 各层均为幂等实现, 不会重复释放.
             live2d?.Shutdown();
             window.Dispose();
-            // 防御: delegate 未创建时也释放上下文(Dispose 幂等, 已释放时为空操作).
             _context.Dispose();
+            Console.WriteLine("[Live2D App]CubismContext disposed.");
         }
     }
 }

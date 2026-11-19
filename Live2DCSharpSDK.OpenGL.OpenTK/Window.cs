@@ -14,7 +14,7 @@ public class Window : GameWindow
     private LAppDelegate lapp;
 
     /// <summary>
-    /// 本次运行使用的 Cubism 上下文. 在窗口构造时创建, 关闭时由 delegate(或本对象的清理路径)释放.
+    /// 本次运行使用的 Cubism 上下文. 在窗口构造时创建, 关闭时由本对象在完成全部清理后释放.
     /// </summary>
     private readonly CubismContext _context;
 
@@ -46,7 +46,7 @@ public class Window : GameWindow
         lapp = new LAppDelegateOpenGL(new OpenTKApi(this))
         {
             BGColor = new(0, 1, 0, 1),
-            // 上下文交给 delegate 管理, 关闭时由 delegate 统一释放.
+            // 上下文由本窗口持有, 关闭清理的最后一步才释放; delegate 只使用, 不释放.
             Context = _context,
         };
 
@@ -144,14 +144,18 @@ public class Window : GameWindow
 
         try
         {
+            // 1) App 侧: 模型 -> 渲染器 -> 纹理(这些步骤需要上下文仍然存活).
             lapp?.Dispose();
-            // 防御: delegate 未创建时也释放上下文(Dispose 幂等, 已释放时为空操作).
-            _context.Dispose();
 
-            // 释放进程共享的 offscreen manager(官方 LAppLive2DManager::ReleaseInstance()).
-            // 渲染器侧不再负责全局释放 manager, 因此应用退出时这里是唯一的释放点.
+            // 2) GL 资源: 释放进程共享的 offscreen manager(官方 LAppLive2DManager::ReleaseInstance()).
+            //    渲染器侧不再负责全局释放 manager, 因此应用退出时这里是唯一的释放点.
             CubismOffscreenManager_OpenGLES2.ReleaseInstance();
             Console.WriteLine("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
+
+            // 3) 最后释放上下文(所有权属于创建它的窗口):
+            //    先释放会让 CubismLog 回退到全局默认, 退出阶段的日志被过滤.
+            _context.Dispose();
+            Console.WriteLine("[Live2D App]CubismContext disposed.");
         }
         catch (Exception e)
         {
