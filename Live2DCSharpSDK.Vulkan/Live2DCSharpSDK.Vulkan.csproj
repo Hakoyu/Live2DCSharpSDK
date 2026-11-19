@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <None Remove="spv\FragShaderSrc.spv" />
+    <None Remove="spv\FragShaderSrcCopy.spv" />
     <None Remove="spv\FragShaderSrcMask.spv" />
     <None Remove="spv\FragShaderSrcMaskInverted.spv" />
     <None Remove="spv\FragShaderSrcMaskInvertedPremultipliedAlpha.spv" />
@@ -29,12 +30,19 @@
     <None Remove="spv\FragShaderSrcPremultipliedAlpha.spv" />
     <None Remove="spv\FragShaderSrcSetupMask.spv" />
     <None Remove="spv\VertShaderSrc.spv" />
+    <None Remove="spv\VertShaderSrcBlend.spv" />
+    <None Remove="spv\VertShaderSrcCopy.spv" />
     <None Remove="spv\VertShaderSrcMasked.spv" />
+    <None Remove="spv\VertShaderSrcMaskedBlend.spv" />
     <None Remove="spv\VertShaderSrcSetupMask.spv" />
   </ItemGroup>
 
+  <!-- 14 个基础 shader 的预编译 SPIR-V（P8a / D-10）。R5 基础组 = 8 frag + 6 vert，
+       其中 FragShaderSrcCopy/VertShaderSrcCopy/VertShaderSrcBlend/VertShaderSrcMaskedBlend 为 R5 新增。
+       P8c 的 474 个 blend 变体不在 EmbeddedResource 内，另行处理。 -->
   <ItemGroup>
     <EmbeddedResource Include="spv\FragShaderSrc.spv" />
+    <EmbeddedResource Include="spv\FragShaderSrcCopy.spv" />
     <EmbeddedResource Include="spv\FragShaderSrcMask.spv" />
     <EmbeddedResource Include="spv\FragShaderSrcMaskInverted.spv" />
     <EmbeddedResource Include="spv\FragShaderSrcMaskInvertedPremultipliedAlpha.spv" />
@@ -42,7 +50,10 @@
     <EmbeddedResource Include="spv\FragShaderSrcPremultipliedAlpha.spv" />
     <EmbeddedResource Include="spv\FragShaderSrcSetupMask.spv" />
     <EmbeddedResource Include="spv\VertShaderSrc.spv" />
+    <EmbeddedResource Include="spv\VertShaderSrcBlend.spv" />
+    <EmbeddedResource Include="spv\VertShaderSrcCopy.spv" />
     <EmbeddedResource Include="spv\VertShaderSrcMasked.spv" />
+    <EmbeddedResource Include="spv\VertShaderSrcMaskedBlend.spv" />
     <EmbeddedResource Include="spv\VertShaderSrcSetupMask.spv" />
   </ItemGroup>
 

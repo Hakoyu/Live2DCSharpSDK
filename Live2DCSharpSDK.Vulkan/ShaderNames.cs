@@ -11,7 +11,8 @@ public class ShaderNames
     public const int ShaderNames_NormalMaskedInverted = 3;
     public const int ShaderNames_NormalPremultipliedAlpha = 4;
     public const int ShaderNames_NormalMaskedPremultipliedAlpha = 5;
-    public const int ShaderNames_NormalMaskedInvertedPremultipliedAlpha = 7;
+    // 原值为 7，与 "Normal + offset(5) = 6" 的取值规则不符（跳号），修正为 6（P8a / V0-4）
+    public const int ShaderNames_NormalMaskedInvertedPremultipliedAlpha = 6;
 
     //Add
     public const int Add = 8;

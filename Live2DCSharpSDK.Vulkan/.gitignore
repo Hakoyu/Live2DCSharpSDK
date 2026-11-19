@@ -1,1 +1,4 @@
 /spv
+# 例外：预编译 spv 入库（PLAN D-10 / P8a）。/spv 排除目录后必须逐级取反，git 才能看到文件。
+!/spv/
+!/spv/*.spv

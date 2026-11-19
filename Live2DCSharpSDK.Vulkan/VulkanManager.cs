@@ -23,7 +23,13 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// <summary>
     /// 検証レイヤーを有効にするか
     /// </summary>
+    // 对应官方 VulkanManager.hpp 的 CSM_DEBUG 开关：Debug 构建启用，Release 关闭（P8a / V0-3）。
+    // 原实现无条件 true，Release 机器未装 Vulkan SDK 时 CheckValidationLayerSupport 会直接抛异常。
+#if DEBUG
     public const bool EnableValidationLayers = true;
+#else
+    public const bool EnableValidationLayers = false;
+#endif
 
     /// <summary>
     /// イメージフォーマット

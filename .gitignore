@@ -6,3 +6,8 @@ Live2DCubismCore.dll
 
 # 例外：Framework 原生依赖入库（P0 / D-01）；上面的通配规则仍拦截 bin/obj 下的拷贝
 !Live2DCSharpSDK.Framework/runtimes/win-x64/native/Live2DCubismCore.dll
+
+# 例外：Vulkan 预编译 spv 入库（D-10 / P8a）。实际生效的排除规则在 Live2DCSharpSDK.Vulkan/.gitignore，
+# 这里同步声明根级例外，避免以后根级规则误伤，且不覆盖 P0 的 Core dll 例外。
+!Live2DCSharpSDK.Vulkan/spv/
+!Live2DCSharpSDK.Vulkan/spv/*.spv
