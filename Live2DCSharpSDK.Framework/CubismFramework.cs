@@ -1,11 +1,11 @@
-﻿using Live2DCSharpSDK.Framework.Core;
-using Live2DCSharpSDK.Framework.Id;
+﻿using Live2DCSharpSDK.Framework.Id;
 
 namespace Live2DCSharpSDK.Framework;
 
 /// <summary>
-/// Live2D Cubism Original Workflow SDK 的入口点.
-/// 开始使用时调用 CubismFramework.Initialize(), 结束时调用 CubismFramework.Dispose().
+/// 过渡期兼容门面(M-1 / S1).
+/// 所有静态成员都转调 <see cref="CubismContext.Default"/>, 静态类内部不再持有进程级状态;
+/// 该门面计划在调用点迁移完成后(S4)删除, 新代码请直接使用 <see cref="CubismContext"/> 实例.
 /// </summary>
 public static class CubismFramework
 {
@@ -19,14 +19,14 @@ public static class CubismFramework
     public const int VertexStep = 2;
 
     /// <summary>
-    /// 获取 ID 管理器的实例.
+    /// 默认上下文的 ID 管理器.
     /// </summary>
-    public static CubismIdManager CubismIdManager { get; private set; } = new();
+    public static CubismIdManager CubismIdManager => CubismContext.Default.IdManager;
 
-    public static bool IsStarted { get; private set; }
-
-    private static ICubismAllocator? s_allocator;
-    private static CubismOption? s_option;
+    /// <summary>
+    /// 默认上下文是否已启动.
+    /// </summary>
+    public static bool IsStarted => CubismContext.Default.IsStarted;
 
     /// <summary>
     /// 使 Cubism Framework 的 API 可用.
@@ -38,84 +38,35 @@ public static class CubismFramework
     /// <param name="option">CubismOption 类的实例</param>
     /// <returns>准备处理完成时返回 true.</returns>
     public static bool StartUp(ICubismAllocator allocator, CubismOption option)
-    {
-        if (IsStarted)
-        {
-            CubismLog.Info("[Live2D SDK]CubismFramework.StartUp() is already done.");
-            return IsStarted;
-        }
-
-        s_option = option;
-        if (s_option != null)
-        {
-            CubismCore.SetLogFunction(s_option.LogFunction);
-        }
-
-        if (allocator == null)
-        {
-            CubismLog.Warning("[Live2D SDK]CubismFramework.StartUp() failed, need allocator instance.");
-            IsStarted = false;
-        }
-        else
-        {
-            s_allocator = allocator;
-            IsStarted = true;
-        }
-
-        // 显示 Live2D Cubism Core 的版本信息
-        if (IsStarted)
-        {
-            var version = CubismCore.GetVersion();
-
-            uint major = (version & 0xFF000000) >> 24;
-            uint minor = (version & 0x00FF0000) >> 16;
-            uint patch = version & 0x0000FFFF;
-            uint versionNumber = version;
-
-            CubismLog.Info($"[Live2D SDK]Cubism Core version: {major:#0}.{minor:0}.{patch:0000} ({versionNumber})");
-        }
-
-        CubismLog.Info("[Live2D SDK]CubismFramework.StartUp() is complete.");
-
-        return IsStarted;
-    }
+        => CubismContext.Default.StartUp(allocator, option);
 
     /// <summary>
-    /// 清除由 StartUp() 初始化的 CubismFramework 各参数.
-    /// 在复用已 Dispose() 的 CubismFramework 时使用.
+    /// 清除由 StartUp() 初始化的状态.
+    /// 在复用已 CleanUp() 的默认上下文时使用.
     /// </summary>
     public static void CleanUp()
-    {
-        IsStarted = false;
-    }
+        => CubismContext.Default.CleanUp();
 
     /// <summary>
     /// 执行绑定到 Core API 的日志函数.
     /// </summary>
     /// <param name="data">日志消息</param>
     public static void CoreLogFunction(string data)
-    {
-        CubismCore.GetLogFunction()?.Invoke(data);
-    }
+        => CubismContext.InvokeCoreLogFunction(data);
 
     /// <summary>
     /// 返回当前的日志输出级别设置值.
     /// </summary>
     /// <returns>当前的日志输出级别设置值</returns>
     public static LogLevel GetLoggingLevel()
-    {
-        if (s_option != null)
-            return s_option.LoggingLevel;
-
-        return LogLevel.Off;
-    }
+        => CubismContext.Default.LogLevel;
 
     public static IntPtr Allocate(int size)
-        => s_allocator!.Allocate(size);
+        => CubismContext.Default.Allocator.Allocate(size);
     public static IntPtr AllocateAligned(int size, int alignment)
-        => s_allocator!.AllocateAligned(size, alignment);
+        => CubismContext.Default.Allocator.AllocateAligned(size, alignment);
     public static void Deallocate(IntPtr address)
-        => s_allocator!.Deallocate(address);
+        => CubismContext.Default.Allocator.Deallocate(address);
     public static void DeallocateAligned(IntPtr address)
-        => s_allocator!.DeallocateAligned(address);
+        => CubismContext.Default.Allocator.DeallocateAligned(address);
 }
