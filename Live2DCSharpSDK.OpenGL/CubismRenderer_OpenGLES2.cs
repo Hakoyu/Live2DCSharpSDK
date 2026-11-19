@@ -85,6 +85,8 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     private CubismOffscreenRenderTarget_OpenGLES2? _currentOffscreen;
     /// <summary>モデル描画のルートフレームバッファ</summary>
     private int _modelRootFBO;
+    /// <summary>Dispose 済みか（二重解放防止。GL 名の再利用事故を避ける）</summary>
+    private bool _disposed;
 
     internal int VertexArray { get; private set; }
     internal int VertexBuffer { get; private set; }
@@ -1141,6 +1143,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// </summary>
     public override void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+        _disposed = true;
+
         // シェーダプログラム
         Shader.ReleaseShaderProgram();
 
@@ -1170,13 +1178,18 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         }
         _offscreenMasks.Clear();
 
-        // オフスクリーン（共有シングルトンのレンダーターゲットを解放）
+        // オフスクリーン（G2-F3 修正）
+        // 公式デストラクタ（FW5/OpenGL/CubismRenderer_OpenGLES2.cpp:494-525）は
+        // 自分が持つ _modelRenderTargets / _drawableMasks / _offscreenMasks だけを破棄し、
+        // 共有シングルトン CubismOffscreenManager_OpenGLES2 のレンダーターゲットには触れない。
+        // manager の解放はアプリ層（公式 Samples/OpenGL/.../LAppLive2DManager.cpp:77 の ReleaseInstance）が行う。
+        // ここでは本 renderer が借りている target を使用終了状態に戻すだけに留める
+        // （他 renderer が現在使用中の target は StopUsingRenderTexture の対象外なので誤傷しない）。
         foreach (var offscreen in _offscreenList)
         {
             offscreen.StopUsingRenderTexture();
         }
         _offscreenList.Clear();
-        CubismOffscreenManager_OpenGLES2.GetInstance().ReleaseAllRenderTextures();
 
         // GL オブジェクト（§2.F 漏点①: 従来は未解放だった）
         GL.DeleteBuffer(VertexBuffer);
