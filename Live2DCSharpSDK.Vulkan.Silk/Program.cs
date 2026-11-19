@@ -13,6 +13,16 @@ internal class Program : VulkanApi
     private IWindow window;
     private Vk vk;
 
+    /// <summary>
+    /// 本次运行使用的 Cubism 上下文, 由 Main 创建后传入, 退出路径统一释放.
+    /// </summary>
+    private readonly CubismContext _context;
+
+    public Program(CubismContext context)
+    {
+        _context = context;
+    }
+
     static void Main(string[] args)
     {
         var cubismAllocator = new LAppAllocator();
@@ -21,9 +31,11 @@ internal class Program : VulkanApi
             LogFunction = Console.WriteLine,
             LoggingLevel = LAppDefine.CubismLoggingLevel
         };
-        CubismFramework.StartUp(cubismAllocator, cubismOption);
+        // 上下文在窗口/模型创建前启动.
+        var cubismContext = CubismContext.Create(cubismAllocator, cubismOption);
+        cubismContext.StartUp();
 
-        new Program().InitWindow();
+        new Program(cubismContext).InitWindow();
     }
 
     public override unsafe VkNonDispatchableHandle CreateSurface<T>(VkHandle handle, T* handel1)
@@ -65,7 +77,9 @@ internal class Program : VulkanApi
         {
             var app = new LAppDelegateVulkan(this)
             {
-                BGColor = new(0, 1, 0, 1)
+                BGColor = new(0, 1, 0, 1),
+                // 上下文交给 delegate 管理, Shutdown 时由 delegate 统一释放.
+                Context = _context
             };
             live2d = app;
 
@@ -123,7 +137,8 @@ internal class Program : VulkanApi
             // 顺序与 OpenGL 宿主一致, 且各层均为幂等实现, 不会重复释放.
             live2d?.Shutdown();
             window.Dispose();
-            CubismFramework.CleanUp();
+            // 防御: delegate 未创建时也释放上下文(Dispose 幂等, 已释放时为空操作).
+            _context.Dispose();
         }
     }
 }

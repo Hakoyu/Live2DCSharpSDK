@@ -113,8 +113,10 @@ public class LAppModel : CubismUserModel
     /// </summary>
     public string IdParamEyeBallY { get; set; }
 
-    public string IdParamBreath { get; set; } = CubismFramework.CubismIdManager
-        .GetId(CubismDefaultParameterId.ParamBreath);
+    /// <summary>
+    /// 参数 ID: ParamBreath
+    /// </summary>
+    public string IdParamBreath { get; set; }
 
     /// <summary>
     /// 拖拽产生的朝向参数信息(官方 5-r.5 的 CubismLook)
@@ -146,7 +148,8 @@ public class LAppModel : CubismUserModel
 
     public event Action<LAppModel, string>? Motion;
 
-    public LAppModel(LAppDelegate lapp, string dir, string fileName)
+    public LAppModel(LAppDelegate lapp, CubismContext context, string dir, string fileName)
+        : base(context)
     {
         _lapp = lapp;
 
@@ -161,17 +164,19 @@ public class LAppModel : CubismUserModel
             _motionConsistency = true;
         }
 
-        IdParamAngleX = CubismFramework.CubismIdManager
+        IdParamBreath = Context.IdManager
+            .GetId(CubismDefaultParameterId.ParamBreath);
+        IdParamAngleX = Context.IdManager
             .GetId(CubismDefaultParameterId.ParamAngleX);
-        IdParamAngleY = CubismFramework.CubismIdManager
+        IdParamAngleY = Context.IdManager
             .GetId(CubismDefaultParameterId.ParamAngleY);
-        IdParamAngleZ = CubismFramework.CubismIdManager.
-            GetId(CubismDefaultParameterId.ParamAngleZ);
-        IdParamBodyAngleX = CubismFramework.CubismIdManager
+        IdParamAngleZ = Context.IdManager
+            .GetId(CubismDefaultParameterId.ParamAngleZ);
+        IdParamBodyAngleX = Context.IdManager
             .GetId(CubismDefaultParameterId.ParamBodyAngleX);
-        IdParamEyeBallX = CubismFramework.CubismIdManager
+        IdParamEyeBallX = Context.IdManager
             .GetId(CubismDefaultParameterId.ParamEyeBallX);
-        IdParamEyeBallY = CubismFramework.CubismIdManager
+        IdParamEyeBallY = Context.IdManager
             .GetId(CubismDefaultParameterId.ParamEyeBallY);
 
         _modelHomeDir = dir;
@@ -220,7 +225,7 @@ public class LAppModel : CubismUserModel
                     continue;
                 }
 
-                var motion = new CubismExpressionMotion(path);
+                var motion = new CubismExpressionMotion(path, Context);
 
                 if (_expressions.ContainsKey(name))
                 {
@@ -258,7 +263,7 @@ public class LAppModel : CubismUserModel
         //EyeBlink
         if (_modelSetting.IsExistEyeBlinkParameters())
         {
-            _eyeBlink = new CubismEyeBlink(_modelSetting);
+            _eyeBlink = new CubismEyeBlink(_modelSetting, Context);
         }
 
         LoadBreath();
@@ -473,7 +478,7 @@ public class LAppModel : CubismUserModel
     /// </remarks>
     public void Update()
     {
-        float deltaTimeSeconds = LAppPal.DeltaTime;
+        float deltaTimeSeconds = _lapp.DeltaTime;
         UserTimeSeconds += deltaTimeSeconds;
 
         // 是否由动作更新参数(CubismEyeBlinkUpdater 会读取该值)
@@ -766,7 +771,7 @@ public class LAppModel : CubismUserModel
             {
                 if (_modelSetting.HitAreas[i].Name == hitAreaName)
                 {
-                    var id = CubismFramework.CubismIdManager.GetId(_modelSetting.HitAreas[i].Id);
+                    var id = Context.IdManager.GetId(_modelSetting.HitAreas[i].Id);
 
                     return IsHit(id, x, y);
                 }

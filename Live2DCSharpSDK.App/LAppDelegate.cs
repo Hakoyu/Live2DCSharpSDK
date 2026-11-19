@@ -1,4 +1,5 @@
-﻿using Live2DCSharpSDK.Framework.Model;
+﻿using Live2DCSharpSDK.Framework;
+using Live2DCSharpSDK.Framework.Model;
 using Live2DCSharpSDK.Framework.Rendering;
 
 namespace Live2DCSharpSDK.App;
@@ -9,6 +10,43 @@ namespace Live2DCSharpSDK.App;
 /// </summary>
 public abstract class LAppDelegate : IDisposable
 {
+    /// <summary>
+    /// 本次运行使用的 Cubism 上下文, 由宿主创建后传入.
+    /// </summary>
+    private CubismContext? _context;
+
+    /// <summary>
+    /// 本次运行使用的 Cubism 上下文.
+    /// 宿主用 <see cref="CubismContext.Create"/> 创建并 <see cref="CubismContext.StartUp"/> 后,
+    /// 在构造表达式(对象初始化器)中传入; 加载模型之前必须设置.
+    /// 生命周期归本对象管理: <see cref="Dispose"/> 时统一释放.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">尚未设置上下文时读取</exception>
+    public CubismContext Context
+    {
+        get => _context ?? throw new InvalidOperationException(
+            "LAppDelegate.Context has not been set. Create a CubismContext and assign it before loading models.");
+        set
+        {
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value), "LAppDelegate.Context cannot be null.");
+            }
+
+            if (_context is not null)
+            {
+                throw new InvalidOperationException("LAppDelegate.Context has already been set.");
+            }
+
+            _context = value;
+        }
+    }
+
+    /// <summary>
+    /// 增量时间(秒). 由 <see cref="Run"/> 每帧更新, 模型更新时读取.
+    /// </summary>
+    public float DeltaTime { get; private set; }
+
     /// <summary>
     /// 纹理管理器
     /// </summary>
@@ -64,15 +102,21 @@ public abstract class LAppDelegate : IDisposable
         //load model
         Live2dManager = new LAppLive2DManager(this);
 
+        DeltaTime = 0;
+        // 过渡期(S6 移除): 静态属性保留镜像写入, 供尚未迁移的调用点读取.
         LAppPal.DeltaTime = 0;
     }
 
     /// <summary>
     /// 释放资源.
+    /// 顺序: 模型与渲染器 -> Cubism 上下文(宿主创建后在构造时交给本对象管理).
     /// </summary>
     public void Dispose()
     {
-        Live2dManager.Dispose();
+        Live2dManager?.Dispose();
+
+        _context?.Dispose();
+        _context = null;
     }
 
     public void Resize()
@@ -108,6 +152,8 @@ public abstract class LAppDelegate : IDisposable
         Resize();
 
         // 时间更新
+        DeltaTime = tick;
+        // 过渡期(S6 移除): 静态属性保留镜像写入.
         LAppPal.DeltaTime = tick;
 
         if (RunPre())

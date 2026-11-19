@@ -19,6 +19,11 @@ public partial class MainWindow : Window
     private LAppDelegate lapp;
 
     /// <summary>
+    /// 本次运行使用的 Cubism 上下文. 窗口构造时创建, 关闭时由 delegate(或本窗口的清理路径)释放.
+    /// </summary>
+    private CubismContext? _context;
+
+    /// <summary>
     /// 是否已经输出过窗口/framebuffer 尺寸诊断(只输出一次).
     /// </summary>
     private bool _loggedSize;
@@ -40,7 +45,9 @@ public partial class MainWindow : Window
             LogFunction = Log,
             LoggingLevel = LAppDefine.CubismLoggingLevel
         };
-        CubismFramework.StartUp(cubismAllocator, cubismOption);
+        // 上下文在模型加载前创建并 StartUp, 生命周期交给 delegate(关闭时统一释放).
+        _context = CubismContext.Create(cubismAllocator, cubismOption);
+        _context.StartUp();
 
         var settings = new GLWpfControlSettings
         {
@@ -53,7 +60,9 @@ public partial class MainWindow : Window
         GLControl.Start(settings);
         lapp = new LAppDelegateOpenGL(new OpenTKWPFApi(GLControl))
         {
-            BGColor = new(0, 1, 0, 1)
+            BGColor = new(0, 1, 0, 1),
+            // 上下文交给 delegate 管理, 关闭时由 delegate 统一释放.
+            Context = _context
         };
         // 模型路径不硬编码, 由 App 层的 ModelResourceLocator 解析
         // (上游 sample 直接写死 "F:\\live2d\\Resources", 本仓库改为参数化).
@@ -173,6 +182,10 @@ public partial class MainWindow : Window
             // 1) App 侧: 模型(renderer / texture / moc) -> 进程共享 offscreen manager.
             lapp?.Dispose();
             Log($"[Live2D App]models after dispose: {lapp?.Live2dManager?.GetModelNum() ?? 0}");
+
+            // 防御: delegate 未创建时也释放上下文(Dispose 幂等, 已释放时为空操作).
+            _context?.Dispose();
+            _context = null;
 
             CubismOffscreenManager_OpenGLES2.ReleaseInstance();
             Log("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");

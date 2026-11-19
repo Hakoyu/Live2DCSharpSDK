@@ -14,6 +14,11 @@ public class Window : GameWindow
     private LAppDelegate lapp;
 
     /// <summary>
+    /// 本次运行使用的 Cubism 上下文. 在窗口构造时创建, 关闭时由 delegate(或本对象的清理路径)释放.
+    /// </summary>
+    private readonly CubismContext _context;
+
+    /// <summary>
     /// 已经记录过的 GL 错误码. 同一错误码只记录一次, 避免逐帧刷屏.
     /// </summary>
     private readonly HashSet<ErrorCode> _reportedGlErrors = [];
@@ -28,7 +33,10 @@ public class Window : GameWindow
             LogFunction = Console.WriteLine,
             LoggingLevel = LAppDefine.CubismLoggingLevel
         };
-        CubismFramework.StartUp(cubismAllocator, cubismOption);
+        // 上下文在窗口构造时创建并 StartUp: OnLoad 里构造 delegate 后立即加载模型,
+        // 因此上下文必须先处于已启动状态.
+        _context = CubismContext.Create(cubismAllocator, cubismOption);
+        _context.StartUp();
     }
 
     protected unsafe override void OnLoad()
@@ -36,7 +44,9 @@ public class Window : GameWindow
         base.OnLoad();
         lapp = new LAppDelegateOpenGL(new OpenTKApi(this))
         {
-            BGColor = new(0, 1, 0, 1)
+            BGColor = new(0, 1, 0, 1),
+            // 上下文交给 delegate 管理, 关闭时由 delegate 统一释放.
+            Context = _context
         };
 
         // 模型路径不硬编码, 由 App 层的 ModelResourceLocator 解析
@@ -130,6 +140,8 @@ public class Window : GameWindow
         try
         {
             lapp?.Dispose();
+            // 防御: delegate 未创建时也释放上下文(Dispose 幂等, 已释放时为空操作).
+            _context.Dispose();
 
             // 释放进程共享的 offscreen manager(官方 LAppLive2DManager::ReleaseInstance()).
             // 渲染器侧不再负责全局释放 manager, 因此应用退出时这里是唯一的释放点.

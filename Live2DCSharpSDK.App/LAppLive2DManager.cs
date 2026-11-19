@@ -190,7 +190,8 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
             throw new Exception($"[Live2D]File not found: {modelJsonName}");
         }
 
-        var model = new LAppModel(lapp, dir, modelJsonName);
+        // 上下文由宿主注入 delegate, 管理器的模型都继承同一个上下文.
+        var model = new LAppModel(lapp, lapp.Context, dir, modelJsonName);
         _models.Add(model);
 
         return model;

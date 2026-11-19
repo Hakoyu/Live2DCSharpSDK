@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Live2DCSharpSDK.Framework;
+using Live2DCSharpSDK.Framework.Core;
 
 namespace Live2DCSharpSDK.App;
 
@@ -140,11 +141,23 @@ public class LAppAllocator : ICubismAllocator
     {
         // 输出条件与 CubismLog 相同(旧实现不等号方向写反, 默认 LoggingLevel 下
         // 完全不输出错误日志; LogLevel 的数值越大表示严重度越高).
-        if (LogLevel.Error < CubismFramework.GetLoggingLevel())
+        // 级别跟随当前上下文(没有当前上下文时用全局默认), 多上下文互不影响.
+        if (LogLevel.Error < CubismLog.LogLevel)
         {
             return;
         }
 
-        CubismFramework.CoreLogFunction($"[CSM] [E] {message}");
+        string data = $"[CSM] [E] {message}";
+
+        // 输出函数同样按上下文解析: 上下文显式设置的输出优先, 没有时回退到 Core 注册的回调.
+        CubismContext context = CubismContext.Current ?? CubismContext.Default;
+        LogFunction? output = context.LogOutput;
+        if (output is null)
+        {
+            CubismContext.InvokeCoreLogFunction(data);
+            return;
+        }
+
+        output(data);
     }
 }

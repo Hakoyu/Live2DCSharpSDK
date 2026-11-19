@@ -34,14 +34,6 @@ public partial class MainWindow : Window
         GLTop.PointerPressed += GLTop_PointerPressed;
         GLTop.PointerMoved += GLTop_PointerMoved;
         GLTop.PointerReleased += GLTop_PointerReleased;
-
-        // Cubism SDK 的初始化
-        var cubismOption = new CubismOption()
-        {
-            LogFunction = Console.WriteLine,
-            LoggingLevel = LAppDefine.CubismLoggingLevel
-        };
-        CubismFramework.StartUp(new LAppAllocator(), cubismOption);
     }
 
     private void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
@@ -119,6 +111,11 @@ public class OpenGlPageControl : OpenGlControlBase
 {
     private LAppDelegate? lapp;
 
+    /// <summary>
+    /// 本次运行使用的 Cubism 上下文, 与 GL 控件同生命周期(初始化时创建, 反初始化时释放).
+    /// </summary>
+    private CubismContext? _context;
+
     private string _info = string.Empty;
     private string _status = string.Empty;
     private DateTime time;
@@ -173,14 +170,30 @@ public class OpenGlPageControl : OpenGlControlBase
 
         try
         {
+            // Cubism 上下文与 GL 控件同生命周期: 先创建并 StartUp, 再构造 delegate;
+            // 模型加载发生在 delegate 构造之后, 此时上下文必然已启动.
+            var cubismAllocator = new LAppAllocator();
+            var cubismOption = new CubismOption()
+            {
+                LogFunction = Console.WriteLine,
+                LoggingLevel = LAppDefine.CubismLoggingLevel
+            };
+            _context = CubismContext.Create(cubismAllocator, cubismOption);
+            _context.StartUp();
+
             lapp = new LAppDelegateOpenGL(new AvaloniaApi(this, gl))
             {
-                BGColor = new(0, 0, 0, 0)
+                BGColor = new(0, 0, 0, 0),
+                // 上下文交给 delegate 管理, 反初始化时由 delegate 统一释放.
+                Context = _context
             };
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
+            // delegate 未构造成功时上下文不会再被它释放, 在这里收尾.
+            _context?.Dispose();
+            _context = null;
             Status = $"初期化失敗: {e.Message}";
             return;
         }
@@ -221,6 +234,10 @@ public class OpenGlPageControl : OpenGlControlBase
         // 这里是 GL 上下文为 current 的唯一收尾点, 因此必须在 lapp.Dispose() (= 各 renderer 的释放) 之后调用. 
         CubismOffscreenManager_OpenGLES2.ReleaseInstance();
         Console.WriteLine("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
+
+        // 防御: delegate 未创建时也释放上下文(Dispose 幂等, 已释放时为空操作).
+        _context?.Dispose();
+        _context = null;
     }
 
     /// <summary>
