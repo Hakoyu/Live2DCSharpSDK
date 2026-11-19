@@ -19,6 +19,15 @@ public sealed class CubismContext : IDisposable
     public static CubismContext Default { get; } = new();
 
     /// <summary>
+    /// 当前执行上下文(ExecutionContext)关联的 CubismContext.
+    /// 由 <see cref="StartUp"/> 设置为自身, 由 <see cref="Dispose"/> 恢复为启动前的值;
+    /// 日志层用它实现上下文感知的日志级别与输出.
+    /// </summary>
+    public static CubismContext? Current => s_current.Value;
+
+    private static readonly AsyncLocal<CubismContext?> s_current = new();
+
+    /// <summary>
     /// ID 管理器.
     /// 在构造时创建(与旧静态属性立即初始化的语义一致), 每个上下文各持有一个实例.
     /// </summary>
@@ -48,6 +57,21 @@ public sealed class CubismContext : IDisposable
     /// 是否已 Dispose(防止二次释放的幂等保护).
     /// </summary>
     private bool _disposed;
+
+    /// <summary>
+    /// 显式设置的日志输出函数, 为 null 时回退到配置里的 <see cref="CubismOption.LogFunction"/>.
+    /// </summary>
+    private LogFunction? _logOutput;
+
+    /// <summary>
+    /// 本上下文成为当前上下文之前的上下文(用于 Dispose 时恢复).
+    /// </summary>
+    private CubismContext? _previousCurrent;
+
+    /// <summary>
+    /// <see cref="_previousCurrent"/> 是否有效.
+    /// </summary>
+    private bool _hasPreviousCurrent;
 
     /// <summary>
     /// 构造实例, 不做任何 Core 注册.
@@ -116,6 +140,16 @@ public sealed class CubismContext : IDisposable
     public bool IsStarted => _isStarted;
 
     /// <summary>
+    /// 当前上下文的日志输出函数.
+    /// 未显式设置时回退到 <see cref="CubismOption.LogFunction"/>; 设置为 null 表示撤销显式设置.
+    /// </summary>
+    public LogFunction? LogOutput
+    {
+        get => _logOutput ?? _option?.LogFunction;
+        set => _logOutput = value;
+    }
+
+    /// <summary>
     /// 启动上下文.
     /// 注册 Core 的日志回调并输出 Core 版本信息; ID 管理器已在构造时创建, 这里不再重复创建.
     /// 准备完成后再次调用会跳过内部处理(幂等).
@@ -127,6 +161,9 @@ public sealed class CubismContext : IDisposable
         {
             throw new ObjectDisposedException(nameof(CubismContext));
         }
+
+        // 先成为当前上下文, 启动过程中的日志才能按本上下文的级别与输出函数处理.
+        AcquireCurrent();
 
         if (_isStarted)
         {
@@ -163,8 +200,9 @@ public sealed class CubismContext : IDisposable
     /// <summary>
     /// 释放上下文.
     /// 幂等, 第二次及以后调用不做任何事.
-    /// 分配器由调用方持有, 这里只解除引用; Core 的日志函数是进程级注册, 不在这里撤销,
-    /// 避免影响其它仍在运行的上下文. ID 管理器是纯托管数据, 随实例一起回收, 不需要显式清理.
+    /// 当前上下文若仍是本实例, 恢复为启动前记录的上下文; 分配器由调用方持有, 这里只解除引用;
+    /// Core 的日志函数是进程级注册, 不在这里撤销, 避免影响其它仍在运行的上下文.
+    /// ID 管理器是纯托管数据, 随实例一起回收, 不需要显式清理.
     /// </summary>
     public void Dispose()
     {
@@ -175,8 +213,10 @@ public sealed class CubismContext : IDisposable
 
         _disposed = true;
         _isStarted = false;
+        RestoreCurrent();
         _allocator = null;
         _option = null;
+        _logOutput = null;
         _logLevel = LogLevel.Off;
     }
 
@@ -193,6 +233,8 @@ public sealed class CubismContext : IDisposable
         {
             throw new ObjectDisposedException(nameof(CubismContext));
         }
+
+        AcquireCurrent();
 
         if (_isStarted)
         {
@@ -221,6 +263,42 @@ public sealed class CubismContext : IDisposable
         }
 
         _isStarted = false;
+    }
+
+    /// <summary>
+    /// 把本上下文设为当前上下文, 并记录(仅记录一次)恢复目标.
+    /// AsyncLocal 的值属于当前执行上下文, 其它线程不受影响.
+    /// </summary>
+    private void AcquireCurrent()
+    {
+        CubismContext? previous = s_current.Value;
+        if (ReferenceEquals(previous, this))
+        {
+            return;
+        }
+
+        if (_hasPreviousCurrent is false)
+        {
+            _previousCurrent = previous;
+            _hasPreviousCurrent = true;
+        }
+
+        s_current.Value = this;
+    }
+
+    /// <summary>
+    /// 若当前上下文仍是本实例, 恢复为启动前记录的上下文.
+    /// Dispose 与 StartUp 可能在不同执行上下文里发生, 此处只做尽力恢复.
+    /// </summary>
+    private void RestoreCurrent()
+    {
+        if (ReferenceEquals(s_current.Value, this))
+        {
+            s_current.Value = _hasPreviousCurrent ? _previousCurrent : null;
+        }
+
+        _previousCurrent = null;
+        _hasPreviousCurrent = false;
     }
 
     /// <summary>
