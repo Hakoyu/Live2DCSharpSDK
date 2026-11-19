@@ -44,7 +44,12 @@ if [ -z "$RESULTS_DIR" ]; then
     RESULTS_DIR="$(mktemp -d)"
 fi
 mkdir -p "$RESULTS_DIR"
-echo "[coverage] tier=$TIER results=$RESULTS_DIR"
+
+# 每次运行使用独立子目录: 复用 COVERAGE_RESULTS_DIR 时目录里可能残留历史
+# coverage.cobertura.xml, 直接 find 会读到旧报告 (评审 M-2).
+RUN_DIR="$RESULTS_DIR/run-$(date +%Y%m%d-%H%M%S)-$$"
+mkdir -p "$RUN_DIR"
+echo "[coverage] tier=$TIER results=$RUN_DIR"
 
 # 分档同时写入环境变量, 让 GlobalStateFixture 知道本次运行是否需要 Core:
 # core 档缺环境时直接失败, 避免出现 "CI 绿但没跑" 的假象.
@@ -52,7 +57,7 @@ run_coverage() {
     dotnet test "$PROJECT" "$@" \
         --collect:"XPlat Code Coverage" \
         --logger "trx;LogFileName=coverage-$TIER.trx" \
-        --results-directory "$RESULTS_DIR"
+        --results-directory "$RUN_DIR"
 }
 
 case "$TIER" in
@@ -77,9 +82,9 @@ case "$TIER" in
         ;;
 esac
 
-REPORT="$(find "$RESULTS_DIR" -name coverage.cobertura.xml -print -quit)"
+REPORT="$(find "$RUN_DIR" -name coverage.cobertura.xml -print -quit)"
 if [ -z "$REPORT" ] || [ ! -f "$REPORT" ]; then
-    echo "error: Cobertura report not found under $RESULTS_DIR" >&2
+    echo "error: Cobertura report not found under $RUN_DIR" >&2
     exit 1
 fi
 

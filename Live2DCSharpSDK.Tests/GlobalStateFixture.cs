@@ -74,8 +74,16 @@ public static class GlobalStateFixture
         Tier = s_tierSnapshot ?? "all";
 
         ModelsRoot = ResolveModelsRoot(s_modelsRootSnapshot);
-        CoreLibraryPath = ResolveCoreLibraryPath();
-        IsCoreLibraryAvailable = CoreLibraryPath is not null && TryProbeCoreLibrary(CoreLibraryPath);
+
+        // A 档必须完全不触碰原生库: 只有 core / all 档才解析并探测 Core,
+        // 否则 A 档会通过 NativeLibrary.TryLoad 加载一次 Live2DCubismCore.dll,
+        // 与「A 档不加载 Core」的硬边界矛盾 (见 PLAN-06 §2).
+        bool needsCoreProbe = string.Equals(Tier, "core", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(Tier, "all", StringComparison.OrdinalIgnoreCase);
+        CoreLibraryPath = needsCoreProbe ? ResolveCoreLibraryPath() : null;
+        IsCoreLibraryAvailable = needsCoreProbe
+            && CoreLibraryPath is not null
+            && TryProbeCoreLibrary(CoreLibraryPath);
 
         context.WriteLine($"[GlobalStateFixture] tier: {Tier}");
         context.WriteLine($"[GlobalStateFixture] {ModelsRootVariable}: {ModelsRoot ?? "<unset>"}");

@@ -21,6 +21,13 @@ B 档缺少环境时**失败而不是 Skip** (见 PLAN-06 §2), 避免出现 "CI
 
 ## 2. 命令
 
+> **Windows 提示**: 本仓库脚本是 Bash 脚本. 系统里若同时装了 WSL 与 Git Bash,
+> 裸 `bash` 可能解析到 `C:\\Windows\\System32\\bash.exe` (WSL), 那里没有 Windows 的 `dotnet`.
+> 请显式使用 Git Bash:
+> ```powershell
+> & 'C:\\Program Files\\Git\\bin\\bash.exe' tools/run-tests.sh all
+> ```
+
 ```bash
 # 在仓库根目录 (Live2DCSharpSDK/) 执行
 bash tools/run-tests.sh a       # A 档: 纯托管, 不加载 Core
