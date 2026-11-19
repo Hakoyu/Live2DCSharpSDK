@@ -34,7 +34,7 @@ public enum LogLevel
 };
 
 /// <summary>
-/// 定义 CubismFramework 配置选项的类
+/// 定义 Cubism 框架配置选项的类
 /// </summary>
 public class CubismOption
 {

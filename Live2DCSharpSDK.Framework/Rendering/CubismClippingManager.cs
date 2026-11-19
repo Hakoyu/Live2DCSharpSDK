@@ -684,8 +684,8 @@ public abstract class CubismClippingManager
             float minX = float.MaxValue, minY = float.MaxValue;
             float maxX = float.MinValue, maxY = float.MinValue;
 
-            int loop = drawableVertexCount * CubismFramework.VertexStep;
-            for (int pi = CubismFramework.VertexOffset; pi < loop; pi += CubismFramework.VertexStep)
+            int loop = drawableVertexCount * CubismModel.VertexStep;
+            for (int pi = CubismModel.VertexOffset; pi < loop; pi += CubismModel.VertexStep)
             {
                 float x = drawableVertexes[pi];
                 float y = drawableVertexes[pi + 1];

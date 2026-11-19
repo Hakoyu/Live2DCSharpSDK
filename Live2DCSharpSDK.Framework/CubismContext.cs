@@ -13,8 +13,9 @@ namespace Live2DCSharpSDK.Framework;
 public sealed class CubismContext : IDisposable
 {
     /// <summary>
-    /// 兼容门面 <see cref="CubismFramework"/> 使用的默认上下文.
-    /// 过渡期(S1) 由静态门面转调, 静态门面删除(S4) 后不再使用.
+    /// 全局默认上下文.
+    /// 没有当前上下文(见 <see cref="Current"/>)时, 日志级别与日志输出回落到它;
+    /// 它不持有分配器与配置, 需要可用的上下文时请用 <see cref="Create"/> 创建.
     /// </summary>
     public static CubismContext Default { get; } = new();
 
@@ -218,51 +219,6 @@ public sealed class CubismContext : IDisposable
         _option = null;
         _logOutput = null;
         _logLevel = LogLevel.Off;
-    }
-
-    /// <summary>
-    /// 绑定分配器与配置后启动上下文.
-    /// 仅用于过渡期(S1) <see cref="CubismFramework"/> 静态门面的转调, 因此与旧门面一致地接受 null 参数.
-    /// </summary>
-    /// <param name="allocator">内存分配器, 允许为 null (启动失败, IsStarted 保持 false)</param>
-    /// <param name="option">上下文配置, 允许为 null (不注册 Core 日志回调)</param>
-    /// <returns>调用结束后 <see cref="IsStarted"/> 的值</returns>
-    internal bool StartUp(ICubismAllocator? allocator, CubismOption? option)
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException(nameof(CubismContext));
-        }
-
-        AcquireCurrent();
-
-        if (_isStarted)
-        {
-            CubismLog.Info("[Live2D SDK]CubismFramework.StartUp() is already done.");
-            return true;
-        }
-
-        _allocator = allocator;
-        _option = option;
-        _logLevel = option is null ? LogLevel.Off : option.LoggingLevel;
-
-        StartUp();
-
-        return _isStarted;
-    }
-
-    /// <summary>
-    /// 清除启动状态, 保留分配器与配置, 之后可以再次 StartUp().
-    /// 仅用于过渡期(S1) <see cref="CubismFramework.CleanUp"/> 的转调.
-    /// </summary>
-    internal void CleanUp()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _isStarted = false;
     }
 
     /// <summary>
