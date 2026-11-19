@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Live2DCSharpSDK.Framework;
 using Silk.NET.Core;
@@ -651,6 +651,10 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
         }
 
         vk.DestroyCommandPool(_device, _commandPool, default);
+
+        // デバイスに紐づくパイプライン／オフスクリーンをデバイス破棄前に解放する（官方 ReleaseAllDeviceInfo）
+        CubismDeviceInfo_Vulkan.ReleaseAllDeviceInfo();
+
         vk.DestroyDevice(_device, null);
         khrSurface!.DestroySurface(_instance, Surface, null);
         vk.DestroyInstance(_instance, null);

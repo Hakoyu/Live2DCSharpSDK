@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework.Model;
+using Live2DCSharpSDK.Framework.Model;
 using Live2DCSharpSDK.Framework.Rendering;
 using Silk.NET.Vulkan;
 
@@ -7,6 +7,13 @@ namespace Live2DCSharpSDK.Vulkan;
 public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
 {
     public override RenderType RenderType => RenderType.Vulkan;
+
+    /// <summary>
+    /// 現在のマスク用レンダーターゲット。
+    /// Framework の CurrentMaskBuffer（旧 CubismOffscreenSurface 型）は P5 の
+    /// CubismRenderTarget 契約に移行できないため、Vulkan 側はこのフィールドを使う（P8b 報告 §2.1）。
+    /// </summary>
+    private CubismRenderTarget_Vulkan? _currentMaskBuffer;
 
     public override unsafe CubismClippingContext CreateClippingContext(CubismClippingManager manager,
         CubismModel model, int* clippingDrawableIndices, int clipCount)
@@ -49,9 +56,9 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
 
         // マスク作成処理
         // 後の計算のためにインデックスの最初をセット
-        CurrentMaskBuffer = renderer.GetMaskBuffer(0);
+        _currentMaskBuffer = renderer.GetMaskBuffer(0);
 
-        var buffer = (CurrentMaskBuffer as CubismOffscreenSurface_Vulkan)!;
+        var buffer = _currentMaskBuffer;
 
         // 1が無効（描かれない）領域、0が有効（描かれる）領域。（シェーダで Cd*Csで0に近い値をかけてマスクを作る。1をかけると何も起こらない）
         buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
@@ -98,11 +105,11 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
             var clipContextOffscreenSurface = renderer.GetMaskBuffer(clipContext.BufferIndex)!;
 
             // 現在のオフスクリーンサーフェイスがclipContextのものと異なる場合
-            if (CurrentMaskBuffer != clipContextOffscreenSurface)
+            if (_currentMaskBuffer != clipContextOffscreenSurface)
             {
                 buffer.EndDraw(commandBuffer);
-                CurrentMaskBuffer = clipContextOffscreenSurface;
-                buffer = (CurrentMaskBuffer as CubismOffscreenSurface_Vulkan)!;
+                _currentMaskBuffer = clipContextOffscreenSurface;
+                buffer = _currentMaskBuffer;
                 // マスク用RenderTextureをactiveにセット
                 buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
             }
@@ -134,7 +141,7 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
                     continue;
                 }
 
-                renderer.IsCulling = model.GetDrawableCulling(clipDrawIndex);
+                renderer.IsCulling = model.GetDrawableCulling(clipDrawIndex) != 0;
 
                 // レンダーパス開始時にマスクはクリアされているのでクリアする必要なし
                 // 今回専用の変換を適用して描く

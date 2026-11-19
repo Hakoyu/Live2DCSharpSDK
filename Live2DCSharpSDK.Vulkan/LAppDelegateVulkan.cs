@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.App;
+using Live2DCSharpSDK.App;
 using Live2DCSharpSDK.Framework.Model;
 using Live2DCSharpSDK.Framework.Rendering;
 using Silk.NET.Vulkan;
@@ -21,7 +21,7 @@ public class LAppDelegateVulkan : LAppDelegate
 
         var swapchainManager = VulkanManager.SwapchainManager;
         // レンダラにvulkanManagerの変数を渡す
-        CubismRenderer_Vulkan.InitializeConstantSettings(
+        CubismRenderer_Vulkan.SetConstantSettings(
             VulkanManager.Device, VulkanManager.PhysicalDevice,
             VulkanManager.CommandPool, VulkanManager.GraphicQueue,
             swapchainManager.Extent, swapchainManager.SwapchainFormat,

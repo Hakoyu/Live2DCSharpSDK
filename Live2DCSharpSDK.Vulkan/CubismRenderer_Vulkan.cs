@@ -1,7 +1,8 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Live2DCSharpSDK.Framework;
+using Live2DCSharpSDK.Framework.Core;
 using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Model;
 using Live2DCSharpSDK.Framework.Rendering;
@@ -28,7 +29,6 @@ public class CubismRenderer_Vulkan : CubismRenderer
     public static bool UseRenderTarget { get; set; }
     public static Image RenderTargetImage { get; set; }
     public static ImageView RenderTargetImageView { get; set; }
-    public static CubismPipeline_Vulkan CubismPipeline_Vulkan { get; set; }
 
     /// <summary>
     /// レンダラを作成するための各種設定
@@ -44,7 +44,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <param name="swapchainImage"></param>
     /// <param name="swapchainImageView">スワップチェーンのイメージビュー</param>
     /// <param name="dFormat"></param>
-    public static void InitializeConstantSettings(Device device, PhysicalDevice physicalDevice,
+    public static void SetConstantSettings(Device device, PhysicalDevice physicalDevice,
                                            CommandPool commandPool, Queue queue,
                                            Extent2D extent, Format depthFormat, Format surfaceFormat,
                                            Image swapchainImage,
@@ -128,6 +128,16 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
     private readonly Vk _vk;
 
+    /// <summary>
+    /// デバイスごとのパイプライン／オフスクリーンマネージャ（官方 CubismDeviceInfo_Vulkan）
+    /// </summary>
+    private CubismDeviceInfo_Vulkan _deviceInfo;
+
+    /// <summary>
+    /// Dispose の二重実行を防ぐ
+    /// </summary>
+    private bool _disposed;
+
     private FvkCmdSetCullMode vkCmdSetCullModeEXT;
 
     /// <summary>
@@ -137,7 +147,11 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <summary>
     /// 描画オブジェクトのインデックスを描画順に並べたリスト
     /// </summary>
-    private readonly int[] _sortedDrawableIndexList;
+    private readonly int[] _sortedObjectsIndexList;
+    /// <summary>
+    /// 描画順に並べたオブジェクト種別（G1 門禁: renderOrder は drawableCount + offscreenCount）
+    /// </summary>
+    private readonly CsmEnum.DrawableObjectType[] _sortedObjectsTypeList;
     /// <summary>
     /// マスクテクスチャに描画するためのクリッピングコンテキスト
     /// </summary>
@@ -149,7 +163,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <summary>
     /// マスク描画用のフレームバッファ
     /// </summary>
-    private CubismOffscreenSurface_Vulkan[] _offscreenFrameBuffers;
+    private CubismRenderTarget_Vulkan[]? _offscreenFrameBuffers;
     /// <summary>
     /// 頂点バッファ
     /// </summary>
@@ -206,8 +220,6 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _vk = vk;
         _vulkanManager = manager;
 
-        CubismPipeline_Vulkan = new(vk, Device);
-
         int maskBufferCount = 1;
 
         if (Device.Handle == 0)
@@ -216,11 +228,15 @@ public class CubismRenderer_Vulkan : CubismRenderer
             return;
         }
 
-        int count = model.GetDrawableCount();
-        _sortedDrawableIndexList = new int[count];
-        for (int a = 0; a < count; a++)
+        // G1 門禁（tester 実測）: csmGetRenderOrders の配列長 = drawableCount + offscreenCount。
+        // drawable / offscreen を合わせた順序配列を確保する（官方 DrawObjectLoop:2714-2727）。
+        int childCount = model.GetDrawableCount() + model.GetOffscreenCount();
+        _sortedObjectsIndexList = new int[childCount];
+        _sortedObjectsTypeList = new CsmEnum.DrawableObjectType[childCount];
+        for (int a = 0; a < childCount; a++)
         {
-            _sortedDrawableIndexList[a] = 0;
+            _sortedObjectsIndexList[a] = 0;
+            _sortedObjectsTypeList[a] = CsmEnum.DrawableObjectType.Drawable;
         }
 
         if (model.IsUsingMasking())
@@ -232,12 +248,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
             var bufferWidth = (uint)_clippingManager.ClippingMaskBufferSize.X;
             var bufferHeight = (uint)_clippingManager.ClippingMaskBufferSize.Y;
 
-            _offscreenFrameBuffers = new CubismOffscreenSurface_Vulkan[maskBufferCount];
+            _offscreenFrameBuffers = new CubismRenderTarget_Vulkan[maskBufferCount];
             // バックバッファ分確保
             for (int i = 0; i < maskBufferCount; i++)
             {
                 _offscreenFrameBuffers[i] = new(_vk);
-                _offscreenFrameBuffers[i].CreateOffscreenSurface(Device, PhysicalDevice, bufferWidth, bufferHeight,
+                _offscreenFrameBuffers[i].CreateRenderTarget(Device, PhysicalDevice, bufferWidth, bufferHeight,
                     ImageFormat, DepthFormat);
             }
         }
@@ -615,6 +631,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     public unsafe void InitializeRenderer()
     {
+        // デバイスごとのパイプライン／オフスクリーンマネージャを取得（官方 InitializeRenderer: _deviceInfo = GetDeviceInfo(s_device)）
+        _deviceInfo = CubismDeviceInfo_Vulkan.GetDeviceInfo(Device);
+
         vkCmdSetCullModeEXT = Marshal.GetDelegateForFunctionPointer<FvkCmdSetCullMode>(_vk.GetDeviceProcAddr(Device, "vkCmdSetCullModeEXT"));
 
         var semaphoreInfo = new SemaphoreCreateInfo
@@ -629,7 +648,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         CreateDescriptorSets();
         CreateDepthBuffer();
 
-        CubismPipeline_Vulkan.CreatePipelines(_descriptorSetLayout);
+        _deviceInfo.Pipeline.CreatePipelines(_descriptorSetLayout);
     }
 
     /// <summary>
@@ -746,9 +765,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
             var imageInfo2 = new DescriptorImageInfo
             {
                 ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
-                ImageView = _offscreenFrameBuffers[ClippingContextBufferForDraw!.
+                ImageView = _offscreenFrameBuffers![ClippingContextBufferForDraw!.
                 BufferIndex].GetTextureView(),
-                Sampler = _offscreenFrameBuffers[ClippingContextBufferForDraw.
+                Sampler = _offscreenFrameBuffers![ClippingContextBufferForDraw.
                 BufferIndex].GetTextureSampler()
             };
             var image2 = new WriteDescriptorSet
@@ -784,21 +803,24 @@ public class CubismRenderer_Vulkan : CubismRenderer
         bool invertedMask = model.GetDrawableInvertedMask(index);
         int offset = (masked ? (invertedMask ? 2 : 1) : 0) + (IsPremultipliedAlpha ? 3 : 0);
 
-        switch (model.GetDrawableBlendMode(index))
+        // 5-r.5: GetDrawableBlendMode() は削除され、GetDrawableBlendModeType()（CsmBlendMode）に置き換わった。
+        // 5.2 以前のモデルは AddCompatible / MultiplyCompatible を返すため、従来の Add / Mult パイプラインに割り当てる。
+        // TODO(P8): 5.3 以降の color/alpha blend（Add / Screen / Overlay 等）は P8c でフル blend パイプラインに置き換える。
+        switch (model.GetDrawableBlendModeType(index).GetColorBlendType())
         {
-            default:
-                shaderIndex = ShaderNames.Normal + offset;
-                blendIndex = Blend.Normal;
-                break;
-
-            case CubismBlendMode.Additive:
+            case CsmEnum.CsmColorBlendType_AddCompatible:
                 shaderIndex = ShaderNames.Add + offset;
                 blendIndex = Blend.Add;
                 break;
 
-            case CubismBlendMode.Multiplicative:
+            case CsmEnum.CsmColorBlendType_MultiplyCompatible:
                 shaderIndex = ShaderNames.Mult + offset;
                 blendIndex = Blend.Mult;
+                break;
+
+            default:
+                shaderIndex = ShaderNames.Normal + offset;
+                blendIndex = Blend.Normal;
                 break;
         }
 
@@ -818,8 +840,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         // 色定数バッファの設定
         var baseColor = GetModelColorWithOpacity(model.GetDrawableOpacity(index));
-        var multiplyColor = model.GetMultiplyColor(index);
-        var screenColor = model.GetScreenColor(index);
+        var multiplyColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableMultiplyColor(index);
+        var screenColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableScreenColor(index);
         SetColorUniformBuffer(&ubo, baseColor, multiplyColor, screenColor);
 
         // ディスクリプタにユニフォームバッファをコピー
@@ -836,12 +858,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
         var descriptorSet = masked ? _descriptorSets[index].DescriptorSetMasked
                                                  : _descriptorSets[index].DescriptorSet;
         _vk.CmdBindDescriptorSets(cmdBuffer, PipelineBindPoint.Graphics,
-                                    CubismPipeline_Vulkan.GetPipelineLayout(shaderIndex, blendIndex), 0, 1,
+                                    _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex), 0, 1,
                                     ref descriptorSet, 0, null);
 
         // パイプラインのバインド
         _vk.CmdBindPipeline(cmdBuffer, PipelineBindPoint.Graphics,
-                          CubismPipeline_Vulkan.GetPipeline(shaderIndex, blendIndex));
+                          _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex));
 
         // 描画
         _vk.CmdDrawIndexed(cmdBuffer, (uint)model.GetDrawableVertexIndexCount(index), 1, 0, 0, 0);
@@ -870,8 +892,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
         // 色定数バッファの設定
         var rect = ClippingContextBufferForMask.LayoutBounds;
         var baseColor = new CubismTextureColor(rect.X * 2.0f - 1.0f, rect.Y * 2.0f - 1.0f, rect.GetRight() * 2.0f - 1.0f, rect.GetBottom() * 2.0f - 1.0f);
-        var multiplyColor = model.GetMultiplyColor(index);
-        var screenColor = model.GetScreenColor(index);
+        var multiplyColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableMultiplyColor(index);
+        var screenColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableScreenColor(index);
         SetColorUniformBuffer(&ubo, baseColor, multiplyColor, screenColor);
 
         // ディスクリプタにユニフォームバッファをコピー
@@ -886,12 +908,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
         // ディスクリプタセットのバインド
         UpdateDescriptorSet(descriptor, textureIndex, false);
         _vk.CmdBindDescriptorSets(cmdBuffer, PipelineBindPoint.Graphics,
-                                CubismPipeline_Vulkan.GetPipelineLayout(shaderIndex, blendIndex), 0, 1,
+                                _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex), 0, 1,
                                 ref _descriptorSets[index].DescriptorSet, 0, null);
 
         // パイプラインのバインド
         _vk.CmdBindPipeline(cmdBuffer, PipelineBindPoint.Graphics,
-                          CubismPipeline_Vulkan.GetPipeline(shaderIndex, blendIndex));
+                          _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex));
 
         // 描画
         _vk.CmdDrawIndexed(cmdBuffer, (uint)model.GetDrawableVertexIndexCount(index), 1, 0, 0, 0);
@@ -925,7 +947,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             return;
         }
 
-        int textureIndex = model.GetDrawableTextureIndices(index);
+        int textureIndex = model.GetDrawableTextureIndex(index);
         if (_textures[textureIndex].Sampler.Handle == 0 || _textures[textureIndex].View.Handle == 0)
         {
             return;
@@ -1098,9 +1120,14 @@ public class CubismRenderer_Vulkan : CubismRenderer
         return _clippingManager.ClippingMaskBufferSize;
     }
 
-    public CubismOffscreenSurface_Vulkan GetMaskBuffer(int index)
+    public CubismRenderTarget_Vulkan GetMaskBuffer(int index)
     {
-        return _offscreenFrameBuffers[index];
+        if (_offscreenFrameBuffers == null)
+        {
+            CubismLog.Error("offscreenFrameBuffers is null.");
+        }
+
+        return _offscreenFrameBuffers![index];
     }
 
     private void BindVertexAndIndexBuffers(int index, CommandBuffer cmdBuffer)
@@ -1113,13 +1140,24 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
     public unsafe override void Dispose()
     {
-        // オフスクリーンを作成していたのなら開放
-        for (int i = 0; i < _offscreenFrameBuffers.Length; i++)
+        if (_disposed)
         {
-            _offscreenFrameBuffers[i].DestroyOffscreenSurface(Device);
+            return;
         }
+        _disposed = true;
 
-        _offscreenFrameBuffers = [];
+        // オフスクリーンを作成していたのなら開放
+        // mask を使わないモデルでは _offscreenFrameBuffers が null のため、
+        // 旧実装はここで NullReferenceException になっていた（本タスク §2.4 で修正）。
+        if (_offscreenFrameBuffers != null)
+        {
+            for (int i = 0; i < _offscreenFrameBuffers.Length; i++)
+            {
+                _offscreenFrameBuffers[i].DestroyRenderTarget();
+            }
+
+            _offscreenFrameBuffers = null;
+        }
 
         _depthImage.Destroy(Device);
         _vk.DestroySemaphore(Device, _updateFinishedSemaphore, null);
@@ -1146,7 +1184,20 @@ public class CubismRenderer_Vulkan : CubismRenderer
             _descriptorSets[i].UniformBuffer.Destroy(Device);
         }
 
-        _clippingManager.Dispose();
+        _clippingManager?.Dispose();
+
+        // テクスチャは TextureInfoVulkan / LAppTextureManager が所有しており、
+        // ここで Destroy すると共有キャッシュの二重解放になる。参照だけ切る
+        // （官方 CubismRenderer_Vulkan のデストラクタも _textures を破棄しない）。
+        _textures.Clear();
+
+        // デバイス情報の参照を解放する。最後のレンダラが消えた時点で
+        // パイプラインとオフスクリーンマネージャも解放される。
+        if (_deviceInfo != null)
+        {
+            CubismDeviceInfo_Vulkan.ReleaseDeviceInfo(Device);
+            _deviceInfo = null!;
+        }
     }
 
     // P5 基类契约（官方 CubismRenderer.hpp:284,289）：
@@ -1180,11 +1231,11 @@ public class CubismRenderer_Vulkan : CubismRenderer
             // サイズが違う場合はここで作成しなおし
             for (int i = 0; i < _clippingManager.RenderTextureCount; ++i)
             {
-                if (_offscreenFrameBuffers[i].BufferWidth != _clippingManager.ClippingMaskBufferSize.X
+                if (_offscreenFrameBuffers![i].BufferWidth != _clippingManager.ClippingMaskBufferSize.X
                     || _offscreenFrameBuffers[i].BufferHeight != _clippingManager.ClippingMaskBufferSize.Y)
                 {
-                    _offscreenFrameBuffers[i].DestroyOffscreenSurface(Device);
-                    _offscreenFrameBuffers[i].CreateOffscreenSurface(
+                    _offscreenFrameBuffers[i].DestroyRenderTarget();
+                    _offscreenFrameBuffers[i].CreateRenderTarget(
                         Device, PhysicalDevice,
                         (uint)_clippingManager.ClippingMaskBufferSize.X,
                         (uint)_clippingManager.ClippingMaskBufferSize.Y,
@@ -1212,12 +1263,26 @@ public class CubismRenderer_Vulkan : CubismRenderer
         }
 
         var drawableCount = Model.GetDrawableCount();
-        var renderOrder = Model.GetDrawableRenderOrders();
+        var offscreenCount = Model.GetOffscreenCount();
+        var totalCount = drawableCount + offscreenCount;
+        var renderOrder = Model.GetRenderOrders();
         // インデックスを描画順でソート
-        for (int i = 0; i < drawableCount; ++i)
+        // G1 門禁（tester 実測）: renderOrder の配列長は totalCount。drawable だけで走査すると
+        // offscreen の順序（および order 値が drawableCount 以上になる場合）を壊す。
+        // 官方 DrawObjectLoop（CubismRenderer_Vulkan.cpp:2714-2727）と同じ二重ソートにする。
+        for (int i = 0; i < totalCount; ++i)
         {
             int order = renderOrder[i];
-            _sortedDrawableIndexList[order] = i;
+            if (i < drawableCount)
+            {
+                _sortedObjectsIndexList[order] = i;
+                _sortedObjectsTypeList[order] = CsmEnum.DrawableObjectType.Drawable;
+            }
+            else
+            {
+                _sortedObjectsIndexList[order] = i - drawableCount;
+                _sortedObjectsTypeList[order] = CsmEnum.DrawableObjectType.Offscreen;
+            }
         }
 
         //描画
@@ -1225,9 +1290,16 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _vk.BeginCommandBuffer(_drawCommandBuffer, &beginInfo);
         BeginRendering(_drawCommandBuffer, false);
 
-        for (int i = 0; i < drawableCount; ++i)
+        for (int i = 0; i < totalCount; ++i)
         {
-            int drawableIndex = _sortedDrawableIndexList[i];
+            // offscreen の実描画（AddOffscreen / blend）は P8c の担当。
+            // G1 門禁の順序配列だけ先に用意し、本フェーズは drawable のみ描画する（R1 语义維持）。
+            if (_sortedObjectsTypeList[i] == CsmEnum.DrawableObjectType.Offscreen)
+            {
+                continue;
+            }
+
+            int drawableIndex = _sortedObjectsIndexList[i];
             // Drawableが表示状態でなければ処理をパスする
             if (!Model.GetDrawableDynamicFlagIsVisible(drawableIndex))
             {
@@ -1251,7 +1323,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
                     _vk.BeginCommandBuffer(_updateCommandBuffer, &beginInfo);
                     _vk.BeginCommandBuffer(_drawCommandBuffer, &beginInfo);
 
-                    var currentHighPrecisionMaskColorBuffer = _offscreenFrameBuffers[clipContext.BufferIndex];
+                    var currentHighPrecisionMaskColorBuffer = _offscreenFrameBuffers![clipContext.BufferIndex];
                     currentHighPrecisionMaskColorBuffer.BeginDraw(_drawCommandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
 
                     // 生成したFrameBufferと同じサイズでビューポートを設定
@@ -1273,7 +1345,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
                             continue;
                         }
 
-                        IsCulling = Model.GetDrawableCulling(clipDrawIndex);
+                        IsCulling = Model.GetDrawableCulling(clipDrawIndex) != 0;
 
                         ClippingContextBufferForMask = clipContext;
                         DrawMeshVulkan(Model, clipDrawIndex, _drawCommandBuffer, _updateCommandBuffer);
@@ -1300,7 +1372,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
             // クリッピングマスクをセットする
             ClippingContextBufferForDraw = clipContext;
-            IsCulling = Model.GetDrawableCulling(drawableIndex);
+            IsCulling = Model.GetDrawableCulling(drawableIndex) != 0;
             DrawMeshVulkan(Model, drawableIndex, _drawCommandBuffer, _updateCommandBuffer);
         }
 
