@@ -95,6 +95,10 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     private bool _warnedOffscreenRenderTargetUnavailable;
     /// <summary>コピー先レンダーターゲットが使えないことを警告済みか（S6）</summary>
     private bool _warnedCopyRenderTargetUnavailable;
+    /// <summary>Drawable 用マスクバッファが使えないことを警告済みか（N-2）</summary>
+    private bool _warnedDrawableMaskBufferUnavailable;
+    /// <summary>Offscreen 用マスクバッファが使えないことを警告済みか（N-2）</summary>
+    private bool _warnedOffscreenMaskBufferUnavailable;
 
     internal int VertexArray { get; private set; }
     internal int VertexBuffer { get; private set; }
@@ -424,6 +428,82 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     public CubismRenderTarget_OpenGLES2 GetMaskBuffer(int index)
     {
         return GetDrawableMaskBuffer(index);
+    }
+
+    /// <summary>
+    /// 遮罩用レンダーターゲットが描画に使えるかを判定する（N-2）。
+    /// 作成に失敗した RT は RenderTexture == 0 のため IsValid() が false になる。
+    /// この判定が false のバッファには Viewport / Clear / マスク描画を行ってはならない
+    /// （実行すると直前にバインドされている FBO＝画面や親 FBO を破壊する）。
+    /// </summary>
+    /// <param name="type">Drawable 用 / Offscreen 用の別</param>
+    /// <param name="index">マスクバッファのインデックス</param>
+    /// <returns>使用可能なら true</returns>
+    internal bool IsMaskBufferUsable(CsmEnum.DrawableObjectType type, int index)
+    {
+        List<CubismRenderTarget_OpenGLES2> masks = type == CsmEnum.DrawableObjectType.Offscreen
+            ? _offscreenMasks
+            : _drawableMasks;
+
+        return index >= 0 && index < masks.Count && masks[index].IsValid();
+    }
+
+    /// <summary>
+    /// 遮罩用レンダーターゲットが使えないことを 1 度だけ警告する（N-2）。
+    /// 実際の Viewport / Clear / マスク描画のスキップは
+    /// <see cref="CubismClippingManager_OpenGLES2.SetupClippingContext"/> と
+    /// 高精度マスク経路（DrawDrawable / DrawOffscreen）側で行う。
+    /// </summary>
+    /// <param name="type">Drawable 用 / Offscreen 用の別</param>
+    internal void WarnMaskBufferUnavailable(CsmEnum.DrawableObjectType type)
+    {
+        if (type == CsmEnum.DrawableObjectType.Offscreen)
+        {
+            if (_warnedOffscreenMaskBufferUnavailable)
+            {
+                return;
+            }
+
+            _warnedOffscreenMaskBufferUnavailable = true;
+            CubismLog.Warning(
+                "[Live2D OpenGL]Offscreen clipping mask render target is not available ({0}x{1}). " +
+                "Skip generating clipping masks for offscreens.",
+                (int)(_offscreenClippingManager?.ClippingMaskBufferSize.X ?? 0.0f),
+                (int)(_offscreenClippingManager?.ClippingMaskBufferSize.Y ?? 0.0f));
+            return;
+        }
+
+        if (_warnedDrawableMaskBufferUnavailable)
+        {
+            return;
+        }
+
+        _warnedDrawableMaskBufferUnavailable = true;
+        CubismLog.Warning(
+            "[Live2D OpenGL]Drawable clipping mask render target is not available ({0}x{1}). " +
+            "Skip generating clipping masks for drawables.",
+            (int)(_drawableClippingManager?.ClippingMaskBufferSize.X ?? 0.0f),
+            (int)(_drawableClippingManager?.ClippingMaskBufferSize.Y ?? 0.0f));
+    }
+
+    /// <summary>
+    /// 遮罩用レンダーターゲットの作成に失敗していないか確認し、失敗していれば 1 度だけ警告する（N-2）。
+    /// </summary>
+    /// <param name="type">Drawable 用 / Offscreen 用の別</param>
+    private void ValidateMaskBuffers(CsmEnum.DrawableObjectType type)
+    {
+        List<CubismRenderTarget_OpenGLES2> masks = type == CsmEnum.DrawableObjectType.Offscreen
+            ? _offscreenMasks
+            : _drawableMasks;
+
+        for (int i = 0; i < masks.Count; ++i)
+        {
+            if (!masks[i].IsValid())
+            {
+                WarnMaskBufferUnavailable(type);
+                return;
+            }
+        }
     }
 
     /// <summary>
@@ -764,6 +844,10 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
                 }
             }
 
+            // N-2: マスク用 FBO の作成に失敗した場合は 1 度だけ警告する。
+            //      実際の Clear / Viewport / マスク描画のスキップは各描画経路側で行う。
+            ValidateMaskBuffers(CsmEnum.DrawableObjectType.Drawable);
+
             if (UseHighPrecisionMask)
             {
                 _drawableClippingManager.SetupMatrixForHighPrecision(Model, false, CsmEnum.DrawableObjectType.Drawable);
@@ -788,6 +872,9 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
                         (int)_offscreenClippingManager.ClippingMaskBufferSize.X, (int)_offscreenClippingManager.ClippingMaskBufferSize.Y);
                 }
             }
+
+            // N-2: マスク用 FBO の作成に失敗した場合は 1 度だけ警告する。
+            ValidateMaskBuffers(CsmEnum.DrawableObjectType.Offscreen);
 
             if (UseHighPrecisionMask)
             {
@@ -901,7 +988,10 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             ? _drawableClippingManager.ClippingContextListForDraw[drawableIndex]
             : null;
 
-        if (clipContext != null && UseHighPrecisionMask) // マスクを書く必要がある
+        // N-2: マスク用レンダーターゲットが作成できていない場合は、Viewport / Clear / マスク描画を行わない。
+        //      RenderTexture == 0 のまま実行すると、バインド中の FBO（画面や親 FBO）を破壊してしまう。
+        if (clipContext != null && UseHighPrecisionMask
+            && IsMaskBufferUsable(CsmEnum.DrawableObjectType.Drawable, clipContext.BufferIndex)) // マスクを書く必要がある
         {
             int[] preHighPrecisionMaskViewport = new int[4];
             GL.GetIntegerv(GL.GL_VIEWPORT, preHighPrecisionMaskViewport);
@@ -954,6 +1044,11 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
                 PreDraw(); // バッファをクリアする
             }
+        }
+        else if (clipContext != null && UseHighPrecisionMask)
+        {
+            // N-2: マスク用 RT が使えないのでマスク生成をスキップする（Clear を画面 / 親 FBO に落とさない）
+            WarnMaskBufferUnavailable(CsmEnum.DrawableObjectType.Drawable);
         }
 
         // クリッピングマスクをセットする
@@ -1061,6 +1156,11 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         CubismRenderTarget_OpenGLES2? offscreenTarget = offscreen.GetRenderTarget();
         if (offscreenTarget == null || !offscreenTarget.IsValid())
         {
+            // N-2: SetOffscreenRenderTarget で借りたプールスロットを必ず返却する。
+            //      返却しないと slot が IsUsed のまま残り、以降このスロットを二度と借りられない
+            //      （= スロット永久占用。使用数カウントも戻らない）。
+            offscreen.StopUsingRenderTexture();
+
             if (!_warnedOffscreenRenderTargetUnavailable)
             {
                 _warnedOffscreenRenderTargetUnavailable = true;
@@ -1106,12 +1206,27 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     private unsafe void DrawOffscreen(CubismOffscreenRenderTarget_OpenGLES2 currentOffscreen)
     {
         int offscreenIndex = currentOffscreen.GetOffscreenIndex();
+
+        // N-2: 描画先（FBO）を作成できなかったオフスクリーンは合成しない。
+        //      AddOffscreen の失敗時点では FBO を切り替えていないため現在の描画先はそのまま維持し、
+        //      状態だけ 1 つ親へ戻す（GetRenderTarget() が null の場合の例外も防ぐ）。
+        if (currentOffscreen.GetRenderTarget() is not { } offscreenTarget || offscreenTarget.IsValid() is false)
+        {
+            _currentOffscreen = _currentOffscreen?.GetOldOffscreen();
+            ClippingContextBufferForOffscreen = null;
+            ClippingContextBufferForMask = null;
+            return;
+        }
+
         // クリッピングマスク
         CubismClippingContext? clipContext = _offscreenClippingManager != null
             ? _offscreenClippingManager.ClippingContextListForOffscreen[offscreenIndex]
             : null;
 
-        if (clipContext != null && UseHighPrecisionMask) // マスクを書く必要がある
+        // N-2: マスク用レンダーターゲットが作成できていない場合は、Viewport / Clear / マスク描画を行わない。
+        //      RenderTexture == 0 のまま実行すると、バインド中の FBO（親オフスクリーン）を破壊してしまう。
+        if (clipContext != null && UseHighPrecisionMask
+            && IsMaskBufferUsable(CsmEnum.DrawableObjectType.Offscreen, clipContext.BufferIndex)) // マスクを書く必要がある
         {
             int[] preHighPrecisionMaskViewport = new int[4];
             GL.GetIntegerv(GL.GL_VIEWPORT, preHighPrecisionMaskViewport);
@@ -1163,6 +1278,11 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
                 PreDraw(); // バッファをクリアする
             }
+        }
+        else if (clipContext != null && UseHighPrecisionMask)
+        {
+            // N-2: マスク用 RT が使えないのでマスク生成をスキップする（Clear を親 FBO に落とさない）
+            WarnMaskBufferUnavailable(CsmEnum.DrawableObjectType.Offscreen);
         }
 
         // クリッピングマスクをセットする

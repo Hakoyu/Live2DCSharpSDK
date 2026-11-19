@@ -54,14 +54,36 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
             return;
         }
 
+        // N-2: マスク用レンダーターゲットの作成に失敗している場合、そのバッファへは一切描画しない。
+        //      RenderTexture == 0 のまま BeginDraw / PreDraw / Clear を実行すると BeginDraw が無視され、
+        //      直前にバインドされている FBO（画面や親 FBO）に対して Clear とマスク描画が行われてしまう。
+        //      まず RT が有効な最初のバッファを初期バッファとして選ぶ（元実装のバッファ 0 固定の代替）。
+        int initialBufferIndex = -1;
+        for (int clipIndex = 0; clipIndex < ClippingContextListForMask.Count; clipIndex++)
+        {
+            var clipContext = ClippingContextListForMask[clipIndex];
+
+            if (renderer.IsMaskBufferUsable(Type, clipContext.BufferIndex))
+            {
+                initialBufferIndex = clipContext.BufferIndex;
+                break;
+            }
+        }
+
+        if (initialBufferIndex < 0)
+        {
+            // 使用できるマスク用 RT が 1 枚も無い（作成失敗）: マスク生成自体をスキップする
+            return;
+        }
+
         // マスク作成処理
         // 生成したRenderTargetと同じサイズでビューポートを設定
         gl.Viewport(0, 0, (int)ClippingMaskBufferSize.X, (int)ClippingMaskBufferSize.Y);
 
         // 後の計算のためにインデックスの最初をセット
         CubismRenderTarget_OpenGLES2 currentMaskBuffer = Type == CsmEnum.DrawableObjectType.Offscreen
-            ? renderer.GetOffscreenMaskBuffer(0)
-            : renderer.GetDrawableMaskBuffer(0);
+            ? renderer.GetOffscreenMaskBuffer(initialBufferIndex)
+            : renderer.GetDrawableMaskBuffer(initialBufferIndex);
         CurrentMaskBuffer = currentMaskBuffer;
 
         // ----- マスク描画処理 -----
@@ -97,6 +119,13 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
         {
             // --- 実際に１つのマスクを描く ---
             var clipContext = ClippingContextListForMask[clipIndex];
+
+            // N-2: このマスク用 RT が作成できていない場合は、Clear / Viewport / マスク描画を行わない
+            if (renderer.IsMaskBufferUsable(Type, clipContext.BufferIndex) is false)
+            {
+                continue;
+            }
+
             RectF allClippedDrawRect = clipContext.AllClippedDrawRect; //このマスクを使う、全ての描画オブジェクトの論理座標上の囲み矩形
             RectF layoutBoundsOnTex01 = clipContext.LayoutBounds; //この中にマスクを収める
             float MARGIN = 0.05f;
