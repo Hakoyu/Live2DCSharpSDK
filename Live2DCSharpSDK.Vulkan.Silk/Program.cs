@@ -64,18 +64,36 @@ internal class Program : VulkanApi
             BGColor = new(0, 1, 0, 1)
         };
 
-        // P8c 启动验收：默认使用官方 5-r.5 包内的 Haru（原 F:\live2d\Resources 路径在本机不存在）。
-        // 环境变量 L2D_MODEL_DIR / L2D_MODEL_NAME 可切换验收模型（tester 用，不改变默认行为）。
-        string modelDir = Environment.GetEnvironmentVariable("L2D_MODEL_DIR")
-            ?? "D:\\AgentGameWorkSpace\\CubismSdkForNative-5-r.5\\Samples\\Resources\\Haru\\";
-        string modelName = Environment.GetEnvironmentVariable("L2D_MODEL_NAME") ?? "Haru";
-        var model = live2d.Live2dManager.LoadModel(modelDir, modelName);
+        // モデルのパスはハードコードせず、App 層の ModelResourceLocator で解決する
+        // （Avalonia / OpenTK / WPF の三宿主と同じ規則:
+        //   LIVE2D_MODEL_DIR / LIVE2D_MODEL_NAME → 既知候補 → 実行ファイル隣の Resources）。
+        // 見つからない場合も例外にせず、空のシーンで起動を続ける。
+        LAppModel? model = null;
+        if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
+        {
+            try
+            {
+                model = live2d.Live2dManager.LoadModel(modelDir, modelName);
+                Console.WriteLine($"[Live2D App]model loaded: {Path.Combine(modelDir, modelName)}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"[Live2D App]model load failed: {e.GetType().Name}: {e.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"[Live2D App]モデル未検出のため空のシーンで起動します: {modelName}");
+        }
 
         window.Resize += (size) =>
         {
             live2d.Resize();
         };
-        // t16 検証用: 30 フレーム後に offscreen 数と DrawOffscreen 回数を出力して終了する
+
+        // 【仅验收用】V-d（Ren offscreen 探针）: 默认关闭，仅当 L2D_PROBE_OFFSCREEN=1 时启用。
+        // 30 帧後に offscreen 数と DrawOffscreen 回数を出力して終了する。
+        // 出力書式は既存の受け入れ手順（t16 / V-d）に合わせて固定している。
         int probeFrames = 0;
         bool probeOffscreen = Environment.GetEnvironmentVariable("L2D_PROBE_OFFSCREEN") == "1";
         window.Render += (time) =>
@@ -84,7 +102,7 @@ internal class Program : VulkanApi
 
             if (probeOffscreen && ++probeFrames >= 30)
             {
-                var renderer = model.Renderer as CubismRenderer_Vulkan;
+                var renderer = model?.Renderer as CubismRenderer_Vulkan;
                 Console.WriteLine($"OFFSCREEN_PROBE offscreens={renderer?.OffscreenCount} draws={renderer?.OffscreenDrawCount}");
                 window.Close();
             }

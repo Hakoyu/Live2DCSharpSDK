@@ -94,10 +94,6 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// </summary>
     public bool IsSwapchainInvalid { get; set; }
     /// <summary>
-    /// デバッグメッセージを出力するオブジェクト
-    /// </summary>
-    private DebugUtilsMessengerEXT _debugMessenger;
-    /// <summary>
     ///  現在のイメージインデックス
     /// </summary>
     private uint _imageIndex = 0;

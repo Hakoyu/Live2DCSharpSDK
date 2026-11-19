@@ -175,13 +175,19 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
             return;
         }
 
+        // 深度/ステンシルの書き込みは early / late fragment tests で発生するため、
+        // ソース段は ColorAttachmentOutputBit ではなく EarlyFragmentTests|LateFragmentTests を使う
+        // （公式 5-r.5 は ColorAttachmentOutputBit のままだが、深度アタッチメントの書き込み段と一致しない）。
+        // srcAccessMask も深度書き込みに合わせる（段とアクセス種別の組み合わせを揃える。dstAccessMask は None のまま）。
+        memoryBarrier.SrcAccessMask = AccessFlags.DepthStencilAttachmentWriteBit;
         memoryBarrier.DstAccessMask = AccessFlags.None;
         memoryBarrier.OldLayout = ImageLayout.DepthStencilAttachmentOptimal;
         memoryBarrier.NewLayout = ImageLayout.DepthStencilAttachmentOptimal;
         memoryBarrier.Image = _depthImage.Image;
         memoryBarrier.SubresourceRange = new(ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit, 0, 1, 0, 1);
 
-        _vk.CmdPipelineBarrier(commandBuffer, PipelineStageFlags.ColorAttachmentOutputBit,
+        _vk.CmdPipelineBarrier(commandBuffer,
+            PipelineStageFlags.EarlyFragmentTestsBit | PipelineStageFlags.LateFragmentTestsBit,
             PipelineStageFlags.BottomOfPipeBit, 0, 0, null, 0, null, 1, ref memoryBarrier);
 
         _depthImage.SetCurrentLayout(ImageLayout.DepthStencilAttachmentOptimal);

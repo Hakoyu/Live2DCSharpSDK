@@ -256,10 +256,6 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     private readonly CubismImageVulkan _depthImage;
     /// <summary>
-    /// クリアカラー
-    /// </summary>
-    private ClearValue _clearColor;
-    /// <summary>
     /// セマフォ
     /// </summary>
     private Semaphore _updateFinishedSemaphore;

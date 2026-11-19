@@ -244,11 +244,15 @@ public class CubismImageVulkan(Vk vk)
                 barrier.DstAccessMask = AccessFlags.TransferWriteBit;
                 destinationStage = PipelineStageFlags.TransferBit;
                 break;
-            //TODO Test this
+
+            // 読み取り専用レイアウトへの遷移は断片シェーダーでの読み取りを待つ。
+            // 公式 5-r.5（Framework/src/Rendering/Vulkan/CubismClass_Vulkan.cpp）はここで
+            // VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR を後置代入して FragmentShaderBit を
+            // 上書きしているが、本デバイスは光線追跡拡張を有効化していないため使わない
+            // （上流由来のバグ。テクスチャは fragment shader でのみサンプルされる）。
             case ImageLayout.ReadOnlyOptimal:
                 barrier.DstAccessMask = AccessFlags.ShaderReadBit;
                 destinationStage = PipelineStageFlags.FragmentShaderBit;
-                destinationStage = PipelineStageFlags.RayTracingShaderBitKhr;
                 break;
 
             default:
