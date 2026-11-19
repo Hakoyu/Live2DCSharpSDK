@@ -41,7 +41,7 @@
 
 ## 验收模型
 
-冒烟与验收使用四个模型: `Haru`、`Mao`、`Ren`(取自官方 [Live2D Cubism SDK](https://www.live2d.com/zh-CHS/sdk/download/native/) `Samples/Resources`)。
+冒烟与验收使用的模型: `Haru`、`Mao`、`Ren`(取自官方 [Live2D Cubism SDK](https://www.live2d.com/zh-CHS/sdk/download/native/) `Samples/Resources`)。
 
 ## 许可与反馈
 
