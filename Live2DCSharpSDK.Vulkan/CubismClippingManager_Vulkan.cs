@@ -8,12 +8,6 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
 {
     public override RenderType RenderType => RenderType.Vulkan;
 
-    /// <summary>
-    /// 現在のマスク用レンダーターゲット。
-    /// Framework の CurrentMaskBuffer（旧 CubismOffscreenSurface 型）は P5 の
-    /// CubismRenderTarget 契約に移行できないため、Vulkan 側はこのフィールドを使う（P8b 報告 §2.1）。
-    /// </summary>
-    private CubismRenderTarget_Vulkan? _currentMaskBuffer;
 
     public override unsafe CubismClippingContext CreateClippingContext(CubismClippingManager manager,
         CubismModel model, int* clippingDrawableIndices, int clipCount)
@@ -56,9 +50,10 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
 
         // マスク作成処理
         // 後の計算のためにインデックスの最初をセット
-        _currentMaskBuffer = renderer.GetMaskBuffer(0);
+        // P6 で Framework の CurrentMaskBuffer は CubismRenderTarget 型になった（P8b の私有フィールドを削除）。
+        CurrentMaskBuffer = renderer.GetMaskBuffer(0);
 
-        var buffer = _currentMaskBuffer;
+        var buffer = (CubismRenderTarget_Vulkan)CurrentMaskBuffer;
 
         // 1が無効（描かれない）領域、0が有効（描かれる）領域。（シェーダで Cd*Csで0に近い値をかけてマスクを作る。1をかけると何も起こらない）
         buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
@@ -105,11 +100,11 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
             var clipContextOffscreenSurface = renderer.GetMaskBuffer(clipContext.BufferIndex)!;
 
             // 現在のオフスクリーンサーフェイスがclipContextのものと異なる場合
-            if (_currentMaskBuffer != clipContextOffscreenSurface)
+            if (CurrentMaskBuffer != clipContextOffscreenSurface)
             {
                 buffer.EndDraw(commandBuffer);
-                _currentMaskBuffer = clipContextOffscreenSurface;
-                buffer = _currentMaskBuffer;
+                CurrentMaskBuffer = clipContextOffscreenSurface;
+                buffer = (CubismRenderTarget_Vulkan)CurrentMaskBuffer;
                 // マスク用RenderTextureをactiveにセット
                 buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
             }

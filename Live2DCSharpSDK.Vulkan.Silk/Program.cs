@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.App;
+using Live2DCSharpSDK.App;
 using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Vulkan;
 using Silk.NET.Core.Native;
@@ -64,7 +64,12 @@ internal class Program : VulkanApi
             BGColor = new(0, 1, 0, 1)
         };
 
-        var model = live2d.Live2dManager.LoadModel("F:\\live2d\\Resources\\Haru\\", "Haru");
+        // P8c 启动验收：默认使用官方 5-r.5 包内的 Haru（原 F:\live2d\Resources 路径在本机不存在）。
+        // 环境变量 L2D_MODEL_DIR / L2D_MODEL_NAME 可切换验收模型（tester 用，不改变默认行为）。
+        string modelDir = Environment.GetEnvironmentVariable("L2D_MODEL_DIR")
+            ?? "D:\\AgentGameWorkSpace\\CubismSdkForNative-5-r.5\\Samples\\Resources\\Haru\\";
+        string modelName = Environment.GetEnvironmentVariable("L2D_MODEL_NAME") ?? "Haru";
+        var model = live2d.Live2dManager.LoadModel(modelDir, modelName);
 
         window.Resize += (size) =>
         {

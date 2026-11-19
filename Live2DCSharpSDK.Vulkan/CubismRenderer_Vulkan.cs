@@ -215,12 +215,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
     private readonly VulkanManager _vulkanManager;
 
-    public CubismRenderer_Vulkan(Vk vk, VulkanManager manager, CubismModel model) : base(model)
+    public CubismRenderer_Vulkan(Vk vk, VulkanManager manager, CubismModel model, int maskBufferCount = 1) : base(model)
     {
         _vk = vk;
         _vulkanManager = manager;
-
-        int maskBufferCount = 1;
 
         if (Device.Handle == 0)
         {
@@ -490,7 +488,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
     {
         // ディスクリプタプールの作成
         int drawableCount = Model.GetDrawableCount();
-        int textureCount = 2;
+        // テクスチャは 3 枚: binding1=モデル, binding2=マスク, binding3=blend 用（P8c）
+        int textureCount = 3;
         int drawModeCount = 2; // マスクされる描画と通常の描画
         int descriptorSetCount = drawableCount * drawModeCount;
 
@@ -545,6 +544,15 @@ public class CubismRenderer_Vulkan : CubismRenderer
             new()
             {
                 Binding = 2,
+                DescriptorCount = 1,
+                DescriptorType = DescriptorType.CombinedImageSampler,
+                PImmutableSamplers = null,
+                StageFlags = ShaderStageFlags.FragmentBit
+            },
+            new()
+            {
+                // 5.3 以降の blend shader 用（s_blendTexture）
+                Binding = 3,
                 DescriptorCount = 1,
                 DescriptorType = DescriptorType.CombinedImageSampler,
                 PImmutableSamplers = null,
@@ -723,7 +731,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             return;
         }
 
-        var descriptorWrites = new WriteDescriptorSet[3];
+        var descriptorWrites = new WriteDescriptorSet[4];
 
         var uniformBufferInfo = new DescriptorBufferInfo
         {
@@ -742,7 +750,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
         };
         descriptorWrites[0] = ubo;
 
-        //テクスチャ1はキャラクターのテクスチャ、テクスチャ2はマスク用のオフスクリーンに使用するテクスチャ
+        // テクスチャ1はキャラクターのテクスチャ、テクスチャ2はマスク用、
+        // テクスチャ3は 5.3 以降の blend shader 用（s_blendTexture）。
         var imageInfo1 = new DescriptorImageInfo
         {
             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
@@ -760,6 +769,26 @@ public class CubismRenderer_Vulkan : CubismRenderer
         };
         descriptorWrites[1] = image1;
 
+        // blending 用テクスチャの初期値（モデルテクスチャ）。実際の blend 時は
+        // UpdateBlendTexture() で描画先テクスチャに差し替える。
+        var imageInfo3 = new DescriptorImageInfo
+        {
+            ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
+            ImageView = _textures[textureIndex].View,
+            Sampler = _textures[textureIndex].Sampler
+        };
+        var image3 = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = descriptorSet,
+            DstBinding = 3,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
+            PImageInfo = &imageInfo3
+        };
+        descriptorWrites[2] = image3;
+
+        uint writeCount = 3;
         if (isMasked)
         {
             var imageInfo2 = new DescriptorImageInfo
@@ -779,13 +808,45 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 DescriptorCount = 1,
                 PImageInfo = &imageInfo2
             };
-            descriptorWrites[2] = image2;
+            descriptorWrites[3] = image2;
+            writeCount = 4;
         }
 
         fixed (WriteDescriptorSet* ptr = descriptorWrites)
         {
-            _vk.UpdateDescriptorSets(Device, (uint)(isMasked ? 3 : 2), ptr, 0, null);
+            _vk.UpdateDescriptorSets(Device, writeCount, ptr, 0, null);
         }
+    }
+
+    /// <summary>
+    /// blend shader 用テクスチャ（binding 3）を更新する。
+    /// 通常は描画先レンダーターゲットのテクスチャを渡す。未使用時はモデルテクスチャで埋める。
+    /// </summary>
+    /// <param name="descriptor">対象ディスクリプタ</param>
+    /// <param name="isMasked">マスク用セットか</param>
+    /// <param name="imageView">ブレンド用テクスチャビュー</param>
+    /// <param name="sampler">サンプラー</param>
+    public unsafe void UpdateBlendTexture(Descriptor descriptor, bool isMasked, ImageView imageView, Sampler sampler)
+    {
+        DescriptorSet descriptorSet = isMasked ? descriptor.DescriptorSetMasked : descriptor.DescriptorSet;
+
+        var imageInfo = new DescriptorImageInfo
+        {
+            ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
+            ImageView = imageView,
+            Sampler = sampler
+        };
+        var write = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = descriptorSet,
+            DstBinding = 3,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
+            PImageInfo = &imageInfo
+        };
+
+        _vk.UpdateDescriptorSets(Device, 1, &write, 0, null);
     }
 
     /// <summary>
@@ -803,26 +864,17 @@ public class CubismRenderer_Vulkan : CubismRenderer
         bool invertedMask = model.GetDrawableInvertedMask(index);
         int offset = (masked ? (invertedMask ? 2 : 1) : 0) + (IsPremultipliedAlpha ? 3 : 0);
 
-        // 5-r.5: GetDrawableBlendMode() は削除され、GetDrawableBlendModeType()（CsmBlendMode）に置き換わった。
-        // 5.2 以前のモデルは AddCompatible / MultiplyCompatible を返すため、従来の Add / Mult パイプラインに割り当てる。
-        // TODO(P8): 5.3 以降の color/alpha blend（Add / Screen / Overlay 等）は P8c でフル blend パイプラインに置き換える。
-        switch (model.GetDrawableBlendModeType(index).GetColorBlendType())
+        // 5-r.5: GetDrawableBlendModeType()（CsmBlendMode）から shader を選択する。
+        // 5.2 以前の AddCompatible / MultiplyCompatible は Add / Mult（Normal shader 共用）に割り当て、
+        // 5.3 以降は GetShaderNamesBegin() が返す blend shader 群（494 項）から選ぶ。
+        CsmBlendMode blendMode = model.GetDrawableBlendModeType(index);
+        shaderIndex = ShaderNames.GetShaderNamesBegin(blendMode) + offset;
+        blendIndex = blendMode.GetColorBlendType() switch
         {
-            case CsmEnum.CsmColorBlendType_AddCompatible:
-                shaderIndex = ShaderNames.Add + offset;
-                blendIndex = Blend.Add;
-                break;
-
-            case CsmEnum.CsmColorBlendType_MultiplyCompatible:
-                shaderIndex = ShaderNames.Mult + offset;
-                blendIndex = Blend.Mult;
-                break;
-
-            default:
-                shaderIndex = ShaderNames.Normal + offset;
-                blendIndex = Blend.Normal;
-                break;
-        }
+            CsmEnum.CsmColorBlendType_AddCompatible => Blend.Add,
+            CsmEnum.CsmColorBlendType_MultiplyCompatible => Blend.Mult,
+            _ => Blend.Normal,
+        };
 
         var descriptor = _descriptorSets[index];
         var ubo = new ModelUBO();
@@ -855,6 +907,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         // ディスクリプタセットのバインド
         UpdateDescriptorSet(descriptor, textureIndex, masked);
+        // blend shader 用テクスチャ（binding3）。P8c 暫定: モデルテクスチャを既定値にし、
+        // オフスクリーン/モデル RT 合成時は P8c の描画先テクスチャで上書きする。
+        UpdateBlendTexture(descriptor, masked, _textures[textureIndex].View, _textures[textureIndex].Sampler);
         var descriptorSet = masked ? _descriptorSets[index].DescriptorSetMasked
                                                  : _descriptorSets[index].DescriptorSet;
         _vk.CmdBindDescriptorSets(cmdBuffer, PipelineBindPoint.Graphics,
