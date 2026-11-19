@@ -48,6 +48,23 @@ public abstract class LAppDelegate : IDisposable
     public float DeltaTime { get; private set; }
 
     /// <summary>
+    /// 最近一次完成初始化的 delegate 实例.
+    /// 仅用于过渡期静态兼容属性 <see cref="LAppPal.DeltaTime"/> 的转发:
+    /// 多个 delegate 并存时指向最后创建的那个, 本实例释放后置空.
+    /// 并发创建时只保证引用赋值原子, 不保证先后顺序.
+    /// </summary>
+    internal static LAppDelegate? Latest { get; private set; }
+
+    /// <summary>
+    /// 写入增量时间. 仅用于过渡期静态兼容属性 <see cref="LAppPal.DeltaTime"/> 的转发.
+    /// </summary>
+    /// <param name="value">增量时间(秒)</param>
+    internal void SetDeltaTime(float value)
+    {
+        DeltaTime = value;
+    }
+
+    /// <summary>
     /// 纹理管理器
     /// </summary>
     public LAppTextureManager TextureManager { get; private set; }
@@ -103,8 +120,8 @@ public abstract class LAppDelegate : IDisposable
         Live2dManager = new LAppLive2DManager(this);
 
         DeltaTime = 0;
-        // 过渡期(S6 移除): 静态属性保留镜像写入, 供尚未迁移的调用点读取.
-        LAppPal.DeltaTime = 0;
+        // 静态兼容属性 LAppPal.DeltaTime 的转发目标: 最后完成初始化的 delegate.
+        Latest = this;
     }
 
     /// <summary>
@@ -113,6 +130,12 @@ public abstract class LAppDelegate : IDisposable
     /// </summary>
     public void Dispose()
     {
+        // 已释放的实例不再作为静态兼容属性的转发目标.
+        if (ReferenceEquals(Latest, this))
+        {
+            Latest = null;
+        }
+
         Live2dManager?.Dispose();
 
         _context?.Dispose();
@@ -153,8 +176,6 @@ public abstract class LAppDelegate : IDisposable
 
         // 时间更新
         DeltaTime = tick;
-        // 过渡期(S6 移除): 静态属性保留镜像写入.
-        LAppPal.DeltaTime = tick;
 
         if (RunPre())
         {

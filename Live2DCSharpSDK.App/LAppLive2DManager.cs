@@ -157,7 +157,8 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
                 _projection.MultiplyByMatrix(ViewMatrix);
             }
 
-            model.Update();
+            // 增量时间由 delegate 实例提供, 每个 delegate(窗口)各自一帧的时间互不影响.
+            model.Update(lapp.DeltaTime);
             model.Draw(_projection); // 因为是引用传递, projection 会被改写
         }
     }

@@ -468,17 +468,26 @@ public class LAppModel : CubismUserModel
     }
 
     /// <summary>
+    /// 使用所属 delegate 当前帧的增量时间更新模型(兼容旧调用点).
+    /// 新代码请调用 <see cref="Update(float)"/> 并显式传入增量时间.
+    /// </summary>
+    public void Update()
+    {
+        Update(_lapp.DeltaTime);
+    }
+
+    /// <summary>
     /// 模型的更新处理. 由模型参数决定绘制状态.
     /// </summary>
+    /// <param name="deltaTimeSeconds">增量时间(秒)</param>
     /// <remarks>
     /// 与官方 5-r.5 的 LAppModel::Update()(LAppModel.cpp:379-408)顺序相同:
     /// 时间更新 → 动作更新 → 不透明度获取 → CubismUpdateScheduler(200→800) → Model.Update().
     /// 此前的实现手写眨眼/表情/拖拽/呼吸/物理/口型同步/姿态,
     /// 5-r.5 中由 SetupModel 注册的 6 个 Updater 依次从 scheduler 调用.
     /// </remarks>
-    public void Update()
+    public void Update(float deltaTimeSeconds)
     {
-        float deltaTimeSeconds = _lapp.DeltaTime;
         UserTimeSeconds += deltaTimeSeconds;
 
         // 是否由动作更新参数(CubismEyeBlinkUpdater 会读取该值)

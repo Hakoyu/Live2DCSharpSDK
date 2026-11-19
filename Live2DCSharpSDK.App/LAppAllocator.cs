@@ -149,9 +149,8 @@ public class LAppAllocator : ICubismAllocator
 
         string data = $"[CSM] [E] {message}";
 
-        // 输出函数同样按上下文解析: 上下文显式设置的输出优先, 没有时回退到 Core 注册的回调.
-        CubismContext context = CubismContext.Current ?? CubismContext.Default;
-        LogFunction? output = context.LogOutput;
+        // 输出函数同样按上下文解析: 当前上下文显式设置的输出优先, 没有时回退到 Core 注册的回调.
+        LogFunction? output = CubismContext.Current?.LogOutput;
         if (output is null)
         {
             CubismContext.InvokeCoreLogFunction(data);
