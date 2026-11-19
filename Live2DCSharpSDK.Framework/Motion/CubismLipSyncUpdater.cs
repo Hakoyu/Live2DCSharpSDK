@@ -3,7 +3,7 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
-/// リップシンクの更新処理（官方 CubismLipSyncUpdater）。
+/// 唇形同步的更新处理 (官方 CubismLipSyncUpdater).
 /// </summary>
 /// <remarks>
 /// 本轮不引入 wav 解码, 只提供从外部注入 IParameterProvider 的形式,
@@ -12,20 +12,20 @@ namespace Live2DCSharpSDK.Framework.Motion;
 public class CubismLipSyncUpdater : ICubismUpdater
 {
     /// <summary>
-    /// 口型の値を提供するパラメータプロバイダ
+    /// 提供口型值的参数提供者
     /// </summary>
     private readonly IParameterProvider _wavFileHandler;
 
     /// <summary>
-    /// リップシンクを適用するパラメータIDのリスト
+    /// 应用唇形同步的参数 ID 列表
     /// </summary>
     private readonly IReadOnlyList<string> _lipSyncIds;
 
     /// <summary>
-    /// コンストラクタ。実行順序は CubismUpdateOrder.LipSync。
+    /// 构造函数. 执行顺序为 CubismUpdateOrder.LipSync.
     /// </summary>
-    /// <param name="lipSyncIds">リップシンクを適用するパラメータIDのリスト</param>
-    /// <param name="wavFileHandler">口型の値を提供するパラメータプロバイダ</param>
+    /// <param name="lipSyncIds">应用唇形同步的参数 ID 列表</param>
+    /// <param name="wavFileHandler">提供口型值的参数提供者</param>
     public CubismLipSyncUpdater(IReadOnlyList<string> lipSyncIds, IParameterProvider wavFileHandler)
         : base((int)CubismUpdateOrder.LipSync)
     {
@@ -34,11 +34,11 @@ public class CubismLipSyncUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// コンストラクタ。
+    /// 构造函数.
     /// </summary>
-    /// <param name="lipSyncIds">リップシンクを適用するパラメータIDのリスト</param>
-    /// <param name="wavFileHandler">口型の値を提供するパラメータプロバイダ</param>
-    /// <param name="executionOrder">実行順序</param>
+    /// <param name="lipSyncIds">应用唇形同步的参数 ID 列表</param>
+    /// <param name="wavFileHandler">提供口型值的参数提供者</param>
+    /// <param name="executionOrder">执行顺序</param>
     public CubismLipSyncUpdater(IReadOnlyList<string> lipSyncIds, IParameterProvider wavFileHandler, int executionOrder)
         : base(executionOrder)
     {
@@ -47,10 +47,10 @@ public class CubismLipSyncUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// 更新処理。
+    /// 更新处理.
     /// </summary>
-    /// <param name="model">更新対象のモデル</param>
-    /// <param name="deltaTimeSeconds">デルタ時間[秒]</param>
+    /// <param name="model">更新目标的模型</param>
+    /// <param name="deltaTimeSeconds">增量时间[秒]</param>
     public override void OnLateUpdate(CubismModel model, float deltaTimeSeconds)
     {
         if (model == null)
@@ -58,7 +58,7 @@ public class CubismLipSyncUpdater : ICubismUpdater
             return;
         }
 
-        // リアルタイムでリップシンクを行う場合、システムから音量を取得して0〜1の範囲で値を入力する。
+        // 实时进行唇形同步时, 从系统获取音量并输入 0 到 1 范围内的值.
         _wavFileHandler.Update(deltaTimeSeconds);
         float value = _wavFileHandler.GetParameter();
 

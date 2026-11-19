@@ -4,7 +4,7 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
-/// 自動まばたきの更新処理（官方 CubismEyeBlinkUpdater）。
+/// 自动眨眼的更新处理 (官方 CubismEyeBlinkUpdater).
 /// </summary>
 /// <remarks>
 /// 官方持有 <c>const csmBool&amp; motionUpdated</c> 的引用,
@@ -14,20 +14,20 @@ namespace Live2DCSharpSDK.Framework.Motion;
 public class CubismEyeBlinkUpdater : ICubismUpdater
 {
     /// <summary>
-    /// モーションによるパラメータ更新の有無を返す関数
+    /// 返回动作是否更新了参数的函数
     /// </summary>
     private readonly Func<bool> _motionUpdated;
 
     /// <summary>
-    /// 自動まばたき
+    /// 自动眨眼
     /// </summary>
     private readonly CubismEyeBlink _eyeBlink;
 
     /// <summary>
-    /// コンストラクタ。実行順序は CubismUpdateOrder.EyeBlink。
+    /// 构造函数. 执行顺序为 CubismUpdateOrder.EyeBlink.
     /// </summary>
-    /// <param name="motionUpdated">モーションによるパラメータ更新の有無を返す関数</param>
-    /// <param name="eyeBlink">自動まばたき</param>
+    /// <param name="motionUpdated">返回动作是否更新了参数的函数</param>
+    /// <param name="eyeBlink">自动眨眼</param>
     public CubismEyeBlinkUpdater(Func<bool> motionUpdated, CubismEyeBlink eyeBlink)
         : base((int)CubismUpdateOrder.EyeBlink)
     {
@@ -36,11 +36,11 @@ public class CubismEyeBlinkUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// コンストラクタ。
+    /// 构造函数.
     /// </summary>
-    /// <param name="motionUpdated">モーションによるパラメータ更新の有無を返す関数</param>
-    /// <param name="eyeBlink">自動まばたき</param>
-    /// <param name="executionOrder">実行順序</param>
+    /// <param name="motionUpdated">返回动作是否更新了参数的函数</param>
+    /// <param name="eyeBlink">自动眨眼</param>
+    /// <param name="executionOrder">执行顺序</param>
     public CubismEyeBlinkUpdater(Func<bool> motionUpdated, CubismEyeBlink eyeBlink, int executionOrder)
         : base(executionOrder)
     {
@@ -49,10 +49,10 @@ public class CubismEyeBlinkUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// 更新処理。
+    /// 更新处理.
     /// </summary>
-    /// <param name="model">更新対象のモデル</param>
-    /// <param name="deltaTimeSeconds">デルタ時間[秒]</param>
+    /// <param name="model">更新目标的模型</param>
+    /// <param name="deltaTimeSeconds">增量时间[秒]</param>
     public override void OnLateUpdate(CubismModel model, float deltaTimeSeconds)
     {
         if (model == null)
@@ -62,7 +62,7 @@ public class CubismEyeBlinkUpdater : ICubismUpdater
 
         if (!_motionUpdated())
         {
-            // メインモーションの更新がないときは目パチ
+            // 主动作没有更新时进行眨眼
             _eyeBlink.UpdateParameters(model, deltaTimeSeconds);
         }
     }

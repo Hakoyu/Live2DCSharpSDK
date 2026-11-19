@@ -5,25 +5,25 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
-/// ドラッグ（顔の向き）の更新処理（官方 CubismLookUpdater）。
+/// 拖拽 (面部朝向) 的更新处理 (官方 CubismLookUpdater).
 /// </summary>
 public class CubismLookUpdater : ICubismUpdater
 {
     /// <summary>
-    /// look に紐づくパラメータ情報
+    /// 与 look 绑定的参数信息
     /// </summary>
     private readonly CubismLook _look;
 
     /// <summary>
-    /// ドラッグ入力の管理
+    /// 拖拽输入的管理
     /// </summary>
     private readonly CubismTargetPoint _dragManager;
 
     /// <summary>
-    /// コンストラクタ。実行順序は CubismUpdateOrder.Look。
+    /// 构造函数. 执行顺序为 CubismUpdateOrder.Look.
     /// </summary>
-    /// <param name="look">look に紐づくパラメータ情報</param>
-    /// <param name="dragManager">ドラッグ入力の管理</param>
+    /// <param name="look">与 look 绑定的参数信息</param>
+    /// <param name="dragManager">拖拽输入的管理</param>
     public CubismLookUpdater(CubismLook look, CubismTargetPoint dragManager)
         : base((int)CubismUpdateOrder.Look)
     {
@@ -32,11 +32,11 @@ public class CubismLookUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// コンストラクタ。
+    /// 构造函数.
     /// </summary>
-    /// <param name="look">look に紐づくパラメータ情報</param>
-    /// <param name="dragManager">ドラッグ入力の管理</param>
-    /// <param name="executionOrder">実行順序</param>
+    /// <param name="look">与 look 绑定的参数信息</param>
+    /// <param name="dragManager">拖拽输入的管理</param>
+    /// <param name="executionOrder">执行顺序</param>
     public CubismLookUpdater(CubismLook look, CubismTargetPoint dragManager, int executionOrder)
         : base(executionOrder)
     {
@@ -45,10 +45,10 @@ public class CubismLookUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// 更新処理。
+    /// 更新处理.
     /// </summary>
-    /// <param name="model">更新対象のモデル</param>
-    /// <param name="deltaTimeSeconds">デルタ時間[秒]</param>
+    /// <param name="model">更新目标的模型</param>
+    /// <param name="deltaTimeSeconds">增量时间[秒]</param>
     public override void OnLateUpdate(CubismModel model, float deltaTimeSeconds)
     {
         if (model == null)

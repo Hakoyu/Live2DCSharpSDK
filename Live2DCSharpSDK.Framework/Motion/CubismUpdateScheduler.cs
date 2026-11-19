@@ -3,29 +3,29 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
-/// 登録された更新処理を実行順に呼び出すスケジューラ（官方 CubismUpdateScheduler）。
+/// 按执行顺序调用已注册更新处理的调度器 (官方 CubismUpdateScheduler).
 /// </summary>
 /// <remarks>
-/// 官方はデストラクタで登録された ICubismUpdater を全て delete する（所有権あり）。
-/// C# 側は GC が回収するため、Dispose ではリストを空にするだけにしている
-/// （updater は効果クラスへの参照だけを保持しており、所有はしていない）。
+/// 官方的析构函数会 delete 所有已注册的 ICubismUpdater (持有所有权).
+/// C# 侧由 GC 回收, 因此 Dispose 中只清空列表
+/// (updater 只持有对效果类的引用, 并不拥有所有权).
 /// </remarks>
 public class CubismUpdateScheduler : IDisposable
 {
     /// <summary>
-    /// 登録された更新処理のリスト
+    /// 已注册的更新处理列表
     /// </summary>
     private readonly List<ICubismUpdater> _cubismUpdatableList = [];
 
     /// <summary>
-    /// ソートが必要かどうか
+    /// 是否需要排序
     /// </summary>
     private bool _needsSort = true;
 
     /// <summary>
-    /// 更新処理を登録する。
+    /// 注册更新处理.
     /// </summary>
-    /// <param name="updatable">登録する更新処理。null は無視する。</param>
+    /// <param name="updatable">要注册的更新处理. null 时忽略.</param>
     public void AddUpdatableList(ICubismUpdater? updatable)
     {
         if (updatable == null)
@@ -38,7 +38,7 @@ public class CubismUpdateScheduler : IDisposable
     }
 
     /// <summary>
-    /// 更新処理のリストを実行順に並べ替える。
+    /// 按执行顺序对更新处理列表排序.
     /// </summary>
     /// <remarks>
     /// 必须使用稳定排序: LINQ 的 OrderBy 是稳定排序,
@@ -60,10 +60,10 @@ public class CubismUpdateScheduler : IDisposable
     }
 
     /// <summary>
-    /// 登録された更新処理を実行順に呼び出す。
+    /// 按执行顺序调用已注册的更新处理.
     /// </summary>
-    /// <param name="model">更新対象のモデル</param>
-    /// <param name="deltaTimeSeconds">デルタ時間[秒]</param>
+    /// <param name="model">更新目标的模型</param>
+    /// <param name="deltaTimeSeconds">增量时间[秒]</param>
     public void OnLateUpdate(CubismModel model, float deltaTimeSeconds)
     {
         if (_needsSort)
@@ -78,7 +78,7 @@ public class CubismUpdateScheduler : IDisposable
     }
 
     /// <summary>
-    /// 登録されている更新処理を破棄する。
+    /// 销毁已注册的更新处理.
     /// </summary>
     public void Dispose()
     {

@@ -3,45 +3,45 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
-/// モーション再生の管理用クラス。CubismMotionモーションなどACubismMotionのサブクラスを再生するために使用する。
+/// 用于动作播放管理的类. 用于播放 CubismMotion 动作等 ACubismMotion 的子类.
 /// 
-/// 再生中に別のモーションが StartMotion()された場合は、新しいモーションに滑らかに変化し旧モーションは中断する。
-/// 表情用モーション、体用モーションなどを分けてモーション化した場合など、
-/// 複数のモーションを同時に再生させる場合は、複数のCubismMotionQueueManagerインスタンスを使用する。
+/// 播放过程中若通过 StartMotion() 启动了另一个动作, 则平滑切换到新动作并中断旧动作.
+/// 例如将表情用动作, 身体用动作等分开做成动作时,
+/// 需要同时播放多个动作时, 请使用多个 CubismMotionQueueManager 实例.
 /// </summary>
 public class CubismMotionQueueManager
 {
     /// <summary>
-    /// モーション
+    /// 动作
     /// </summary>
     protected readonly List<CubismMotionQueueEntry> Motions = [];
 
     private readonly List<CubismMotionQueueEntry> _remove = [];
 
     /// <summary>
-    /// コールバック関数ポインタ
+    /// 回调函数指针
     /// </summary>
     private CubismMotionEventFunction? _eventCallback;
     /// <summary>
-    /// コールバックに戻されるデータ
+    /// 返回给回调的数据
     /// </summary>
     private CubismUserModel? _eventCustomData;
 
     /// <summary>
-    /// デルタ時間の積算値[秒]
+    /// 增量时间的累计值[秒]
     /// </summary>
     protected float UserTimeSeconds;
 
     /// <summary>
-    /// 指定したモーションを開始する。同じタイプのモーションが既にある場合は、既存のモーションに終了フラグを立て、フェードアウトを開始させる。
+    /// 开始指定的动作. 若已存在同类型的动作, 则给已有动作置结束标志并开始淡出.
     /// </summary>
-    /// <param name="motion">開始するモーション</param>
-    /// <returns>開始したモーションの識別番号を返す。個別のモーションが終了したか否かを判定するIsFinished()の引数で使用する。開始できない時は「-1」</returns>
+    /// <param name="motion">要开始的动作</param>
+    /// <returns>返回已开始动作的识别编号. 用于 IsFinished() 的参数, 判定各个动作是否结束. 无法开始时为 "-1"</returns>
     public CubismMotionQueueEntry StartMotion(ACubismMotion motion)
     {
         CubismMotionQueueEntry motionQueueEntry;
 
-        // 既にモーションがあれば終了フラグを立てる
+        // 若已有动作则置结束标志
         for (int i = 0; i < Motions.Count; ++i)
         {
             motionQueueEntry = Motions[0];
@@ -64,17 +64,17 @@ public class CubismMotionQueueManager
     }
 
     /// <summary>
-    /// すべてのモーションが終了しているかどうか。
+    /// 所有动作是否都已结束.
     /// </summary>
-    /// <returns>true    すべて終了している
-    /// false   終了していない</returns>
+    /// <returns>true    全部已结束
+    /// false   尚未结束</returns>
     public bool IsFinished()
     {
-        // ------- 処理を行う --------
-        // 既にモーションがあれば終了フラグを立てる
+        // ------- 执行处理 --------
+        // 若已有动作则置结束标志
         foreach (var item in Motions)
         {
-            // ----- 終了済みの処理があれば削除する ------
+            // ----- 若存在已结束的处理则删除 ------
             if (!item.Finished)
             {
                 return false;
@@ -85,14 +85,14 @@ public class CubismMotionQueueManager
     }
 
     /// <summary>
-    /// 指定したモーションが終了しているかどうか。
+    /// 指定的动作是否已结束.
     /// </summary>
-    /// <param name="motionQueueEntryNumber">モーションの識別番号</param>
-    /// <returns>true    指定したモーションは終了している
-    /// false   終了していない</returns>
+    /// <param name="motionQueueEntryNumber">动作的识别编号</param>
+    /// <returns>true    指定的动作已结束
+    /// false   尚未结束</returns>
     public bool IsFinished(object motionQueueEntryNumber)
     {
-        // 既にモーションがあれば終了フラグを立てる
+        // 若已有动作则置结束标志
 
         foreach (var item in Motions)
         {
@@ -111,26 +111,26 @@ public class CubismMotionQueueManager
     }
 
     /// <summary>
-    /// すべてのモーションを停止する。
+    /// 停止所有动作.
     /// </summary>
     public void StopAllMotions()
     {
-        // ------- 処理を行う --------
-        // 既にモーションがあれば終了フラグを立てる
+        // ------- 执行处理 --------
+        // 若已有动作则置结束标志
 
         Motions.Clear();
     }
 
     /// <summary>
-    /// 指定したCubismMotionQueueEntryを取得する。
+    /// 获取指定的 CubismMotionQueueEntry.
     /// </summary>
-    /// <param name="motionQueueEntryNumber">モーションの識別番号</param>
-    /// <returns>指定したCubismMotionQueueEntryへのポインタ
-    /// NULL   見つからなかった</returns>
+    /// <param name="motionQueueEntryNumber">动作的识别编号</param>
+    /// <returns>指向指定 CubismMotionQueueEntry 的指针
+    /// NULL   未找到</returns>
     public CubismMotionQueueEntry? GetCubismMotionQueueEntry(object motionQueueEntryNumber)
     {
-        //------- 処理を行う --------
-        //既にモーションがあれば終了フラグを立てる
+        //------- 执行处理 --------
+        //若已有动作则置结束标志
 
         foreach (var item in Motions)
         {
@@ -144,10 +144,10 @@ public class CubismMotionQueueManager
     }
 
     /// <summary>
-    /// イベントを受け取るCallbackの登録をする。
+    /// 注册接收事件的 Callback.
     /// </summary>
-    /// <param name="callback">コールバック関数</param>
-    /// <param name="customData">コールバックに返されるデータ</param>
+    /// <param name="callback">回调函数</param>
+    /// <param name="customData">返回给回调的数据</param>
     public void SetEventCallback(CubismMotionEventFunction callback, CubismUserModel customData)
     {
         _eventCallback = callback;
@@ -155,18 +155,18 @@ public class CubismMotionQueueManager
     }
 
     /// <summary>
-    /// モーションを更新して、モデルにパラメータ値を反映する。
+    /// 更新动作, 并把参数值反映到模型.
     /// </summary>
-    /// <param name="model">対象のモデル</param>
-    /// <param name="userTimeSeconds">デルタ時間の積算値[秒]</param>
-    /// <returns>true    モデルへパラメータ値の反映あり
-    /// false   モデルへパラメータ値の反映なし(モーションの変化なし)</returns>
+    /// <param name="model">目标模型</param>
+    /// <param name="userTimeSeconds">增量时间的累计值[秒]</param>
+    /// <returns>true    已把参数值反映到模型
+    /// false   未把参数值反映到模型 (动作无变化)</returns>
     public virtual bool DoUpdateMotion(CubismModel model, float userTimeSeconds)
     {
         bool updated = false;
 
-        // ------- 処理を行う --------
-        // 既にモーションがあれば終了フラグを立てる
+        // ------- 执行处理 --------
+        // 若已有动作则置结束标志
 
         _remove.Clear();
 
@@ -174,11 +174,11 @@ public class CubismMotionQueueManager
         {
             var motion = item.Motion;
 
-            // ------ 値を反映する ------
+            // ------ 反映值 ------
             motion.UpdateParameters(model, item, userTimeSeconds);
             updated = true;
 
-            // ------ ユーザトリガーイベントを検査する ----
+            // ------ 检查用户触发事件 ----
             var firedList = motion.GetFiredEvent(
                 item.LastEventCheckSeconds - item.StartTime,
                 userTimeSeconds - item.StartTime);
@@ -190,10 +190,10 @@ public class CubismMotionQueueManager
 
             item.LastEventCheckSeconds = userTimeSeconds;
 
-            // ----- 終了済みの処理があれば削除する ------
+            // ----- 若存在已结束的处理则删除 ------
             if (item.Finished)
             {
-                _remove.Add(item);          // 削除
+                _remove.Add(item);          // 删除
             }
             else
             {

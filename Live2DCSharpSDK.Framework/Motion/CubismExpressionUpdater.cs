@@ -3,7 +3,7 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
-/// 表情の更新処理（官方 CubismExpressionUpdater）。
+/// 表情的更新处理 (官方 CubismExpressionUpdater).
 /// </summary>
 public class CubismExpressionUpdater : ICubismUpdater
 {
@@ -13,7 +13,7 @@ public class CubismExpressionUpdater : ICubismUpdater
     private readonly CubismExpressionMotionManager _expressionManager;
 
     /// <summary>
-    /// コンストラクタ。実行順序は CubismUpdateOrder.Expression。
+    /// 构造函数. 执行顺序为 CubismUpdateOrder.Expression.
     /// </summary>
     /// <param name="expressionManager">表情管理</param>
     public CubismExpressionUpdater(CubismExpressionMotionManager expressionManager)
@@ -23,10 +23,10 @@ public class CubismExpressionUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// コンストラクタ。
+    /// 构造函数.
     /// </summary>
     /// <param name="expressionManager">表情管理</param>
-    /// <param name="executionOrder">実行順序</param>
+    /// <param name="executionOrder">执行顺序</param>
     public CubismExpressionUpdater(CubismExpressionMotionManager expressionManager, int executionOrder)
         : base(executionOrder)
     {
@@ -34,10 +34,10 @@ public class CubismExpressionUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// 更新処理。
+    /// 更新处理.
     /// </summary>
-    /// <param name="model">更新対象のモデル</param>
-    /// <param name="deltaTimeSeconds">デルタ時間[秒]</param>
+    /// <param name="model">更新目标的模型</param>
+    /// <param name="deltaTimeSeconds">增量时间[秒]</param>
     public override void OnLateUpdate(CubismModel model, float deltaTimeSeconds)
     {
         if (model == null)
@@ -45,7 +45,7 @@ public class CubismExpressionUpdater : ICubismUpdater
             return;
         }
 
-        // 表情でパラメータ更新（相対変化）
+        // 按表情更新参数 (相对变化)
         _expressionManager.UpdateMotion(model, deltaTimeSeconds);
     }
 }

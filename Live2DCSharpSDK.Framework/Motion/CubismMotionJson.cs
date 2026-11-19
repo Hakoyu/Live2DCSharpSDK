@@ -1,19 +1,19 @@
 namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
-/// motion3.json の整合性検証（官方 CubismMotionJson::HasConsistency）。
+/// motion3.json 的一致性校验 (官方 CubismMotionJson::HasConsistency).
 /// </summary>
 /// <remarks>
-/// 官方は生 JSON を走査するが、本地は <see cref="CubismMotionObj"/> の DTO を走査して
+/// 官方遍历原始 JSON, 本地则遍历 <see cref="CubismMotionObj"/> 的 DTO,
 /// 核对 Curves / Segments / Points 的实际数值与 Meta 的声明值.
 /// </remarks>
 public static class CubismMotionJson
 {
     /// <summary>
-    /// motion3.json の各カーブ・セグメント・ポイント数が Meta の宣言値と一致するか検証する。
+    /// 校验 motion3.json 中各曲线, 段, 点的数量是否与 Meta 的声明值一致.
     /// </summary>
-    /// <param name="motionObj">読み込んだ motion3.json の DTO</param>
-    /// <returns>整合性が取れていれば true</returns>
+    /// <param name="motionObj">已读取的 motion3.json 的 DTO</param>
+    /// <returns>若一致则为 true</returns>
     public static bool HasConsistency(CubismMotionObj motionObj)
     {
         if (motionObj?.Meta == null || motionObj.Curves == null)
@@ -28,7 +28,7 @@ public static class CubismMotionJson
         int actualTotalSegmentCount = 0;
         int actualTotalPointCount = 0;
 
-        // カウント処理
+        // 计数处理
         for (int curvePosition = 0; curvePosition < actualCurveListSize; ++curvePosition)
         {
             var segments = motionObj.Curves[curvePosition]?.Segments;
@@ -47,7 +47,7 @@ public static class CubismMotionJson
                     segmentPosition += 2;
                 }
 
-                // セグメントの種類（CubismMotionSegmentType）
+                // 段的类型 (CubismMotionSegmentType)
                 int segment = (int)segments[segmentPosition];
 
                 switch (segment)
@@ -69,7 +69,7 @@ public static class CubismMotionJson
                         segmentPosition += 3;
                         break;
                     default:
-                        // 官方は CSM_ASSERT(0)。C# 側は不正データとして扱う。
+                        // 官方为 CSM_ASSERT(0). C# 侧作为非法数据处理.
                         CubismLog.Warning("[Live2D SDK]Unknown segment type in motion3.json.");
                         return false;
                 }
@@ -78,7 +78,7 @@ public static class CubismMotionJson
             }
         }
 
-        // 個数チェック
+        // 数量检查
         if (actualCurveListSize != motionObj.Meta.CurveCount)
         {
             CubismLog.Warning("[Live2D SDK]The number of curves does not match the metadata.");

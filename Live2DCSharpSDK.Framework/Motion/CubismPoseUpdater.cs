@@ -4,19 +4,19 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
-/// ポーズの更新処理（官方 CubismPoseUpdater）。
+/// 姿势的更新处理 (官方 CubismPoseUpdater).
 /// </summary>
 public class CubismPoseUpdater : ICubismUpdater
 {
     /// <summary>
-    /// ポーズ管理
+    /// 姿势管理
     /// </summary>
     private readonly CubismPose _pose;
 
     /// <summary>
-    /// コンストラクタ。実行順序は CubismUpdateOrder.Pose。
+    /// 构造函数. 执行顺序为 CubismUpdateOrder.Pose.
     /// </summary>
-    /// <param name="pose">ポーズ管理</param>
+    /// <param name="pose">姿势管理</param>
     public CubismPoseUpdater(CubismPose pose)
         : base((int)CubismUpdateOrder.Pose)
     {
@@ -24,10 +24,10 @@ public class CubismPoseUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// コンストラクタ。
+    /// 构造函数.
     /// </summary>
-    /// <param name="pose">ポーズ管理</param>
-    /// <param name="executionOrder">実行順序</param>
+    /// <param name="pose">姿势管理</param>
+    /// <param name="executionOrder">执行顺序</param>
     public CubismPoseUpdater(CubismPose pose, int executionOrder)
         : base(executionOrder)
     {
@@ -35,10 +35,10 @@ public class CubismPoseUpdater : ICubismUpdater
     }
 
     /// <summary>
-    /// 更新処理。
+    /// 更新处理.
     /// </summary>
-    /// <param name="model">更新対象のモデル</param>
-    /// <param name="deltaTimeSeconds">デルタ時間[秒]</param>
+    /// <param name="model">更新目标的模型</param>
+    /// <param name="deltaTimeSeconds">增量时间[秒]</param>
     public override void OnLateUpdate(CubismModel model, float deltaTimeSeconds)
     {
         if (model == null)
