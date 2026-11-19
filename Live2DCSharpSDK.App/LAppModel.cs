@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Effect;
 using Live2DCSharpSDK.Framework.Math;
@@ -92,6 +92,19 @@ public class LAppModel : CubismUserModel
 
     public string IdParamBreath { get; set; } = CubismFramework.CubismIdManager
         .GetId(CubismDefaultParameterId.ParamBreath);
+
+    /// <summary>
+    /// マウスドラッグのX位置（5-r.5 で CubismUserModel の _dragX が削除されたため App 側で保持。P7 で LookUpdater へ移行予定）
+    /// </summary>
+    private float _dragX;
+    /// <summary>
+    /// マウスドラッグのY位置（同上）
+    /// </summary>
+    private float _dragY;
+    /// <summary>
+    /// リップシンクするかどうか（5-r.5 で CubismUserModel の _lipSync が削除されたため App 側で保持。P7 で LipSyncUpdater へ移行予定）
+    /// </summary>
+    private bool _lipSync = true;
 
     /// <summary>
     /// wavファイルハンドラ

@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Live2DCSharpSDK.Framework.Core;
 
 namespace Live2DCSharpSDK.Framework.Model;
@@ -9,9 +9,9 @@ namespace Live2DCSharpSDK.Framework.Model;
 public class CubismMoc : IDisposable
 {
     /// <summary>
-    /// Mocデータ
+    /// Mocデータ（官方 5-r.5 で private → protected に変更）
     /// </summary>
-    private readonly IntPtr _moc;
+    protected readonly IntPtr _moc;
     /// <summary>
     /// 読み込んだモデルの.moc3 Version
     /// </summary>
@@ -77,6 +77,31 @@ public class CubismMoc : IDisposable
     }
 
     /// <summary>
+    /// 未復元の Moc バッファから .moc3 のバージョンを取得する（官方 5-r.5 の新規 API GetMocVersionFromBuffer）。
+    /// 未対応の新しい MOC3 でもバージョンだけは取得できる。
+    /// </summary>
+    /// <param name="mocBytes">Mocファイルのバッファ</param>
+    /// <returns>.moc3 Version。不正な引数の場合は 0</returns>
+    public static uint GetMocVersionFromBuffer(byte[] mocBytes)
+    {
+        if (mocBytes == null || mocBytes.Length == 0)
+        {
+            // 官方は CubismLogError を出して 0 を返す（C# の CubismLog.Error は例外を投げるため Warning で代替）
+            CubismLog.Warning("Invalid mocBytes or size.");
+            return 0;
+        }
+
+        IntPtr alignedBuffer = CubismFramework.AllocateAligned(mocBytes.Length, CsmEnum.csmAlignofMoc);
+        Marshal.Copy(mocBytes, 0, alignedBuffer, mocBytes.Length);
+
+        var version = CubismCore.GetMocVersion(alignedBuffer, mocBytes.Length);
+
+        CubismFramework.DeallocateAligned(alignedBuffer);
+
+        return version;
+    }
+
+    /// <summary>
     /// Checks consistency of a moc.
     /// </summary>
     /// <param name="address">Address of unrevived moc. The address must be aligned to 'csmAlignofMoc'.</param>
@@ -91,7 +116,6 @@ public class CubismMoc : IDisposable
     /// Checks consistency of a moc.
     /// </summary>
     /// <param name="mocBytes">Mocファイルのバッファ</param>
-    /// <param name="size">バッファのサイズ</param>
     /// <returns>'true' if Moc is valid; 'false' otherwise.</returns>
     public static bool HasMocConsistencyFromUnrevivedMoc(byte[] data)
     {
@@ -108,7 +132,7 @@ public class CubismMoc : IDisposable
     /// <summary>
     /// デストラクタ。
     /// </summary>
-    public void Dispose()
+    public virtual void Dispose()
     {
         Model.Dispose();
         CubismFramework.DeallocateAligned(_moc);

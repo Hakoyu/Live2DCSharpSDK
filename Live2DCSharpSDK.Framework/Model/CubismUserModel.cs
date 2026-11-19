@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework.Effect;
+using Live2DCSharpSDK.Framework.Effect;
 using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Motion;
 using Live2DCSharpSDK.Framework.Physics;
@@ -74,21 +74,9 @@ public abstract class CubismUserModel : IDisposable
     /// </summary>
     protected CubismModelUserData? _modelUserData;
     /// <summary>
-    /// リップシンクするかどうか
-    /// </summary>
-    protected bool _lipSync;
-    /// <summary>
     /// 最後のリップシンクの制御値
     /// </summary>
     protected float _lastLipSyncValue;
-    /// <summary>
-    /// マウスドラッグのX位置
-    /// </summary>
-    protected float _dragX;
-    /// <summary>
-    /// マウスドラッグのY位置
-    /// </summary>
-    protected float _dragY;
     /// <summary>
     /// X軸方向の加速度
     /// </summary>
@@ -105,6 +93,13 @@ public abstract class CubismUserModel : IDisposable
     /// MOC3整合性検証するかどうか
     /// </summary>
     protected bool _mocConsistency;
+    /// <summary>
+    /// モーション整合性検証するかどうか（官方 5-r.5 で追加）
+    /// </summary>
+    protected bool _motionConsistency;
+
+    // 注: 5-r.5 で _lipSync / _dragX / _dragY は基底クラスから削除された
+    // （口型は CubismLipSyncUpdater、ドラッグは CubismLookUpdater が担当する。PLAN U11 / U12 / D-03）。
 
     /// <summary>
     /// CubismMotionQueueManagerにイベント用に登録するためのCallback。
@@ -122,8 +117,6 @@ public abstract class CubismUserModel : IDisposable
     /// </summary>
     public CubismUserModel()
     {
-        _lipSync = true;
-
         Opacity = 1.0f;
 
         // モーションマネージャーを作成
@@ -181,6 +174,34 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
+    /// モーションデータを読み込む（官方 5-r.5 の CubismUserModel::LoadMotion）。
+    /// ローカルは moc3 と同様にファイルパスを受け取る形にしている。
+    /// </summary>
+    /// <param name="buffer">motion3.jsonのファイルパス</param>
+    /// <param name="name">モーション名（ログ用）</param>
+    /// <param name="onFinishedMotionHandler">モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
+    /// <returns>生成したモーションデータ。読み込めない場合は null</returns>
+    /// <remarks>
+    /// TODO(P7): 官方は ICubismModelSetting* / group / index を受け取り、model3.json の
+    /// FadeInTime / FadeOutTime でモーション側のフェード値を上書きする（PLAN U01）。
+    /// 本地に ICubismModelSetting は無く、App 層が ModelSettingObj で同等処理を行っているため、
+    /// この上書きは App 側に残す（P7 で App から呼ぶ際に再検討する）。
+    /// shouldCheckMotionConsistency / BeganMotionCallback は P3（Motion 層）の受け皿ができてから追加する。
+    /// </remarks>
+    protected ACubismMotion? LoadMotion(string buffer, string name, FinishedMotionCallback? onFinishedMotionHandler = null)
+    {
+        if (string.IsNullOrEmpty(buffer))
+        {
+            CubismLog.Warning("Failed to LoadMotion(). Buffer is NULL.");
+            return null;
+        }
+
+        CubismLog.Debug($"[Live2D SDK]load motion: {name}");
+
+        return new CubismMotion(buffer, onFinishedMotionHandler);
+    }
+
+    /// <summary>
     /// ポーズデータを読み込む。
     /// </summary>
     /// <param name="buffer">pose3.jsonが読み込まれているバッファ</param>
@@ -205,6 +226,16 @@ public abstract class CubismUserModel : IDisposable
     protected void LoadUserData(string buffer)
     {
         _modelUserData = new CubismModelUserData(buffer);
+    }
+
+    /// <summary>
+    /// 未復元の Moc バッファから .moc3 のバージョンを取得する（官方 CubismUserModel::GetMocVersionFromBuffer）。
+    /// </summary>
+    /// <param name="buffer">moc3ファイルが読み込まれているバッファ</param>
+    /// <returns>.moc3 Version</returns>
+    public static uint GetMocVersionFromBuffer(byte[] buffer)
+    {
+        return CubismMoc.GetMocVersionFromBuffer(buffer);
     }
 
     /// <summary>
@@ -266,10 +297,22 @@ public abstract class CubismUserModel : IDisposable
 
     /// <summary>
     /// レンダラを生成して初期化を実行する。
+    /// 本地は「ホストが生成したレンダラを設定する」方式を維持する（PLAN D-06）。
     /// </summary>
     protected void CreateRenderer(CubismRenderer renderer)
     {
         Renderer = renderer;
+    }
+
+    /// <summary>
+    /// オフスクリーン（レンダーターゲット）のサイズを設定する（官方 5-r.5 の新規 API）。
+    /// ホストが実サイズで毎フレーム呼ぶ想定（PLAN D-06）。
+    /// </summary>
+    /// <param name="width">モデルを描画するバッファの幅</param>
+    /// <param name="height">モデルを描画するバッファの高さ</param>
+    public void SetRenderTargetSize(uint width, uint height)
+    {
+        Renderer?.SetRenderTargetSize(width, height);
     }
 
     /// <summary>
