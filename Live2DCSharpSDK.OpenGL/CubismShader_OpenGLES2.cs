@@ -1624,7 +1624,45 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// シェーダプログラムをコンパイルする
+    /// シェーダの info-log を取得する（GL_INFO_LOG_LENGTH が 0 なら空文字）。
+    /// 【F1】info-log は「コンパイル成否」ではなくドライバからのメッセージであり、
+    /// コンパイル成功時にも警告（例: ANGLE の "unexpected end of file found in directive"）が入り得る。
+    /// </summary>
+    private unsafe string ReadShaderInfoLog(int shader)
+    {
+        int logLength;
+        gl.GetShaderiv(shader, gl.GL_INFO_LOG_LENGTH, &logLength);
+        if (logLength <= 0)
+        {
+            return string.Empty;
+        }
+
+        gl.GetShaderInfoLog(shader, out string log);
+        return log ?? string.Empty;
+    }
+
+    /// <summary>
+    /// プログラムの info-log を取得する（GL_INFO_LOG_LENGTH が 0 なら空文字）。
+    /// </summary>
+    private unsafe string ReadProgramInfoLog(int shaderProgram)
+    {
+        int logLength;
+        gl.GetProgramiv(shaderProgram, gl.GL_INFO_LOG_LENGTH, &logLength);
+        if (logLength <= 0)
+        {
+            return string.Empty;
+        }
+
+        gl.GetProgramInfoLog(shaderProgram, out string log);
+        return log ?? string.Empty;
+    }
+
+    /// <summary>
+    /// シェーダをコンパイルする。
+    /// 【F1】成否の判定は GL_COMPILE_STATUS のみで行う。
+    /// glGetShaderiv(GL_COMPILE_STATUS) は「直近のコンパイルが成功なら GL_TRUE」を返し、
+    /// GL_INFO_LOG_LENGTH は「情報ログの文字数」を返すだけで成否を表さない（Khronos glGetShaderiv 仕様）。
+    /// よってコンパイル成功時に info-log が非空でも警告に降格して出力し、例外にしない。
     /// </summary>
     internal unsafe bool CompileShaderSource(out int outShader, int shaderType, string shaderSource)
     {
@@ -1634,68 +1672,74 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         gl.ShaderSource(outShader, shaderSource);
         gl.CompileShader(outShader);
 
-        int logLength;
-        gl.GetShaderiv(outShader, gl.GL_INFO_LOG_LENGTH, &logLength);
-        if (logLength > 0)
-        {
-            gl.GetShaderInfoLog(outShader, out string log);
-            CubismLog.Error($"[Live2D OpenGL]Shader compile log: {log}");
-        }
-
         gl.GetShaderiv(outShader, gl.GL_COMPILE_STATUS, &status);
+        string log = ReadShaderInfoLog(outShader);
+        string typeName = shaderType == gl.GL_VERTEX_SHADER ? "vertex" : "fragment";
+
         if (status == gl.GL_FALSE)
         {
             gl.DeleteShader(outShader);
+            CubismLog.Error("[Live2D OpenGL]{0} shader compile error: {1}", typeName, log);
             return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(log))
+        {
+            CubismLog.Warning("[Live2D OpenGL]{0} shader compile warning (GL_COMPILE_STATUS=OK): {1}", typeName, log);
         }
 
         return true;
     }
 
     /// <summary>
-    /// シェーダプログラムをリンクする
+    /// シェーダプログラムをリンクする。
+    /// 【F1】成否の判定は GL_LINK_STATUS のみで行う（glGetProgramiv 仕様）。
+    /// GL_INFO_LOG が非空でもリンク成功なら警告に降格する。
     /// </summary>
     internal unsafe bool LinkProgram(int shaderProgram)
     {
         int status;
         gl.LinkProgram(shaderProgram);
 
-        int logLength;
-        gl.GetProgramiv(shaderProgram, gl.GL_INFO_LOG_LENGTH, &logLength);
-        if (logLength > 0)
-        {
-            gl.GetProgramInfoLog(shaderProgram, out string log);
-            CubismLog.Error($"[Live2D OpenGL]Program link log: {log}");
-        }
-
         gl.GetProgramiv(shaderProgram, gl.GL_LINK_STATUS, &status);
+        string log = ReadProgramInfoLog(shaderProgram);
+
         if (status == gl.GL_FALSE)
         {
+            CubismLog.Error("[Live2D OpenGL]Program link error: {0}", log);
             return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(log))
+        {
+            CubismLog.Warning("[Live2D OpenGL]Program link warning (GL_LINK_STATUS=OK): {0}", log);
         }
 
         return true;
     }
 
     /// <summary>
-    /// シェーダプログラムを検証する
+    /// シェーダプログラムを検証する。
+    /// 【F1】成否の判定は GL_VALIDATE_STATUS のみで行う（glGetProgramiv 仕様、リンクと同じ誤りの修正）。
     /// </summary>
     internal unsafe bool ValidateProgram(int shaderProgram)
     {
-        int logLength, status;
+        int status;
 
         gl.ValidateProgram(shaderProgram);
-        gl.GetProgramiv(shaderProgram, gl.GL_INFO_LOG_LENGTH, &logLength);
-        if (logLength > 0)
-        {
-            gl.GetProgramInfoLog(shaderProgram, out string log);
-            CubismLog.Error($"[Live2D OpenGL]Validate program log: {log}");
-        }
 
         gl.GetProgramiv(shaderProgram, gl.GL_VALIDATE_STATUS, &status);
+        string log = ReadProgramInfoLog(shaderProgram);
+
         if (status == gl.GL_FALSE)
         {
+            CubismLog.Error("[Live2D OpenGL]Validate program error: {0}", log);
             return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(log))
+        {
+            CubismLog.Warning("[Live2D OpenGL]Validate program warning (GL_VALIDATE_STATUS=OK): {0}", log);
         }
 
         return true;
