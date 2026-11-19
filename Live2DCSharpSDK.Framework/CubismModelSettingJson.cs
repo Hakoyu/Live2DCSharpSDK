@@ -113,11 +113,11 @@ public static class CubismModelSettingJson
     }
 
     /// <summary>
-    /// 指定したグループのモーション数を取得する（官方 CubismModelSettingJson::GetMotionCount）。
+    /// 获取指定动作组的动作数量(对应官方 CubismModelSettingJson::GetMotionCount).
     /// </summary>
-    /// <param name="obj">モデル設定</param>
-    /// <param name="groupName">モーショングループ名</param>
-    /// <returns>モーション数。グループが無い場合は 0</returns>
+    /// <param name="obj">模型设置</param>
+    /// <param name="groupName">动作组名</param>
+    /// <returns>动作数量, 组不存在时为 0</returns>
     public static int GetMotionCount(this ModelSettingObj obj, string groupName)
     {
         var list = FindMotionList(obj, groupName);
@@ -126,29 +126,29 @@ public static class CubismModelSettingJson
     }
 
     /// <summary>
-    /// 指定したモーションのファイル名を取得する（官方 CubismModelSettingJson::GetMotionFileName）。
+    /// 获取指定动作的文件名(对应官方 CubismModelSettingJson::GetMotionFileName).
     /// </summary>
-    /// <param name="obj">モデル設定</param>
-    /// <param name="groupName">モーショングループ名</param>
-    /// <param name="index">グループ内のインデックス</param>
-    /// <returns>motion3.json のファイル名（model3.json 記載のまま）。存在しない場合は null</returns>
+    /// <param name="obj">模型设置</param>
+    /// <param name="groupName">动作组名</param>
+    /// <param name="index">组内索引</param>
+    /// <returns>motion3.json 的文件名(与 model3.json 记载一致), 不存在时为 null</returns>
     public static string? GetMotionFileName(this ModelSettingObj obj, string groupName, int index)
     {
         return FindMotion(obj, groupName, index)?.File;
     }
 
     /// <summary>
-    /// 指定したモーションのフェードイン時間を取得する（官方 CubismModelSettingJson::GetMotionFadeInTimeValue）。
-    /// 負値は「motion3.json 側の値を上書きしない」を意味する。
+    /// 获取指定动作的淡入时间(对应官方 CubismModelSettingJson::GetMotionFadeInTimeValue).
+    /// 负值表示不覆盖 motion3.json 中的值.
     /// </summary>
     /// <remarks>
-    /// 官方は未記載の場合 -1 を返すが、本地 ModelSettingObj は [DefaultValue(-1f)] が
-    /// System.Text.Json では効かないため未記載は 0 になる（既知の偏差。報告参照）。
+    /// 官方在未记录时返回 -1, 但本地 ModelSettingObj 的 [DefaultValue(-1f)] 在
+    /// System.Text.Json 下不生效, 因此未记录会得到 0(已知偏差).
     /// </remarks>
-    /// <param name="obj">モデル設定</param>
-    /// <param name="groupName">モーショングループ名</param>
-    /// <param name="index">グループ内のインデックス</param>
-    /// <returns>フェードイン時間。存在しない場合は -1</returns>
+    /// <param name="obj">模型设置</param>
+    /// <param name="groupName">动作组名</param>
+    /// <param name="index">组内索引</param>
+    /// <returns>淡入时间, 不存在时为 -1</returns>
     public static float GetMotionFadeInTimeValue(this ModelSettingObj obj, string groupName, int index)
     {
         var motion = FindMotion(obj, groupName, index);
@@ -157,13 +157,13 @@ public static class CubismModelSettingJson
     }
 
     /// <summary>
-    /// 指定したモーションのフェードアウト時間を取得する（官方 CubismModelSettingJson::GetMotionFadeOutTimeValue）。
-    /// 負値は「motion3.json 側の値を上書きしない」を意味する。
+    /// 获取指定动作的淡出时间(对应官方 CubismModelSettingJson::GetMotionFadeOutTimeValue).
+    /// 负值表示不覆盖 motion3.json 中的值.
     /// </summary>
-    /// <param name="obj">モデル設定</param>
-    /// <param name="groupName">モーショングループ名</param>
-    /// <param name="index">グループ内のインデックス</param>
-    /// <returns>フェードアウト時間。存在しない場合は -1</returns>
+    /// <param name="obj">模型设置</param>
+    /// <param name="groupName">动作组名</param>
+    /// <param name="index">组内索引</param>
+    /// <returns>淡出时间, 不存在时为 -1</returns>
     public static float GetMotionFadeOutTimeValue(this ModelSettingObj obj, string groupName, int index)
     {
         var motion = FindMotion(obj, groupName, index);
@@ -172,7 +172,7 @@ public static class CubismModelSettingJson
     }
 
     /// <summary>
-    /// グループ内のモーションリストを取得する（内部用）。
+    /// 获取组内的动作列表(内部使用).
     /// </summary>
     private static List<ModelSettingObj.FileReference.Motion>? FindMotionList(ModelSettingObj obj, string groupName)
     {
@@ -186,7 +186,7 @@ public static class CubismModelSettingJson
     }
 
     /// <summary>
-    /// グループ内のモーションを取得する（内部用）。
+    /// 获取组内的动作(内部使用).
     /// </summary>
     private static ModelSettingObj.FileReference.Motion? FindMotion(ModelSettingObj obj, string groupName, int index)
     {

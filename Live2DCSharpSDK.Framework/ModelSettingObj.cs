@@ -15,9 +15,9 @@ public record ModelSettingObj
         {
             public string File { get; set; }
             public string Sound { get; set; }
-            // 注: [DefaultValue(-1f)] は System.Text.Json（source-gen 含む）では
-            // 逆シリアル化時の既定値に反映されない（未記載プロパティは 0 になる）。
-            // 官方 GetMotionFadeInTimeValue の「未記載 = -1（上書きしない）」に合わせるため、
+            // 注: [DefaultValue(-1f)] 在 System.Text.Json(含 source-gen)中
+            // 不会作用于反序列化的默认值(未记录的属性会变成 0).
+            // 为与官方 GetMotionFadeInTimeValue 的 "未记录 = -1(不覆盖)" 语义一致,
             // 用等价的手段(属性初始化器)将 -1 设为默认值.
             [DefaultValue(-1f)]
             public float FadeInTime { get; set; } = -1f;

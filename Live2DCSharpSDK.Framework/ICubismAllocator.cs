@@ -1,37 +1,37 @@
 ﻿namespace Live2DCSharpSDK.Framework;
 
 /// <summary>
-/// メモリアロケーションを抽象化したクラス.
+/// 抽象化内存分配的接口.
 /// 
-/// メモリ確保・解放処理をプラットフォーム側で実装して
-/// フレームワークから呼び出すためのインターフェース。
+/// 由平台侧实现内存分配与释放,
+/// 供框架调用.
 /// </summary>
 public interface ICubismAllocator
 {
     /// <summary>
-    /// アラインメント制約なしのヒープ・メモリーを確保します。
+    /// 分配无对齐约束的堆内存.
     /// </summary>
-    /// <param name="size">確保するバイト数</param>
-    /// <returns>成功すると割り当てられたメモリのアドレス。 そうでなければ '0'を返す。</returns>
+    /// <param name="size">要分配的字节数</param>
+    /// <returns>成功时返回分配的内存地址, 否则返回 '0'.</returns>
     IntPtr Allocate(int size);
 
     /// <summary>
-    /// アラインメント制約なしのヒープ・メモリーを解放します。
+    /// 释放无对齐约束的堆内存.
     /// </summary>
-    /// <param name="memory">解放するメモリのアドレス</param>
+    /// <param name="memory">要释放的内存地址</param>
     void Deallocate(IntPtr memory);
 
     /// <summary>
-    /// アラインメント制約ありのヒープ・メモリーを確保します。
+    /// 分配带对齐约束的堆内存.
     /// </summary>
-    /// <param name="size">確保するバイト数</param>
-    /// <param name="alignment">メモリーブロックのアラインメント幅</param>
-    /// <returns>成功すると割り当てられたメモリのアドレス。 そうでなければ '0'を返す。</returns>
+    /// <param name="size">要分配的字节数</param>
+    /// <param name="alignment">内存块的对齐宽度</param>
+    /// <returns>成功时返回分配的内存地址, 否则返回 '0'.</returns>
     IntPtr AllocateAligned(int size, int alignment);
 
     /// <summary>
-    /// アラインメント制約ありのヒープ・メモリーを解放します。
+    /// 释放带对齐约束的堆内存.
     /// </summary>
-    /// <param name="alignedMemory">解放するメモリのアドレス</param>
+    /// <param name="alignedMemory">要释放的内存地址</param>
     void DeallocateAligned(IntPtr alignedMemory);
 }

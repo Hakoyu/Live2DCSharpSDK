@@ -3,47 +3,47 @@
 namespace Live2DCSharpSDK.Framework;
 
 /// <summary>
-/// ログ出力のレベル
+/// 日志输出级别
 /// </summary>
 public enum LogLevel
 {
     /// <summary>
-    /// 詳細ログ
+    /// 详细日志
     /// </summary>
     Verbose = 0,
     /// <summary>
-    /// デバッグログ
+    /// 调试日志
     /// </summary>
     Debug,
     /// <summary>
-    /// Infoログ
+    /// Info 日志
     /// </summary>
     Info,
     /// <summary>
-    /// 警告ログ
+    /// 警告日志
     /// </summary>
     Warning,
     /// <summary>
-    /// エラーログ
+    /// 错误日志
     /// </summary>
     Error,
     /// <summary>
-    /// ログ出力無効
+    /// 关闭日志输出
     /// </summary>
     Off
 };
 
 /// <summary>
-/// CubismFrameworkに設定するオプション要素を定義するクラス
+/// 定义 CubismFramework 配置选项的类
 /// </summary>
 public class CubismOption
 {
     /// <summary>
-    /// ログ出力の関数ポイ
+    /// 日志输出函数指针
     /// </summary>
     public required LogFunction LogFunction;
     /// <summary>
-    /// ログ出力レベル設定
+    /// 日志输出级别设置
     /// </summary>
     public LogLevel LoggingLevel;
 }
