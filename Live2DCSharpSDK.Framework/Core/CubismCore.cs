@@ -85,9 +85,17 @@ public static class CsmEnum
     /// </summary>
     public const int CsmMocVersion_40 = 3;
     /// <summary>
-    /// moc3 file version 4.2.00 -
+    /// moc3 file version 4.2.00 - 4.2.04
     /// </summary>
     public const int CsmMocVersion_42 = 4;
+    /// <summary>
+    /// moc3 file version 5.0.00 - 5.2.03
+    /// </summary>
+    public const int CsmMocVersion_50 = 5;
+    /// <summary>
+    /// moc3 file version 5.3.00 -
+    /// </summary>
+    public const int CsmMocVersion_53 = 6;
 
     //Parameter types.
 
@@ -99,6 +107,123 @@ public static class CsmEnum
     /// Parameter for blend shape.
     /// </summary>
     public const int CsmParameterType_BlendShape = 1;
+
+    //Color blend types (Live2DCubismCore.h:118-160).
+
+    /// <summary>
+    /// Normal blend.
+    /// </summary>
+    public const int CsmColorBlendType_Normal = 0;
+    /// <summary>
+    /// Add compatible blend. For version 5.2 and earlier.
+    /// </summary>
+    public const int CsmColorBlendType_AddCompatible = 1;
+    /// <summary>
+    /// Multiply compatible blend. For version 5.2 and earlier.
+    /// </summary>
+    public const int CsmColorBlendType_MultiplyCompatible = 2;
+    /// <summary>
+    /// Add blend.
+    /// </summary>
+    public const int CsmColorBlendType_Add = 3;
+    /// <summary>
+    /// AddGlow blend.
+    /// </summary>
+    public const int CsmColorBlendType_AddGlow = 4;
+    /// <summary>
+    /// Darken blend.
+    /// </summary>
+    public const int CsmColorBlendType_Darken = 5;
+    /// <summary>
+    /// Multiply blend.
+    /// </summary>
+    public const int CsmColorBlendType_Multiply = 6;
+    /// <summary>
+    /// ColorBurn blend.
+    /// </summary>
+    public const int CsmColorBlendType_ColorBurn = 7;
+    /// <summary>
+    /// LinearBurn blend.
+    /// </summary>
+    public const int CsmColorBlendType_LinearBurn = 8;
+    /// <summary>
+    /// Lighten blend.
+    /// </summary>
+    public const int CsmColorBlendType_Lighten = 9;
+    /// <summary>
+    /// Screen blend.
+    /// </summary>
+    public const int CsmColorBlendType_Screen = 10;
+    /// <summary>
+    /// ColorDodge blend.
+    /// </summary>
+    public const int CsmColorBlendType_ColorDodge = 11;
+    /// <summary>
+    /// Overlay blend.
+    /// </summary>
+    public const int CsmColorBlendType_Overlay = 12;
+    /// <summary>
+    /// SoftLight blend.
+    /// </summary>
+    public const int CsmColorBlendType_SoftLight = 13;
+    /// <summary>
+    /// HardLight blend.
+    /// </summary>
+    public const int CsmColorBlendType_HardLight = 14;
+    /// <summary>
+    /// LinearLight blend.
+    /// </summary>
+    public const int CsmColorBlendType_LinearLight = 15;
+    /// <summary>
+    /// Hue blend.
+    /// </summary>
+    public const int CsmColorBlendType_Hue = 16;
+    /// <summary>
+    /// Color blend.
+    /// </summary>
+    public const int CsmColorBlendType_Color = 17;
+
+    //Alpha blend types (Live2DCubismCore.h:162-175).
+
+    /// <summary>
+    /// Over blend.
+    /// </summary>
+    public const int CsmAlphaBlendType_Over = 0;
+    /// <summary>
+    /// Atop blend.
+    /// </summary>
+    public const int CsmAlphaBlendType_Atop = 1;
+    /// <summary>
+    /// Out blend.
+    /// </summary>
+    public const int CsmAlphaBlendType_Out = 2;
+    /// <summary>
+    /// ConjointOver blend.
+    /// </summary>
+    public const int CsmAlphaBlendType_ConjointOver = 3;
+    /// <summary>
+    /// DisjointOver blend.
+    /// </summary>
+    public const int CsmAlphaBlendType_DisjointOver = 4;
+
+    //Rendering object types.
+    //官方来源是 Framework/src/Rendering/CubismRenderer.hpp:33-37（非 Core C API）。
+    //Cubism 5-r.5 只保留 Drawable=0 / Offscreen=2，值 1 已被官方删除，不要补（PLAN D-15）。
+
+    /// <summary>
+    /// Type of rendering object.
+    /// </summary>
+    public enum DrawableObjectType
+    {
+        /// <summary>
+        /// Drawable object.
+        /// </summary>
+        Drawable = 0,
+        /// <summary>
+        /// Offscreen object.
+        /// </summary>
+        Offscreen = 2
+    }
 }
 
 /// <summary>
@@ -280,6 +405,14 @@ public static partial class CubismCore
     internal static unsafe partial float* GetParameterValues(IntPtr model);
 
     /// <summary>
+    /// Gets Parameter Repeat informations.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetParameterRepeats")]
+    internal static unsafe partial int* GetParameterRepeats(IntPtr model);
+
+    /// <summary>
     /// Gets number of key values of each parameter.
     /// </summary>
     /// <param name="model">Model to query.</param>
@@ -330,6 +463,14 @@ public static partial class CubismCore
     [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetPartParentPartIndices")]
     internal static unsafe partial int* GetPartParentPartIndices(IntPtr model);
 
+    /// <summary>
+    /// Gets part's offscreen indices.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetPartOffscreenIndices")]
+    internal static unsafe partial int* GetPartOffscreenIndices(IntPtr model);
+
     //DRAWABLES
 
     /// <summary>
@@ -366,6 +507,14 @@ public static partial class CubismCore
     internal static unsafe partial byte* GetDrawableDynamicFlags(IntPtr model);
 
     /// <summary>
+    /// Gets drawable blend modes.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetDrawableBlendModes")]
+    internal static unsafe partial int* GetDrawableBlendModes(IntPtr model);
+
+    /// <summary>
     /// Gets drawable texture indices.
     /// </summary>
     /// <param name="model">Model to query.</param>
@@ -382,13 +531,17 @@ public static partial class CubismCore
     internal static unsafe partial int* GetDrawableDrawOrders(IntPtr model);
 
     /// <summary>
-    /// Gets drawable render orders.
-    /// The higher the order, the more up front a drawable is.
+    /// Gets model draw orders.
     /// </summary>
     /// <param name="model">Model to query.</param>
-    /// <returns>Valid pointer on success; '0'otherwise.</returns>
-    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetDrawableRenderOrders")]
-    internal static unsafe partial int* GetDrawableRenderOrders(IntPtr model);
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    /// <remarks>
+    /// R5 改名：R1 的 csmGetDrawableRenderOrders 在 5-r.5 已从 Core 头文件中删除，
+    /// 新入口点为 csmGetRenderOrders（Live2DCubismCore.h:332）。EntryPoint 是字符串，
+    /// 改错不会编译报错，但运行期首次调用会抛 EntryPointNotFoundException。
+    /// </remarks>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetRenderOrders")]
+    internal static unsafe partial int* GetRenderOrders(IntPtr model);
 
     /// <summary>
     /// Gets drawable opacities.
@@ -484,4 +637,78 @@ public static partial class CubismCore
     /// <param name="model">Model containing flags.</param>
     [LibraryImport("Live2DCubismCore", EntryPoint = "csmResetDrawableDynamicFlags")]
     internal static unsafe partial void ResetDrawableDynamicFlags(IntPtr model);
+
+    //OFFSCREENS（R5 新增，Live2DCubismCore.h:675-756）
+
+    /// <summary>
+    /// Gets number of offscreens.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid count on success; '-1' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetOffscreenCount")]
+    internal static partial int GetOffscreenCount(IntPtr model);
+
+    /// <summary>
+    /// Gets offscreen blend modes.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetOffscreenBlendModes")]
+    internal static unsafe partial int* GetOffscreenBlendModes(IntPtr model);
+
+    /// <summary>
+    /// Gets offscreen opacities.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetOffscreenOpacities")]
+    internal static unsafe partial float* GetOffscreenOpacities(IntPtr model);
+
+    /// <summary>
+    /// Gets offscreen owner indices.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetOffscreenOwnerIndices")]
+    internal static unsafe partial int* GetOffscreenOwnerIndices(IntPtr model);
+
+    /// <summary>
+    /// Gets multiply color data for each offscreen.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetOffscreenMultiplyColors")]
+    internal static unsafe partial Vector4* GetOffscreenMultiplyColors(IntPtr model);
+
+    /// <summary>
+    /// Gets screen color data for each offscreen.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetOffscreenScreenColors")]
+    internal static unsafe partial Vector4* GetOffscreenScreenColors(IntPtr model);
+
+    /// <summary>
+    /// Gets numbers of masks of each offscreen.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetOffscreenMaskCounts")]
+    internal static unsafe partial int* GetOffscreenMaskCounts(IntPtr model);
+
+    /// <summary>
+    /// Gets mask indices of each offscreen.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetOffscreenMasks")]
+    internal static unsafe partial int** GetOffscreenMasks(IntPtr model);
+
+    /// <summary>
+    /// Gets constant offscreen flags.
+    /// </summary>
+    /// <param name="model">Model to query.</param>
+    /// <returns>Valid pointer on success; '0' otherwise.</returns>
+    [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetOffscreenConstantFlags")]
+    internal static unsafe partial byte* GetOffscreenConstantFlags(IntPtr model);
 }

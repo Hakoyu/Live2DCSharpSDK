@@ -694,7 +694,7 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの描画順リスト</returns>
     public unsafe int* GetDrawableRenderOrders()
     {
-        return CubismCore.GetDrawableRenderOrders(Model);
+        return CubismCore.GetRenderOrders(Model);
     }
 
     /// <summary>
