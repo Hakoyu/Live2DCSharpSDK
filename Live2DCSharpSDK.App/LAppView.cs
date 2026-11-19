@@ -67,8 +67,8 @@ public abstract class LAppView(LAppDelegate lapp)
         _deviceToScreen.TranslateRelative(-width * 0.5f, -height * 0.5f);
 
         // 设置显示范围
-        _viewMatrix.MaxScale = LAppDefine.ViewMaxScale; // 限界拡大率
-        _viewMatrix.MinScale = LAppDefine.ViewMinScale; // 限界縮小率
+        _viewMatrix.MaxScale = LAppDefine.ViewMaxScale; // 极限放大倍率
+        _viewMatrix.MinScale = LAppDefine.ViewMinScale; // 极限缩小倍率
 
         // 可显示的最大范围
         _viewMatrix.SetMaxScreenRect(
@@ -89,7 +89,7 @@ public abstract class LAppView(LAppDelegate lapp)
         var manager = lapp.Live2dManager;
         manager.ViewMatrix.SetMatrix(_viewMatrix);
 
-        // Cubism更新・描画
+        // Cubism 更新与绘制
         manager.OnUpdate();
 
         RenderPost();

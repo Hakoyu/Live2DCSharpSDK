@@ -8,7 +8,7 @@ namespace Live2DCSharpSDK.App;
 /// </summary>
 public static class LAppDefine
 {
-    // 画面
+    // 视图
     public const float ViewScale = 1.0f;
     public const float ViewMaxScale = 2.0f;
     public const float ViewMinScale = 0.8f;

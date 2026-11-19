@@ -17,7 +17,7 @@ public abstract class LAppDelegate : IDisposable
     public LAppLive2DManager Live2dManager { get; private set; }
 
     /// <summary>
-    /// View情報
+    /// View 信息
     /// </summary>
     public LAppView View { get; protected set; }
 
@@ -101,13 +101,13 @@ public abstract class LAppDelegate : IDisposable
     public abstract void RunPost();
 
     /// <summary>
-    /// 実行処理。
+    /// 执行处理.
     /// </summary>
     public void Run(float tick)
     {
         Resize();
 
-        // 時間更新
+        // 时间更新
         LAppPal.DeltaTime = tick;
 
         if (RunPre())
@@ -115,7 +115,7 @@ public abstract class LAppDelegate : IDisposable
             return;
         }
 
-        //描画更新
+        // 绘制更新
         View.Render();
 
         RunPost();
@@ -144,10 +144,10 @@ public abstract class LAppDelegate : IDisposable
     }
 
     /// <summary>
-    /// OpenGL用 glfwSetCursorPosCallback用関数。
+    /// 供 OpenGL 使用的 glfwSetCursorPosCallback 回调函数.
     /// </summary>
-    /// <param name="x">x座標</param>
-    /// <param name="y">x座標</param>
+    /// <param name="x">x 坐标</param>
+    /// <param name="y">y 坐标</param>
     public void OnMouseCallBack(float x, float y)
     {
         // 按下时的点击判定(OnTouchesBegan/Ended)使用上一次的坐标,

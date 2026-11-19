@@ -307,10 +307,10 @@ public class LAppModel : CubismUserModel
         //   200 EyeBlink → 300 Expression → 400 Look → 500 Breath → 600 Physics → 700 LipSync → 800 Pose
         //-----------------------------------------------------------------
 
-        // 表情（官方 LAppModel.cpp:158-159）
+        // 表情(官方 LAppModel.cpp:158-159)
         RegisterUpdater(new CubismExpressionUpdater(_expressionManager));
 
-        // 物理演算（官方 LAppModel.cpp:172-173）
+        // 物理演算(官方 LAppModel.cpp:172-173)
         if (_physics != null)
         {
             _physicsUpdater = new LAppPhysicsUpdater(_physics);
@@ -329,7 +329,7 @@ public class LAppModel : CubismUserModel
             RegisterUpdater(new CubismEyeBlinkUpdater(() => _motionUpdated, _eyeBlink));
         }
 
-        // 呼吸（官方 LAppModel.cpp:219-220）
+        // 呼吸(官方 LAppModel.cpp:219-220)
         RegisterUpdater(new CubismBreathUpdater(_breath));
 
         // 不注册口型同步: 本轮不引入 wav 解码, 口型值恒为 0.
@@ -771,7 +771,7 @@ public class LAppModel : CubismUserModel
     }
 
     /// <summary>
-    /// モーションデータをグループ名から一括でロードする。
+    /// 按组名批量加载动作数据.
     /// 动作数据的名字在内部从 ModelSetting 获取.
     /// </summary>
     /// <param name="group">动作数据的组名</param>

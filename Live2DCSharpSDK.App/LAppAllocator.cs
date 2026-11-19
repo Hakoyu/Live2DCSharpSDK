@@ -132,7 +132,7 @@ public class LAppAllocator : ICubismAllocator
     /// 以 Error 级别输出日志, 但不抛出异常.
     /// </summary>
     /// <remarks>
-    /// <see cref="CubismLog.Error"/> 输出日志后必定抛异常(本次不改其本体),
+    /// <see cref="CubismLog.Error"/> 输出日志后必定抛异常(本次不改动其本身),
     /// 与 ICubismAllocator "分配失败时返回 0" 的契约冲突.
     /// 因此保持与 CubismLog 相同的输出条件(日志级别), 只省略 throw.
     /// </remarks>

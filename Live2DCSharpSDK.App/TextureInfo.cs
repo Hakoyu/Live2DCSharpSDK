@@ -1,7 +1,7 @@
 ﻿namespace Live2DCSharpSDK.App;
 
 /// <summary>
-/// 画像情報構造体
+/// 图像信息结构体
 /// </summary>
 public abstract class TextureInfo
 {
@@ -11,7 +11,7 @@ public abstract class TextureInfo
     /// </summary>
     public int Id;
     /// <summary>
-    /// 横幅
+    /// 宽度
     /// </summary>
     public int Width;
     /// <summary>

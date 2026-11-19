@@ -46,9 +46,9 @@ public partial class MainWindow : Window
         {
             BGColor = new(0, 1, 0, 1)
         };
-        // モデルのパスはハードコードせず、App 層の ModelResourceLocator で解決する
-        // （上流 sample は "F:\\live2d\\Resources" 直書きだった。本仓库はパラメータ化）。
-        // 見つからない場合も例外にせず、空のシーンで起動を続ける。
+        // 模型路径不硬编码, 由 App 层的 ModelResourceLocator 解析
+        // (上游 sample 直接写死 "F:\\live2d\\Resources", 本仓库改为参数化).
+        // 找不到时也不抛出异常, 继续以空场景启动.
         if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
         {
             try
@@ -68,11 +68,11 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// ログ出力。WinExe（コンソール無し）で起動した場合、Console.WriteLine が
-    /// "句柄无效"（ERROR_INVALID_HANDLE）で例外になることがあるため、
-    /// ログ出力でプロセスを落とさないように包む。
+    /// 日志输出. 以 WinExe(无控制台)启动时, Console.WriteLine 可能因
+    /// "句柄无效"(ERROR_INVALID_HANDLE)而抛出异常, 因此
+    /// 把日志输出包起来, 避免导致进程退出.
     /// </summary>
-    /// <param name="message">出力する文字列</param>
+    /// <param name="message">要输出的字符串</param>
     private static void Log(string message)
     {
         try
@@ -81,8 +81,8 @@ public partial class MainWindow : Window
         }
         catch (Exception e)
         {
-            // コンソールハンドルが無効な環境（WinExe をリダイレクト無しで起動した場合など）では
-            // IOException / UnauthorizedAccessException の両方が来るため、ここで握りつぶす。
+            // 控制台句柄无效的环境中(例如未重定向启动 WinExe),
+            // 会同时出现 IOException / UnauthorizedAccessException, 因此在此吞掉.
             System.Diagnostics.Debug.WriteLine($"{message} (console write failed: {e.GetType().Name})");
         }
     }
@@ -103,8 +103,8 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// ウィンドウ終了時の後片付け（公式 Samples/OpenGL/.../LAppLive2DManager.cpp:77 の解放経路に相当）。
-    /// GLWpfControl には deinit イベントが無いため Closed でコンテキストを明示的に current にしてから解放する。
+    /// 窗口结束时的清理(相当于官方 Samples/OpenGL/.../LAppLive2DManager.cpp:77 的释放路径).
+    /// GLWpfControl 没有 deinit 事件, 因此在 Closed 中显式把 context 置为 current 后再释放.
     /// </summary>
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
@@ -115,20 +115,20 @@ public partial class MainWindow : Window
 
             lapp?.Dispose();
 
-            // プロセス共有の offscreen manager を解放する（官方 LAppLive2DManager::ReleaseInstance()）。
+            // 释放进程共享的 offscreen manager(官方 LAppLive2DManager::ReleaseInstance()).
             CubismOffscreenManager_OpenGLES2.ReleaseInstance();
             Log("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
 
             context?.MakeNoneCurrent();
 
-            // 注: GLControl.Dispose() は呼ばない。OpenTK.GLWpfControl 4.3.1 の
-            // GLWpfControlRenderer.Dispose → DxGlContext.Dispose → DXCloseDeviceNV が
-            // AccessViolation（実測 0xC0000005, 終了コード 139）を起こすため、D3D 相互運用の後片付けは
-            // WPF/OS の破棄経路に任せる（GL リソースは lapp.Dispose + ReleaseInstance で解放済み）。
+            // 注: 不调用 GLControl.Dispose(). OpenTK.GLWpfControl 4.3.1 中
+            // GLWpfControlRenderer.Dispose → DxGlContext.Dispose → DXCloseDeviceNV 会
+            // 引发 AccessViolation(实测 0xC0000005, 退出码 139), 因此 D3D 互操作的清理
+            // 交给 WPF/OS 的销毁路径处理(GL 资源已由 lapp.Dispose + ReleaseInstance 释放).
         }
         catch (Exception ex)
         {
-            // 終了経路でコンテキストが既に無効な場合でもプロセス終了を妨げない。
+            // 结束路径中即使 context 已失效也不妨碍进程退出.
             Log($"[Live2D App]release on close failed: {ex.GetType().Name}: {ex.Message}");
         }
     }
