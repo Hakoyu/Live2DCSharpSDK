@@ -63,7 +63,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            Log($"[Live2D App]モデル未検出のため空のシーンで起動します: {modelName}");
+            Log($"[Live2D App]未找到模型, 以空场景启动: {modelName}");
         }
     }
 

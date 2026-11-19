@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Effect;
@@ -189,7 +190,7 @@ public class LAppModel : CubismUserModel
         var path = _modelSetting.FileReferences?.Moc;
         if (!string.IsNullOrWhiteSpace(path))
         {
-            path = Path.GetFullPath(_modelHomeDir + path);
+            path = Path.GetFullPath(Path.Combine(_modelHomeDir, path));
             if (!File.Exists(path))
             {
                 throw new Exception("model is null");
@@ -208,7 +209,12 @@ public class LAppModel : CubismUserModel
                 var item = _modelSetting.FileReferences.Expressions[i];
                 string name = item.Name;
                 path = item.File;
-                path = Path.GetFullPath(_modelHomeDir + path);
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    continue;
+                }
+
+                path = Path.GetFullPath(Path.Combine(_modelHomeDir, path));
                 if (!File.Exists(path))
                 {
                     continue;
@@ -231,7 +237,7 @@ public class LAppModel : CubismUserModel
         path = _modelSetting.FileReferences?.Physics;
         if (!string.IsNullOrWhiteSpace(path))
         {
-            path = Path.GetFullPath(_modelHomeDir + path);
+            path = Path.GetFullPath(Path.Combine(_modelHomeDir, path));
             if (File.Exists(path))
             {
                 LoadPhysics(path);
@@ -242,7 +248,7 @@ public class LAppModel : CubismUserModel
         path = _modelSetting.FileReferences?.Pose;
         if (!string.IsNullOrWhiteSpace(path))
         {
-            path = Path.GetFullPath(_modelHomeDir + path);
+            path = Path.GetFullPath(Path.Combine(_modelHomeDir, path));
             if (File.Exists(path))
             {
                 LoadPose(path);
@@ -261,7 +267,7 @@ public class LAppModel : CubismUserModel
         path = _modelSetting.FileReferences?.UserData;
         if (!string.IsNullOrWhiteSpace(path))
         {
-            path = Path.GetFullPath(_modelHomeDir + path);
+            path = Path.GetFullPath(Path.Combine(_modelHomeDir, path));
             if (File.Exists(path))
             {
                 LoadUserData(path);
@@ -532,17 +538,43 @@ public class LAppModel : CubismUserModel
     /// <param name="priority">优先级</param>
     /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>
-    /// <returns>返回已开始动作的识别编号, 作为 IsFinished() 的参数用于判断单个动作是否结束. 无法开始时返回 "-1".</returns>
+    /// <returns>动作的队列条目. 无法开始时返回 null.</returns>
     public CubismMotionQueueEntry? StartMotion(string name, MotionPriority priority, FinishedMotionCallback? onFinishedMotionHandler = null, BeganMotionCallback? onBeganMotionHandler = null)
     {
-        var temp = name.Split("_");
-        if (temp.Length != 2)
+        // 以最后一个下划线拆分: 官方动作名的格式是 "组名_编号", 组名本身允许包含下划线(如 "Tap_Body_0").
+        if (string.IsNullOrEmpty(name))
         {
-            throw new Exception("motion name error");
+            CubismLog.Warning("[Live2D App]motion name is empty.");
+            return null;
         }
-        return StartMotion(temp[0], int.Parse(temp[1]), priority, onFinishedMotionHandler, onBeganMotionHandler);
+
+        int separator = name.LastIndexOf('_');
+        if (separator <= 0 || separator == name.Length - 1)
+        {
+            CubismLog.Warning($"[Live2D App]motion name error: [{name}]. Expected \"group_no\".");
+            return null;
+        }
+
+        string noText = name[(separator + 1)..];
+        if (int.TryParse(noText, NumberStyles.None, CultureInfo.InvariantCulture, out int no) is false)
+        {
+            CubismLog.Warning($"[Live2D App]motion name error: [{name}]. Invalid motion index.");
+            return null;
+        }
+
+        return StartMotion(name[..separator], no, priority, onFinishedMotionHandler, onBeganMotionHandler);
     }
 
+    /// <summary>
+    /// 开始播放指定动作组内的动作.
+    /// 组或编号不存在时与官方一样按 "无法开始" 处理, 返回 null 而不抛异常.
+    /// </summary>
+    /// <param name="group">动作组名</param>
+    /// <param name="no">组内编号</param>
+    /// <param name="priority">优先级</param>
+    /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
+    /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>
+    /// <returns>动作的队列条目. 无法开始时返回 null.</returns>
     public CubismMotionQueueEntry? StartMotion(string group, int no, MotionPriority priority, FinishedMotionCallback? onFinishedMotionHandler = null, BeganMotionCallback? onBeganMotionHandler = null)
     {
         if (priority == MotionPriority.PriorityForce)
@@ -555,7 +587,18 @@ public class LAppModel : CubismUserModel
             return null;
         }
 
-        var item = _modelSetting.FileReferences.Motions[group][no];
+        // 组或编号不存在时按 "无法开始" 处理, 与官方 GetMotionFileName 返回空串后走同一分支等价.
+        var motions = _modelSetting.FileReferences?.Motions;
+        if (motions is null || motions.TryGetValue(group, out var items) is false || no < 0 || no >= items.Count)
+        {
+            CubismLog.Warning($"[Live2D App]Can't start motion [{group}_{no}]. Motion is not found.");
+
+            // 恢复未能开始的动作的预约优先级(官方 LAppModel.cpp:448)
+            _motionManager.ReservePriority = MotionPriority.PriorityNone;
+            return null;
+        }
+
+        var item = items[no];
 
         //ex) idle_0
         string name = $"{group}_{no}";
@@ -583,7 +626,14 @@ public class LAppModel : CubismUserModel
         }
         else
         {
-            motion = (value as CubismMotion)!;
+            if (value is not CubismMotion cachedMotion)
+            {
+                CubismLog.Warning($"[Live2D App]Can't start motion [{group}_{no}]. Cached motion type mismatch.");
+                _motionManager.ReservePriority = MotionPriority.PriorityNone;
+                return null;
+            }
+
+            motion = cachedMotion;
             motion.OnFinishedMotion = onFinishedMotionHandler;
             motion.OnBeganMotion = onBeganMotionHandler;
         }
@@ -608,16 +658,18 @@ public class LAppModel : CubismUserModel
     /// <param name="priority">优先级</param>
     /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>
-    /// <returns>返回已开始动作的识别编号, 作为 IsFinished() 的参数用于判断单个动作是否结束. 无法开始时返回 "-1".</returns>
+    /// <returns>动作的队列条目. 无法开始时返回 null.</returns>
     public object? StartRandomMotion(string group, MotionPriority priority, FinishedMotionCallback? onFinishedMotionHandler = null, BeganMotionCallback? onBeganMotionHandler = null)
     {
-        if (_modelSetting.FileReferences?.Motions?.ContainsKey(group) == true)
+        var motions = _modelSetting.FileReferences?.Motions;
+        if (motions is null || motions.TryGetValue(group, out var items) is false || items.Count == 0)
         {
-            int no = _random.Next() % _modelSetting.FileReferences.Motions[group].Count;
-            return StartMotion(group, no, priority, onFinishedMotionHandler, onBeganMotionHandler);
+            // 与官方 StartRandomMotion 相同: 组不存在或为空时直接返回无效句柄, 不抛异常.
+            return null;
         }
 
-        return null;
+        int no = _random.Next() % items.Count;
+        return StartMotion(group, no, priority, onFinishedMotionHandler, onBeganMotionHandler);
     }
 
     /// <summary>
@@ -763,7 +815,7 @@ public class LAppModel : CubismUserModel
                 var texturePath = _modelSetting.FileReferences.Textures[index];
                 if (string.IsNullOrWhiteSpace(texturePath))
                     continue;
-                texturePath = Path.GetFullPath(_modelHomeDir + texturePath);
+                texturePath = Path.GetFullPath(Path.Combine(_modelHomeDir, texturePath));
                 var texture = _lapp.TextureManager.CreateTextureFromPngFile(this, index, texturePath);
                 Textures.Add(texture);
             }

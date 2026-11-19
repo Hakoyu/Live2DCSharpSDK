@@ -86,11 +86,11 @@ public static class ModelResourceLocator
             if (IsModelPresent(envDir, name))
             {
                 dir = envDir;
-                CubismLog.Info($"[Live2D App]モデルを環境変数から解決: dir=\"{dir}\", name=\"{name}\"");
+                CubismLog.Info($"[Live2D App]已从环境变量解析模型: dir=\"{dir}\", name=\"{name}\"");
                 return true;
             }
 
-            CubismLog.Warning($"[Live2D App]{ModelDirEnvName}=\"{envDir}\" にモデル '{name}' が見つからないため、相対探索を試します。");
+            CubismLog.Warning($"[Live2D App]{ModelDirEnvName}=\"{envDir}\" 下找不到模型 '{name}', 改试相对搜索.");
         }
 
         // 2. 从 BaseDirectory 向父方向的 SDK 相对搜索
@@ -98,7 +98,7 @@ public static class ModelResourceLocator
         if (sdkSamples is not null && IsModelPresent(sdkSamples, name))
         {
             dir = sdkSamples;
-            CubismLog.Info($"[Live2D App]モデルを SDK 相対探索で解決: dir=\"{dir}\", name=\"{name}\"");
+            CubismLog.Info($"[Live2D App]已通过 SDK 相对搜索解析模型: dir=\"{dir}\", name=\"{name}\"");
             return true;
         }
 
@@ -108,14 +108,14 @@ public static class ModelResourceLocator
         if (IsModelPresent(localResources, name))
         {
             dir = localResources;
-            CubismLog.Info($"[Live2D App]モデルを実行ファイル隣の Resources から解決: dir=\"{dir}\", name=\"{name}\"");
+            CubismLog.Info($"[Live2D App]已从可执行文件旁边的 Resources 解析模型: dir=\"{dir}\", name=\"{name}\"");
             return true;
         }
 
         dir = attempted[^1];
         CubismLog.Warning(
-            $"[Live2D App]モデル '{name}' が見つかりません。試行したパス: [{string.Join(" | ", attempted)}]。" +
-            "空のシーンで起動します。");
+            $"[Live2D App]模型 '{name}' 未找到. 已尝试的路径: [{string.Join(" | ", attempted)}]." +
+            "将以空场景启动.");
         return false;
     }
 
@@ -178,7 +178,7 @@ public static class ModelResourceLocator
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or System.Security.SecurityException)
         {
-            CubismLog.Warning($"[Live2D App]モデル探索の起点 \"{path}\" が不正です: {ex.GetType().Name}: {ex.Message}");
+            CubismLog.Warning($"[Live2D App]模型搜索起点 \"{path}\" 不合法: {ex.GetType().Name}: {ex.Message}");
             return null;
         }
     }
@@ -195,7 +195,7 @@ public static class ModelResourceLocator
         }
         catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException or PathTooLongException or System.Security.SecurityException)
         {
-            CubismLog.Warning($"[Live2D App]親ディレクトリの取得に失敗しました \"{directory}\": {ex.GetType().Name}: {ex.Message}");
+            CubismLog.Warning($"[Live2D App]获取父目录失败 \"{directory}\": {ex.GetType().Name}: {ex.Message}");
             return null;
         }
     }

@@ -36,8 +36,14 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
     /// </summary>
     /// <param name="no">模型列表的索引值</param>
     /// <returns>返回模型实例. 索引值越界时返回 NULL.</returns>
-    public LAppModel GetModel(int no)
+    public LAppModel? GetModel(int no)
     {
+        // 与官方 LAppLive2DManager::GetModel 一致: 索引越界时返回 NULL, 而不是抛异常.
+        if (no < 0 || no >= _models.Count)
+        {
+            return null;
+        }
+
         return _models[no];
     }
 
@@ -63,7 +69,7 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
     {
         for (int i = 0; i < _models.Count; i++)
         {
-            LAppModel model = GetModel(i);
+            LAppModel model = _models[i];
 
             model.SetDragging(x, y);
         }
@@ -114,7 +120,7 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
     {
         for (int i = 0; i < _models.Count; i++)
         {
-            GetModel(i).SetRenderTargetSize((uint)width, (uint)height);
+            _models[i].SetRenderTargetSize((uint)width, (uint)height);
         }
     }
 
@@ -165,17 +171,19 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
         // 需要让目录名与 model3.json 的名字保持一致.
         if (!dir.EndsWith('\\') && !dir.EndsWith('/'))
         {
-            dir = Path.GetFullPath(dir + '/');
+            dir = Path.GetFullPath(dir + Path.DirectorySeparatorChar);
         }
-        var modelJsonName = Path.GetFullPath($"{dir}{name}");
+
+        // 统一用 Path.Combine 拼接, 目录带不带尾分隔符都得到相同结果.
+        var modelJsonName = Path.GetFullPath(Path.Combine(dir, name));
         if (!File.Exists(modelJsonName))
         {
-            modelJsonName = Path.GetFullPath($"{dir}{name}.model3.json");
+            modelJsonName = Path.GetFullPath(Path.Combine(dir, name + ".model3.json"));
         }
         if (!File.Exists(modelJsonName))
         {
-            dir = Path.GetFullPath(dir + name + '/');
-            modelJsonName = Path.GetFullPath($"{dir}{name}.model3.json");
+            dir = Path.GetFullPath(Path.Combine(dir, name) + Path.DirectorySeparatorChar);
+            modelJsonName = Path.GetFullPath(Path.Combine(dir, name + ".model3.json"));
         }
         if (!File.Exists(modelJsonName))
         {
@@ -190,7 +198,7 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
 
     public void RemoveModel(int index)
     {
-        if (_models.Count > index)
+        if (index >= 0 && index < _models.Count)
         {
             var model = _models[index];
             _models.RemoveAt(index);

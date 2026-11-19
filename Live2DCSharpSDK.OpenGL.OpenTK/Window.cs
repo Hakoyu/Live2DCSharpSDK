@@ -52,7 +52,7 @@ public class Window : GameWindow
         }
         else
         {
-            Console.WriteLine($"[Live2D App]モデル未検出のため空のシーンで起動します: {modelName}");
+            Console.WriteLine($"[Live2D App]未找到模型, 以空场景启动: {modelName}");
         }
     }
 
