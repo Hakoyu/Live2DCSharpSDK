@@ -41,9 +41,9 @@ public class CubismUpdateScheduler : IDisposable
     /// 更新処理のリストを実行順に並べ替える。
     /// </summary>
     /// <remarks>
-    /// PLAN D-04: 安定ソートが必須。LINQ の OrderBy は安定ソートなので、
-    /// 同じ実行順序の更新処理は登録順が保たれる。
-    /// List&lt;T&gt;.Sort は不安定ソートなので使用禁止。
+    /// 必须使用稳定排序: LINQ 的 OrderBy 是稳定排序,
+    /// 相同执行顺序的更新处理会保持注册顺序.
+    /// List&lt;T&gt;.Sort 为不稳定排序, 禁止使用.
     /// </remarks>
     public void SortUpdatableList()
     {

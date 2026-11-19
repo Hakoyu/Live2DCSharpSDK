@@ -3,23 +3,23 @@
 public enum EyeState
 {
     /// <summary>
-    /// 初期状態
+    /// 初始状态
     /// </summary>
     First = 0,
     /// <summary>
-    /// まばたきしていない状態
+    /// 未眨眼状态
     /// </summary>
     Interval,
     /// <summary>
-    /// まぶたが閉じていく途中の状態
+    /// 眼睑闭合过程中的状态
     /// </summary>
     Closing,
     /// <summary>
-    /// まぶたが閉じている状態
+    /// 眼睑已闭合状态
     /// </summary>
     Closed,
     /// <summary>
-    /// まぶたが開いていく途中の状態
+    /// 眼睑睁开过程中的状态
     /// </summary>
     Opening
 };

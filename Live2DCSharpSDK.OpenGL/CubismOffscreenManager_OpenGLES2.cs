@@ -4,9 +4,9 @@ using Live2DCSharpSDK.Framework.Rendering;
 namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
-/// オフスクリーン用のレンダーターゲットを管理するクラス
-/// （官方 OpenGL/CubismOffscreenManager_OpenGLES2.hpp:19-57 / .cpp:17-67、B4）。
-/// 官方同様にシングルトン（OpenGL 側のみ。Vulkan 側は CubismDeviceInfo 経由で非シングルトン）。
+/// 管理 Offscreen 用渲染目标的类
+/// (对应官方 OpenGL/CubismOffscreenManager_OpenGLES2.hpp:19-57 / .cpp:17-67).
+/// 与官方相同为单例 (仅 OpenGL 侧. Vulkan 侧通过 CubismDeviceInfo 使用非单例). 
 /// </summary>
 public sealed class CubismOffscreenManager_OpenGLES2 : ICubismOffscreenManager<CubismRenderTarget_OpenGLES2>
 {
@@ -18,8 +18,8 @@ public sealed class CubismOffscreenManager_OpenGLES2 : ICubismOffscreenManager<C
     }
 
     /// <summary>
-    /// クラスのインスタンス（シングルトン）を返す。
-    /// インスタンスが生成されていない場合は内部で生成する。
+    /// 返回类的实例 (单例). 
+    /// 实例尚未生成时在内部生成. 
     /// </summary>
     public static CubismOffscreenManager_OpenGLES2 GetInstance()
     {
@@ -35,7 +35,7 @@ public sealed class CubismOffscreenManager_OpenGLES2 : ICubismOffscreenManager<C
     }
 
     /// <summary>
-    /// クラスのインスタンス（シングルトン）を解放する。
+    /// 释放类的实例 (单例). 
     /// </summary>
     public static void ReleaseInstance()
     {
@@ -47,35 +47,35 @@ public sealed class CubismOffscreenManager_OpenGLES2 : ICubismOffscreenManager<C
     }
 
     /// <summary>
-    /// 使用可能なレンダーターゲットの取得（官方 GetOffscreenRenderTarget）。
+    /// 获取可用的渲染目标 (官方 GetOffscreenRenderTarget). 
     /// </summary>
     /// <param name="width">幅</param>
-    /// <param name="height">高さ</param>
-    /// <returns>使用可能なレンダーターゲット</returns>
+    /// <param name="height">高度</param>
+    /// <returns>可用的渲染目标</returns>
     public CubismRenderTarget_OpenGLES2 GetOffscreenRenderTarget(uint width, uint height)
     {
-        // 使用数を更新
+        // 更新使用数
         UpdateRenderTargetCount();
 
-        // 使われていないリソースコンテナがあればそれを返す
+        // 若有未被使用的资源容器则返回它
         CubismRenderTarget_OpenGLES2? offscreenRenderTarget = GetUnusedOffscreenRenderTarget();
         if (offscreenRenderTarget != null)
         {
-            // サイズが違う場合は再作成する
+            // 尺寸不同时重新创建
             if (offscreenRenderTarget.GetBufferWidth() != width || offscreenRenderTarget.GetBufferHeight() != height)
             {
-                // S6: 作成に失敗しても戻り値の契約は非 null なので返すが、失敗を記録する。
-                //     呼び出し側（CubismRenderer_OpenGLES2.AddOffscreen）は IsValid() で判定して描画をスキップする。
+                // 创建失败时返回值契约仍为非 null, 因此照常返回, 但会记录失败状态.
+                //     调用方 (CubismRenderer_OpenGLES2.AddOffscreen) 用 IsValid() 判定后跳过绘制. 
                 if (!offscreenRenderTarget.CreateRenderTarget((int)width, (int)height))
                 {
                     WarnInvalidRenderTarget(width, height);
                 }
             }
-            // 既存の未使用レンダーターゲットを返す
+            // 返回已存在的未使用渲染目标
             return offscreenRenderTarget;
         }
 
-        // 新規にレンダーターゲットを作成して登録する
+        // 新建渲染目标并注册
         offscreenRenderTarget = CreateOffscreenRenderTarget();
         if (!offscreenRenderTarget.CreateRenderTarget((int)width, (int)height))
         {
@@ -85,8 +85,8 @@ public sealed class CubismOffscreenManager_OpenGLES2 : ICubismOffscreenManager<C
     }
 
     /// <summary>
-    /// S6: オフスクリーン用 FBO を作成できなかったことを警告する。
-    /// 状態コード・サイズなどの詳細は <see cref="CubismRenderTarget_OpenGLES2.CreateRenderTarget"/> 側で出力済み。
+    /// 警告离屏用帧缓冲创建失败.
+    /// 状态码, 尺寸等详细信息已由 <see cref="CubismRenderTarget_OpenGLES2.CreateRenderTarget"/> 侧输出. 
     /// </summary>
     private static void WarnInvalidRenderTarget(uint width, uint height)
     {

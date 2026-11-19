@@ -6,9 +6,9 @@ namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
 /// motion3.json の整合性検証に失敗したことを表す例外（本地独自）。
-/// 官方の CubismMotion::Create は NULL を返すが、C# のコンストラクタは null を返せないため、
-/// この型で失敗を通知する。CubismUserModel.LoadMotion はこの型だけを捕捉して null に変換する
-/// （G2 finding F2: 他の例外は握りつぶさない）。
+/// 官方 CubismMotion::Create 返回 NULL, 但 C# 构造函数无法返回 null,
+/// 因此用该类型通知失败. CubismUserModel.LoadMotion 只捕获该类型并转换为 null
+/// (其他异常不吞掉).
 /// </summary>
 public sealed class CubismMotionConsistencyException : Exception
 {
@@ -357,7 +357,7 @@ public class CubismMotion : ACubismMotion
         if (shouldCheckMotionConsistency && !CubismMotionJson.HasConsistency(obj))
         {
             // 官方 CubismMotion::Parse は _motionData を埋めずに戻り、Create が NULL を返す。
-            // C# はコンストラクタから null を返せないため、専用例外で通知する（G2 finding F2）。
+            // C# 构造函数无法返回 null, 因此用专用异常通知(其他异常不吞掉).
             throw new CubismMotionConsistencyException();
         }
 

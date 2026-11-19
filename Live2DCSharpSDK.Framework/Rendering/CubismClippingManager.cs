@@ -13,7 +13,7 @@ public abstract class CubismClippingManager
     /// </summary>
     public abstract RenderType RenderType { get; }
     /// <summary>
-    /// 処理するオブジェクトタイプ（Drawable / Offscreen の 2 系統を区別する。PLAN D-08）。
+    /// 处理的对象类型(用于区分 Drawable / Offscreen 两个体系).
     /// 官方 R5 は Initialize 等の引数で都度渡すが、本地は manager を 2 系統に分ける
     /// （drawable 用 / offscreen 用）ためフィールドで保持する。
     /// 既定値は Drawable（値 0）。Offscreen は値 2（値 1 は官方で削除済み）。
@@ -468,7 +468,7 @@ public abstract class CubismClippingManager
             {
                 // マスクの制限数の警告を出す
                 // 官方 release 语义：仅记录 + 断言（CSM_ASSERT 在 release 下不生效），仍继续渲染。
-                // 本地 R1 的 CubismLog.Error 会 throw 导致加载中断，因此这里降为 Warning。
+                // 本地的 CubismLog.Error 会抛异常导致加载中断, 因此这里降级为 Warning.
                 int count = usingClipCount - useClippingMaskMaxCount;
                 CubismLog.Warning("[Live2D SDK]not supported mask count : {0}\n[Details] render texture count: {1}\n, mask count : {2}"
                     , count, RenderTextureCount, usingClipCount);

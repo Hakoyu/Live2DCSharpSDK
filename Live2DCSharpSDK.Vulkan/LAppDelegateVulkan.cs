@@ -9,7 +9,7 @@ namespace Live2DCSharpSDK.Vulkan;
 public class LAppDelegateVulkan : LAppDelegate
 {
     /// <summary>
-    /// モデルごとのマスクバッファ枚数の上限（4 枚 = 128 グループまで、OpenGL 側と同一）
+    /// 每个模型的 mask buffer 张数上限(4 张 = 最多 128 组, 与 OpenGL 侧一致)
     /// </summary>
     private const int MaxMaskBufferCount = 4;
 
@@ -26,7 +26,7 @@ public class LAppDelegateVulkan : LAppDelegate
         VulkanManager.Initialize();
 
         var swapchainManager = VulkanManager.SwapchainManager;
-        // レンダラにvulkanManagerの変数を渡す
+        // 向渲染器传递 vulkanManager 的变量
         CubismRenderer_Vulkan.SetConstantSettings(
             VulkanManager.Device, VulkanManager.PhysicalDevice,
             VulkanManager.CommandPool, VulkanManager.GraphicQueue,
@@ -48,15 +48,15 @@ public class LAppDelegateVulkan : LAppDelegate
 
     public override CubismRenderer CreateRenderer(CubismModel model)
     {
-        // 【官方との差異】官方 sample は maskBufferCount = 1 固定だが、本地はモデルの
-        // 実際のマスクグループ数から必要枚数を決める（大肥魚: 49 グループ > 1 枚あたり上限 36 の対策）。
+        // [与官方的差异] 官方 sample 固定 maskBufferCount = 1, 而本地根据模型的
+        // 实际遮罩组数量决定所需张数(大肥魚: 49 组 > 每张上限 36 的应对).
         int maskBufferCount = CalculateMaskBufferCount(model);
         return new CubismRenderer_Vulkan(_vk, VulkanManager, model, maskBufferCount);
     }
 
     /// <summary>
-    /// モデルのマスクグループ数から必要な maskBufferCount を算出する（OpenGL 側と同一規則）。
-    /// 1 枚あたり 36 グループ、2 枚以上は 1 枚あたり 32 グループ（官方の上限式）。
+    /// 根据模型的遮罩组数量算出所需的 maskBufferCount(与 OpenGL 侧同一规则).
+    /// 单张 36 组, 两张及以上时每张 32 组(官方的上限公式).
     /// </summary>
     private static int CalculateMaskBufferCount(CubismModel model)
     {
@@ -103,8 +103,8 @@ public class LAppDelegateVulkan : LAppDelegate
 
     public override void OnUpdatePre()
     {
-        // swapchain 再作成後の extent も毎フレーム同期する（古い extent でモデル RT を作ると
-        // ウィンドウとの解像度不一致で描画が右下にずれる）。
+        // 每帧同步 swapchain 重建后的 extent(用旧的 extent 创建模型 RT 会
+        // 因与窗口分辨率不一致而导致绘制偏向右下).
         CubismRenderer_Vulkan.UpdateSwapchainVariable(
             VulkanManager.SwapchainManager.Extent,
             VulkanManager.GetSwapchainImage(),
@@ -141,9 +141,9 @@ public class LAppDelegateVulkan : LAppDelegate
                 VulkanManager.GetSwapchainImageView()
             );
 
-            // AppViewの初期化（R5: LAppView.Initialize(int width, int height)）
+            // 初始化 AppView(R5: LAppView.Initialize(int width, int height))
             View.Initialize(width, height);
-            // サイズを保存しておく
+            // 保存尺寸
             WindowWidth = width;
             WindowHeight = height;
             VulkanManager.IsSwapchainInvalid = false;

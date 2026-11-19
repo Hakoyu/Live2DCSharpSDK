@@ -20,7 +20,7 @@ public class CubismMoc : IDisposable
     public CubismModel Model { get; }
 
     /// <summary>
-    /// 破棄済みか（S1: Dispose の冪等ガード。CubismUserModel の解放経路から二重に呼ばれても安全にする）
+    /// 是否已释放(Dispose 的幂等保护, 即使从 CubismUserModel 的释放路径被重复调用也安全).
     /// </summary>
     private bool _disposed;
 
@@ -135,7 +135,7 @@ public class CubismMoc : IDisposable
     }
 
     /// <summary>
-    /// デストラクタ（S1: 冪等。2 回目以降は何もしない）。
+    /// 终结器(幂等, 第二次及以后不做任何事).
     /// </summary>
     public virtual void Dispose()
     {

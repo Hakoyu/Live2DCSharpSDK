@@ -4,20 +4,20 @@ using Live2DCSharpSDK.Framework.Rendering;
 namespace Live2DCSharpSDK.Framework.Model;
 
 /// <summary>
-/// モデルの乗算色・スクリーン色を扱うクラス。
-/// 官方 Framework/src/Model/CubismModelMultiplyAndScreenColor.{hpp,cpp} の移植。
-/// 5-r.5 で CubismModel から分離された（CHANGELOG: Change multiply and screen color functions to separate class with renamed methods）。
+/// 处理模型的乘算色与屏幕色的类.
+/// 移植自官方 Framework/src/Model/CubismModelMultiplyAndScreenColor.{hpp,cpp}.
+/// 5-r.5 中从 CubismModel 分离 (CHANGELOG: Change multiply and screen color functions to separate class with renamed methods).
 /// </summary>
 public class CubismModelMultiplyAndScreenColor
 {
     /// <summary>
-    /// 描画オブジェクトの色情報（官方 ColorData）。
-    /// 旧 DrawableColorData / PartColorData の代替（官方は本クラスの ColorData に統合）。
+    /// 绘制对象的颜色信息 (官方 ColorData).
+    /// 替代旧的 DrawableColorData / PartColorData (官方已整合到本类的 ColorData).
     /// </summary>
     public struct ColorData
     {
         /// <summary>
-        /// SDK 側の色で上書きするか
+        /// 是否用 SDK 侧的颜色覆盖
         /// </summary>
         public bool IsOverridden;
         /// <summary>
@@ -26,7 +26,7 @@ public class CubismModelMultiplyAndScreenColor
         public CubismTextureColor Color;
 
         /// <summary>
-        /// コンストラクタ。
+        /// 构造函数.
         /// </summary>
         public ColorData(bool isOverridden, CubismTextureColor color)
         {
@@ -36,19 +36,19 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// モデル（パーツ階層と色数取得に使用）
+    /// 模型 (用于获取部件层级与颜色数量)
     /// </summary>
     private readonly CubismModel _model;
     /// <summary>
-    /// パーツ階層（CubismModel が保持する List の参照。再代入しないこと：PLAN U04）
+    /// 部件层级(引用 CubismModel 持有的 List, 不要重新赋值).
     /// </summary>
     private readonly List<CubismModelPartInfo> _partsHierarchy;
     /// <summary>
-    /// 乗算色を全て上書きするか？
+    /// 是否覆盖全部乘算色?
     /// </summary>
     private bool _isOverriddenModelMultiplyColors;
     /// <summary>
-    /// スクリーン色を全て上書きするか？
+    /// 是否覆盖全部屏幕色?
     /// </summary>
     private bool _isOverriddenModelScreenColors;
 
@@ -60,12 +60,12 @@ public class CubismModelMultiplyAndScreenColor
     private ColorData[] _userOffscreenMultiplyColors = [];
 
     /// <summary>
-    /// コンストラクタ。
-    /// 官方は CubismModel の初期化子リストで this と _partsHierarchy のアドレスを渡す（PLAN U04）。
-    /// C# 側も同じくコンストラクタでモデルと階層リストの参照を受け取る（参照は後から埋まる）。
+    /// 构造函数.
+    /// 官方在 CubismModel 的初始化列表中传入 this 和 _partsHierarchy 的地址.
+    /// C# 侧同样在构造函数中接收模型与层级列表的引用 (引用会在之后填充).
     /// </summary>
-    /// <param name="model">Cubism モデル</param>
-    /// <param name="partsHierarchy">パーツ階層（CubismModel が保持する List そのもの）</param>
+    /// <param name="model">Cubism 模型</param>
+    /// <param name="partsHierarchy">部件层级 (CubismModel 持有的 List 本身)</param>
     public CubismModelMultiplyAndScreenColor(CubismModel model, List<CubismModelPartInfo> partsHierarchy)
     {
         _model = model;
@@ -75,17 +75,17 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// 乗算色・スクリーン色を使うための初期化。
+    /// 使用乘算色与屏幕色所需的初始化.
     /// </summary>
-    /// <param name="partCount">パーツの個数</param>
-    /// <param name="drawableCount">Drawable の個数</param>
-    /// <param name="offscreenCount">Offscreen の個数</param>
+    /// <param name="partCount">部件的个数</param>
+    /// <param name="drawableCount">Drawable 的个数</param>
+    /// <param name="offscreenCount">Offscreen 的个数</param>
     public void Initialize(int partCount, int drawableCount, int offscreenCount)
     {
         // 乗算色
         var userMultiplyColor = new ColorData(false, new CubismTextureColor(1.0f, 1.0f, 1.0f, 1.0f));
 
-        // スクリーン色
+        // 屏幕色
         var userScreenColor = new ColorData(false, new CubismTextureColor(0.0f, 0.0f, 0.0f, 1.0f));
 
         // Part
@@ -117,16 +117,16 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// モデル全体の乗算色として実行時に設定した色を使用するか設定する。
+    /// 设置是否把运行时设置的颜色作为模型整体的乘算色使用.
     /// </summary>
-    /// <param name="value">true の場合、実行時に設定した色を使用する</param>
+    /// <param name="value">为 true 时, 使用运行时设置的颜色</param>
     public void SetMultiplyColorEnabled(bool value)
     {
         _isOverriddenModelMultiplyColors = value;
     }
 
     /// <summary>
-    /// モデル全体の乗算色として実行時に設定した色を使用するか取得する。
+    /// 获取是否把运行时设置的颜色作为模型整体的乘算色使用.
     /// </summary>
     public bool GetMultiplyColorEnabled()
     {
@@ -134,16 +134,16 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// モデル全体のスクリーン色として実行時に設定した色を使用するか設定する。
+    /// 设置是否把运行时设置的颜色作为模型整体的屏幕色使用.
     /// </summary>
-    /// <param name="value">true の場合、実行時に設定した色を使用する</param>
+    /// <param name="value">为 true 时, 使用运行时设置的颜色</param>
     public void SetScreenColorEnabled(bool value)
     {
         _isOverriddenModelScreenColors = value;
     }
 
     /// <summary>
-    /// モデル全体のスクリーン色として実行時に設定した色を使用するか取得する。
+    /// 获取是否把运行时设置的颜色作为模型整体的屏幕色使用.
     /// </summary>
     public bool GetScreenColorEnabled()
     {
@@ -151,7 +151,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツの乗算色を SDK 側の色で上書きするか設定する。
+    /// 设置是否用 SDK 侧的颜色覆盖部件的乘算色.
     /// </summary>
     public void SetPartMultiplyColorEnabled(int partIndex, bool value)
     {
@@ -165,7 +165,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツの乗算色を SDK 側の色で上書きするか取得する。
+    /// 获取是否用 SDK 侧的颜色覆盖部件的乘算色.
     /// </summary>
     public bool GetPartMultiplyColorEnabled(int partIndex)
     {
@@ -179,7 +179,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツのスクリーン色を SDK 側の色で上書きするか設定する。
+    /// 设置是否用 SDK 侧的颜色覆盖部件的屏幕色.
     /// </summary>
     public void SetPartScreenColorEnabled(int partIndex, bool value)
     {
@@ -193,7 +193,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツのスクリーン色を SDK 側の色で上書きするか取得する。
+    /// 获取是否用 SDK 侧的颜色覆盖部件的屏幕色.
     /// </summary>
     public bool GetPartScreenColorEnabled(int partIndex)
     {
@@ -207,7 +207,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツの乗算色を設定する。
+    /// 设置部件的乘算色.
     /// </summary>
     public void SetPartMultiplyColor(int partIndex, CubismTextureColor color)
     {
@@ -215,7 +215,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツの乗算色を設定する。
+    /// 设置部件的乘算色.
     /// </summary>
     public void SetPartMultiplyColor(int partIndex, float r, float g, float b, float a = 1.0f)
     {
@@ -229,7 +229,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツの乗算色を取得する。
+    /// 获取部件的乘算色.
     /// </summary>
     public CubismTextureColor GetPartMultiplyColor(int partIndex)
     {
@@ -243,7 +243,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツのスクリーン色を設定する。
+    /// 设置部件的屏幕色.
     /// </summary>
     public void SetPartScreenColor(int partIndex, CubismTextureColor color)
     {
@@ -251,7 +251,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツのスクリーン色を設定する。
+    /// 设置部件的屏幕色.
     /// </summary>
     public void SetPartScreenColor(int partIndex, float r, float g, float b, float a = 1.0f)
     {
@@ -265,7 +265,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツのスクリーン色を取得する。
+    /// 获取部件的屏幕色.
     /// </summary>
     public CubismTextureColor GetPartScreenColor(int partIndex)
     {
@@ -279,7 +279,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable の乗算色として実行時に設定した色を使用するか設定する。
+    /// 设置是否把运行时设置的颜色作为 Drawable 的乘算色使用.
     /// </summary>
     public void SetDrawableMultiplyColorEnabled(int drawableIndex, bool value)
     {
@@ -293,7 +293,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable の乗算色として実行時に設定した色を使用するか取得する。
+    /// 获取是否把运行时设置的颜色作为 Drawable 的乘算色使用.
     /// </summary>
     public bool GetDrawableMultiplyColorEnabled(int drawableIndex)
     {
@@ -307,7 +307,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable のスクリーン色として実行時に設定した色を使用するか設定する。
+    /// 设置是否把运行时设置的颜色作为 Drawable 的屏幕色使用.
     /// </summary>
     public void SetDrawableScreenColorEnabled(int drawableIndex, bool value)
     {
@@ -321,7 +321,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable のスクリーン色として実行時に設定した色を使用するか取得する。
+    /// 获取是否把运行时设置的颜色作为 Drawable 的屏幕色使用.
     /// </summary>
     public bool GetDrawableScreenColorEnabled(int drawableIndex)
     {
@@ -335,7 +335,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable の乗算色を設定する。
+    /// 设置 Drawable 的乘算色.
     /// </summary>
     public void SetDrawableMultiplyColor(int drawableIndex, CubismTextureColor color)
     {
@@ -343,7 +343,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable の乗算色を設定する。
+    /// 设置 Drawable 的乘算色.
     /// </summary>
     public void SetDrawableMultiplyColor(int drawableIndex, float r, float g, float b, float a = 1.0f)
     {
@@ -360,8 +360,8 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable の乗算色を取得する。
-    /// SDK 側で上書きしていない場合はモデル（Core）の色を返す。
+    /// 获取 Drawable 的乘算色.
+    /// SDK 侧未覆盖时返回模型 (Core) 的颜色.
     /// </summary>
     public CubismTextureColor GetDrawableMultiplyColor(int drawableIndex)
     {
@@ -382,7 +382,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable のスクリーン色を設定する。
+    /// 设置 Drawable 的屏幕色.
     /// </summary>
     public void SetDrawableScreenColor(int drawableIndex, CubismTextureColor color)
     {
@@ -390,7 +390,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable のスクリーン色を設定する。
+    /// 设置 Drawable 的屏幕色.
     /// </summary>
     public void SetDrawableScreenColor(int drawableIndex, float r, float g, float b, float a = 1.0f)
     {
@@ -407,8 +407,8 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Drawable のスクリーン色を取得する。
-    /// SDK 側で上書きしていない場合はモデル（Core）の色を返す。
+    /// 获取 Drawable 的屏幕色.
+    /// SDK 侧未覆盖时返回模型 (Core) 的颜色.
     /// </summary>
     public CubismTextureColor GetDrawableScreenColor(int drawableIndex)
     {
@@ -429,7 +429,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen の乗算色を SDK 側の色で上書きするか設定する。
+    /// 设置是否用 SDK 侧的颜色覆盖 Offscreen 的乘算色.
     /// </summary>
     public void SetOffscreenMultiplyColorEnabled(int offscreenIndex, bool value)
     {
@@ -443,7 +443,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen の乗算色を SDK 側の色で上書きするか取得する。
+    /// 获取是否用 SDK 侧的颜色覆盖 Offscreen 的乘算色.
     /// </summary>
     public bool GetOffscreenMultiplyColorEnabled(int offscreenIndex)
     {
@@ -457,7 +457,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen のスクリーン色を SDK 側の色で上書きするか設定する。
+    /// 设置是否用 SDK 侧的颜色覆盖 Offscreen 的屏幕色.
     /// </summary>
     public void SetOffscreenScreenColorEnabled(int offscreenIndex, bool value)
     {
@@ -471,7 +471,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen のスクリーン色を SDK 側の色で上書きするか取得する。
+    /// 获取是否用 SDK 侧的颜色覆盖 Offscreen 的屏幕色.
     /// </summary>
     public bool GetOffscreenScreenColorEnabled(int offscreenIndex)
     {
@@ -485,7 +485,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen の乗算色を設定する。
+    /// 设置 Offscreen 的乘算色.
     /// </summary>
     public void SetOffscreenMultiplyColor(int offscreenIndex, CubismTextureColor color)
     {
@@ -493,7 +493,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen の乗算色を設定する。
+    /// 设置 Offscreen 的乘算色.
     /// </summary>
     public void SetOffscreenMultiplyColor(int offscreenIndex, float r, float g, float b, float a = 1.0f)
     {
@@ -510,7 +510,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen の乗算色を取得する。
+    /// 获取 Offscreen 的乘算色.
     /// </summary>
     public CubismTextureColor GetOffscreenMultiplyColor(int offscreenIndex)
     {
@@ -531,7 +531,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen のスクリーン色を設定する。
+    /// 设置 Offscreen 的屏幕色.
     /// </summary>
     public void SetOffscreenScreenColor(int offscreenIndex, CubismTextureColor color)
     {
@@ -539,7 +539,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen のスクリーン色を設定する。
+    /// 设置 Offscreen 的屏幕色.
     /// </summary>
     public void SetOffscreenScreenColor(int offscreenIndex, float r, float g, float b, float a = 1.0f)
     {
@@ -556,7 +556,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// Offscreen のスクリーン色を取得する。
+    /// 获取 Offscreen 的屏幕色.
     /// </summary>
     public CubismTextureColor GetOffscreenScreenColor(int offscreenIndex)
     {
@@ -577,8 +577,8 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツの色を設定する（官方 SetPartColor）。
-    /// Offscreen が無いパーツは子へ再帰、Offscreen があるパーツはその Offscreen のみに反映する。
+    /// 设置部件的颜色 (官方 SetPartColor).
+    /// 没有 Offscreen 的部件递归到子级, 有 Offscreen 的部件只反映到该 Offscreen.
     /// </summary>
     private void SetPartColor(int partIndex, float r, float g, float b, float a,
         ColorData[] partColors,
@@ -597,7 +597,7 @@ public class CubismModelMultiplyAndScreenColor
                 var offscreenIndex = CubismCore.GetPartOffscreenIndices(_model.Model)[partIndex];
                 if (offscreenIndex == CubismModel.CubismNoIndex_Offscreen)
                 {
-                    // Offscreen が無い場合は子へ反映する
+                    // 没有 Offscreen 时反映到子级
                     var objects = _partsHierarchy[partIndex].Objects;
                     for (int i = 0; i < objects.Count; ++i)
                     {
@@ -618,7 +618,7 @@ public class CubismModelMultiplyAndScreenColor
                 }
                 else
                 {
-                    // Offscreen がある場合はその Offscreen のみに反映する
+                    // 有 Offscreen 时只反映到该 Offscreen
                     offscreenColors[offscreenIndex].Color.R = r;
                     offscreenColors[offscreenIndex].Color.G = g;
                     offscreenColors[offscreenIndex].Color.B = b;
@@ -629,7 +629,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// パーツの色の上書きフラグを設定する（官方 SetPartColorEnabled）。
+    /// 设置部件颜色的覆盖标志 (官方 SetPartColorEnabled).
     /// </summary>
     private void SetPartColorEnabled(int partIndex, bool value,
         ColorData[] partColors,
@@ -643,7 +643,7 @@ public class CubismModelMultiplyAndScreenColor
             var offscreenIndex = CubismCore.GetPartOffscreenIndices(_model.Model)[partIndex];
             if (offscreenIndex == CubismModel.CubismNoIndex_Offscreen)
             {
-                // Offscreen が無い場合は子へ反映する
+                // 没有 Offscreen 时反映到子级
                 var objects = _partsHierarchy[partIndex].Objects;
                 for (int i = 0; i < objects.Count; ++i)
                 {
@@ -675,7 +675,7 @@ public class CubismModelMultiplyAndScreenColor
             }
             else
             {
-                // Offscreen がある場合はその Offscreen のみに反映する
+                // 有 Offscreen 时只反映到该 Offscreen
                 offscreenColors[offscreenIndex].IsOverridden = value;
                 if (value)
                 {
@@ -689,7 +689,7 @@ public class CubismModelMultiplyAndScreenColor
     }
 
     /// <summary>
-    /// インデックスが範囲外のときに警告を出す（官方 WarnIndexOutOfRange）。
+    /// 索引超出范围时发出警告 (官方 WarnIndexOutOfRange).
     /// </summary>
     private static void WarnIndexOutOfRange(string funcName, int index, int range)
     {

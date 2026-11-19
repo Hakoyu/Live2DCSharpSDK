@@ -22,7 +22,7 @@ public partial class MainWindow : Window
 
         Button1.Click += Button1_Click;
 
-        // V6（操作/表情/物理の切替）用のボタン。処理は GL コントロール側に置き、ここは配線だけ。
+        // 用于切换动作/表情/物理的按钮, 处理逻辑放在 GL 控件侧, 这里只做接线.
         MotionButton.Click += MotionButton_Click;
         ExpressionButton.Click += ExpressionButton_Click;
         PhysicsButton.Click += PhysicsButton_Click;
@@ -260,7 +260,7 @@ public class OpenGlPageControl : OpenGlControlBase
     }
 
     /// <summary>
-    /// 次のモーションを順に再生する（V6「動作切替」用の App 拡張）。
+    /// 依次播放下一个动作(动作切换用的 App 扩展).
     /// </summary>
     public void StartNextMotion()
     {
@@ -299,7 +299,7 @@ public class OpenGlPageControl : OpenGlControlBase
     }
 
     /// <summary>
-    /// 次の表情を順に適用する（V6「表情切替」用）。
+    /// 依次应用下一个表情(表情切换用的 App 扩展).
     /// </summary>
     public void StartNextExpression()
     {
@@ -323,7 +323,7 @@ public class OpenGlPageControl : OpenGlControlBase
     }
 
     /// <summary>
-    /// 物理演算の ON/OFF を切り替える（V6「物理切替」用の App 拡張）。切替後の状態を返す。
+    /// 切换物理演算的开关(物理切换用的 App 扩展), 返回切换后的状态.
     /// </summary>
     public bool TogglePhysics()
     {
@@ -363,7 +363,7 @@ public class OpenGlPageControl : OpenGlControlBase
         }
         gl.Viewport(0, 0, x, y);
 
-        // D-06: モデルのレンダーターゲットは「実ピクセル」で設定する（viewport と同じ座標系）。
+        // 模型的渲染目标按实际像素设置(与 viewport 使用同一坐标系).
         // LAppDelegate 側のウィンドウサイズは DIP なので、ここで上書きする。
         if (x > 0 && y > 0)
         {

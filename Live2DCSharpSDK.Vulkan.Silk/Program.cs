@@ -95,7 +95,7 @@ internal class Program : VulkanApi
 
         // 【仅验收用】V-d（Ren offscreen 探针）: 默认关闭，仅当 L2D_PROBE_OFFSCREEN=1 时启用。
         // 30 帧後に offscreen 数と DrawOffscreen 回数を出力して終了する。
-        // 出力書式は既存の受け入れ手順（t16 / V-d）に合わせて固定している。
+        // 输出格式固定, 与既有的验收流程保持一致.
         int probeFrames = 0;
         bool probeOffscreen = Environment.GetEnvironmentVariable("L2D_PROBE_OFFSCREEN") == "1";
         window.Render += (time) =>

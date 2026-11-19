@@ -1,4 +1,4 @@
-//IDで指定された目のパラメータが、0のときに閉じるなら true 、1の時に閉じるなら false 。
+//由 ID 指定的眼部参数, 取值为 0 时闭眼则为 true, 取值为 1 时闭眼则为 false.
 //#define CloseIfZero
 
 using Live2DCSharpSDK.Framework.Model;
@@ -6,53 +6,53 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Effect;
 
 /// <summary>
-/// 自動まばたき機能を提供する。
+/// 提供自动眨眼功能.
 /// </summary>
 public class CubismEyeBlink
 {
     /// <summary>
-    /// 操作対象のパラメータのIDのリスト
+    /// 操作对象的参数 ID 列表
     /// </summary>
     public readonly List<string> ParameterIds = [];
     /// <summary>
-    /// 現在の状態
+    /// 当前状态
     /// </summary>
     private EyeState _blinkingState;
     /// <summary>
-    /// 次のまばたきの時刻[秒]
+    /// 下一次眨眼的时间[秒]
     /// </summary>
     private float _nextBlinkingTime;
     /// <summary>
-    /// 現在の状態が開始した時刻[秒]
+    /// 当前状态的开始时刻[秒]
     /// </summary>
     private float _stateStartTimeSeconds;
     /// <summary>
-    /// まばたきの間隔[秒]
+    /// 眨眼间隔[秒]
     /// </summary>
     private float _blinkingIntervalSeconds;
     /// <summary>
-    /// まぶたを閉じる動作の所要時間[秒]
+    /// 眼睑闭合动作的持续时间[秒]
     /// </summary>
     private float _closingSeconds;
     /// <summary>
-    /// まぶたを閉じている動作の所要時間[秒]
+    /// 眼睑保持闭合的持续时间[秒]
     /// </summary>
     private float _closedSeconds;
     /// <summary>
-    /// まぶたを開く動作の所要時間[秒]
+    /// 眼睑睁开动作的持续时间[秒]
     /// </summary>
     private float _openingSeconds;
     /// <summary>
-    /// デルタ時間の積算値[秒]
+    /// 增量时间的累计值[秒]
     /// </summary>
     private float _userTimeSeconds;
 
     private readonly Random _random = new();
 
     /// <summary>
-    /// インスタンスを作成する。
+    /// 创建实例.
     /// </summary>
-    /// <param name="modelSetting">モデルの設定情報</param>
+    /// <param name="modelSetting">模型设置信息</param>
     public CubismEyeBlink(ModelSettingObj modelSetting)
     {
         _blinkingState = EyeState.First;
@@ -78,20 +78,20 @@ public class CubismEyeBlink
     }
 
     /// <summary>
-    /// まばたきの間隔を設定する。
+    /// 设置眨眼间隔.
     /// </summary>
-    /// <param name="blinkingInterval">まばたきの間隔の時間[秒]</param>
+    /// <param name="blinkingInterval">眨眼间隔时间[秒]</param>
     public void SetBlinkingInterval(float blinkingInterval)
     {
         _blinkingIntervalSeconds = blinkingInterval;
     }
 
     /// <summary>
-    /// まばたきのモーションの詳細設定を行う。
+    /// 进行眨眼动作的详细设置.
     /// </summary>
-    /// <param name="closing">まぶたを閉じる動作の所要時間[秒]</param>
-    /// <param name="closed">まぶたを閉じている動作の所要時間[秒]</param>
-    /// <param name="opening">まぶたを開く動作の所要時間[秒]</param>
+    /// <param name="closing">眼睑闭合动作的持续时间[秒]</param>
+    /// <param name="closed">眼睑保持闭合的持续时间[秒]</param>
+    /// <param name="opening">眼睑睁开动作的持续时间[秒]</param>
     public void SetBlinkingSettings(float closing, float closed, float opening)
     {
         _closingSeconds = closing;
@@ -100,10 +100,10 @@ public class CubismEyeBlink
     }
 
     /// <summary>
-    /// モデルのパラメータを更新する。
+    /// 更新模型参数.
     /// </summary>
-    /// <param name="model">対象のモデル</param>
-    /// <param name="deltaTimeSeconds">デルタ時間[秒]</param>
+    /// <param name="model">目标模型</param>
+    /// <param name="deltaTimeSeconds">增量时间[秒]</param>
     public void UpdateParameters(CubismModel model, float deltaTimeSeconds)
     {
         _userTimeSeconds += deltaTimeSeconds;
@@ -179,13 +179,13 @@ public class CubismEyeBlink
     }
 
     /// <summary>
-    /// 次のまばたきのタイミングを決定する。
+    /// 决定下一次眨眼的时机.
     /// </summary>
-    /// <returns>次のまばたきを行う時刻[秒]</returns>
+    /// <returns>下一次眨眼的执行时刻[秒]</returns>
     private float DetermineNextBlinkingTiming()
     {
-        // C# 整数除法陷阱：两侧 int 会先做整除再隐式转 float，结果恒 0。
-        // 官方 R5 は static_cast<csmFloat32>(rand()) / static_cast<csmFloat32>(RAND_MAX) で [0,1) の乱数を得る。
+        // C# 整数除法陷阱: 两侧 int 会先做整除再隐式转 float, 结果恒为 0.
+        // 官方 R5 通过 static_cast<csmFloat32>(rand()) / static_cast<csmFloat32>(RAND_MAX) 取得 [0,1) 的随机数.
         float r = (float)_random.Next() / int.MaxValue;
 
         return _userTimeSeconds + (r * (2.0f * _blinkingIntervalSeconds - 1.0f));

@@ -7,9 +7,9 @@ namespace Live2DCSharpSDK.Framework.Motion;
 /// 自動まばたきの更新処理（官方 CubismEyeBlinkUpdater）。
 /// </summary>
 /// <remarks>
-/// 官方は <c>const csmBool&amp; motionUpdated</c> への参照を保持するが、
-/// C# では参照フィールドを持てないため <see cref="Func{TResult}"/> で都度取得する
-/// （scout 01-framework U12）。
+/// 官方持有 <c>const csmBool&amp; motionUpdated</c> 的引用,
+/// C# 无法持有引用字段, 因此改用 <see cref="Func{TResult}"/> 每次获取
+/// (调用方注入的委托).
 /// </remarks>
 public class CubismEyeBlinkUpdater : ICubismUpdater
 {

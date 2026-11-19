@@ -16,30 +16,30 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
     }
 
     /// <summary>
-    /// クリッピングコンテキストを作成する。モデル描画時に実行する。
+    /// 创建裁剪上下文. 在绘制模型时执行.
     /// </summary>
-    /// <param name="model">モデルのインスタンス</param>
-    /// <param name="commandBuffer">コマンドバッファ</param>
-    /// <param name="updateCommandBuffer">更新用コマンドバッファ</param>
-    /// <param name="renderer">レンダラのインスタンス</param>
+    /// <param name="model">模型实例</param>
+    /// <param name="commandBuffer">命令缓冲区</param>
+    /// <param name="updateCommandBuffer">更新用命令缓冲区</param>
+    /// <param name="renderer">渲染器实例</param>
     public unsafe void SetupClippingContext(CubismModel model, CommandBuffer commandBuffer, CommandBuffer updateCommandBuffer,
                               CubismRenderer_Vulkan renderer)
     {
-        // 全てのクリッピングを用意する
-        // 同じクリップ（複数の場合はまとめて１つのクリップ）を使う場合は１度だけ設定する
+        // 准备所有裁剪
+        // 使用同一裁剪(多个时合并为一个裁剪)时只设置一次
         int usingClipCount = 0;
 
         for (int clipIndex = 0; clipIndex < ClippingContextListForMask.Count; clipIndex++)
         {
-            // １つのクリッピングマスクに関して
+            // 针对一个裁剪遮罩
             var cc = ClippingContextListForMask[clipIndex];
 
-            // このクリップを利用する描画オブジェクト群全体を囲む矩形を計算
+            // 计算包围使用该裁剪的全部绘制对象的矩形
             CalcClippedDrawTotalBounds(model, cc);
 
             if (cc.IsUsing)
             {
-                usingClipCount++; //使用中としてカウント
+                usingClipCount++; // 计入使用中的数量
             }
         }
 
@@ -48,26 +48,26 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
             return;
         }
 
-        // マスク作成処理
-        // 後の計算のためにインデックスの最初をセット
-        // P6 で Framework の CurrentMaskBuffer は CubismRenderTarget 型になった（P8b の私有フィールドを削除）。
+        // 遮罩创建处理
+        // 为后续计算设置索引的起始值
+        // Framework 的 CurrentMaskBuffer 已改为 CubismRenderTarget 类型, 由此删除了此前的私有字段.
         CurrentMaskBuffer = renderer.GetMaskBufferForType(Type, 0);
 
         var buffer = (CubismRenderTarget_Vulkan)CurrentMaskBuffer;
 
-        // 1が無効（描かれない）領域、0が有効（描かれる）領域。（シェーダで Cd*Csで0に近い値をかけてマスクを作る。1をかけると何も起こらない）
+        // 1 为无效(不绘制)区域, 0 为有效(绘制)区域. (在 shader 中用 Cd*Cs 乘以接近 0 的值生成遮罩. 乘以 1 则不会发生任何变化)
         buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
 
-        // 生成したFrameBufferと同じサイズでビューポートを設定
+        // 以与生成的 FrameBuffer 相同的尺寸设置 viewport
         var viewport = CubismRenderer_Vulkan.GetViewport(ClippingMaskBufferSize.X, ClippingMaskBufferSize.Y, 0.0f, 1.0f);
         vk.CmdSetViewport(commandBuffer, 0, 1, &viewport);
         var rect = CubismRenderer_Vulkan.GetScissor(0.0f, 0.0f, ClippingMaskBufferSize.X, ClippingMaskBufferSize.Y);
         vk.CmdSetScissor(commandBuffer, 0, 1, &rect);
 
-        // 各マスクのレイアウトを決定していく
+        // 逐个决定各遮罩的布局
         SetupLayoutBounds(usingClipCount);
 
-        // サイズがレンダーテクスチャの枚数と合わない場合は合わせる
+        // 尺寸与渲染纹理张数不一致时进行调整
         if (ClearedMaskBufferFlags.Count != RenderTextureCount)
         {
             ClearedMaskBufferFlags.Clear();
@@ -79,58 +79,58 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
         }
         else
         {
-            // マスクのクリアフラグを毎フレーム開始時に初期化
+            // 每帧开始时初始化遮罩的清除标志
             for (int i = 0; i < RenderTextureCount; ++i)
             {
                 ClearedMaskBufferFlags[i] = false;
             }
         }
 
-        // 実際にマスクを生成する
-        // 全てのマスクをどの様にレイアウトして描くかを決定し、ClipContext , ClippedDrawContext に記憶する
+        // 实际生成遮罩
+        // 决定所有遮罩如何布局绘制, 并记录到 ClipContext, ClippedDrawContext 中
         for (int clipIndex = 0; clipIndex < ClippingContextListForMask.Count; clipIndex++)
         {
-            // --- 実際に１つのマスクを描く ---
+            // --- 实际绘制一个遮罩 ---
             var clipContext = (ClippingContextListForMask[clipIndex] as CubismClippingContext_Vulkan)!;
-            var allClippedDrawRect = clipContext.AllClippedDrawRect; //このマスクを使う、全ての描画オブジェクトの論理座標上の囲み矩形
-            var layoutBoundsOnTex01 = clipContext.LayoutBounds; //この中にマスクを収める
+            var allClippedDrawRect = clipContext.AllClippedDrawRect; // 使用该遮罩的全部绘制对象在逻辑坐标上的包围矩形
+            var layoutBoundsOnTex01 = clipContext.LayoutBounds; // 把遮罩放入其中
             var MARGIN = 0.05f;
 
-            // clipContextに設定したオフスクリーンサーフェイスをインデックスで取得
+            // 按索引获取设置到 clipContext 的离屏 surface
             var clipContextOffscreenSurface = renderer.GetMaskBufferForType(Type, clipContext.BufferIndex)!;
 
-            // 現在のオフスクリーンサーフェイスがclipContextのものと異なる場合
+            // 当前离屏 surface 与 clipContext 的不同时
             if (CurrentMaskBuffer != clipContextOffscreenSurface)
             {
                 buffer.EndDraw(commandBuffer);
                 CurrentMaskBuffer = clipContextOffscreenSurface;
                 buffer = (CubismRenderTarget_Vulkan)CurrentMaskBuffer;
-                // マスク用RenderTextureをactiveにセット
+                // 把遮罩用 RenderTexture 设为 active
                 buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
             }
 
-            // モデル座標上の矩形を、適宜マージンを付けて使う
+            // 使用模型坐标上的矩形, 并适当附加 margin
             TmpBoundsOnModel.SetRect(allClippedDrawRect);
             TmpBoundsOnModel.Expand(allClippedDrawRect.Width * MARGIN, allClippedDrawRect.Height * MARGIN);
-            //########## 本来は割り当てられた領域の全体を使わず必要最低限のサイズがよい
-            // シェーダ用の計算式を求める。回転を考慮しない場合は以下のとおり
+            //########## 本来不应使用分配区域的全部, 而应取所需的最小尺寸
+            // 求出 shader 用的计算式. 不考虑旋转时如下
             // movePeriod' = movePeriod * scaleX + offX     [[ movePeriod' = (movePeriod - tmpBoundsOnModel.movePeriod)*scale + layoutBoundsOnTex01.movePeriod ]]
             var scaleX = layoutBoundsOnTex01.Width / TmpBoundsOnModel.Width;
             var scaleY = layoutBoundsOnTex01.Height / TmpBoundsOnModel.Height;
 
-            // マスク生成時に使う行列を求める
+            // 求出生成遮罩时使用的矩阵
             CreateMatrixForMask(false, layoutBoundsOnTex01, scaleX, scaleY);
 
             clipContext.MatrixForMask.SetMatrix(TmpMatrixForMask);
             clipContext.MatrixForDraw.SetMatrix(TmpMatrixForDraw);
 
-            // 実際の描画を行う
+            // 执行实际绘制
             int clipDrawCount = clipContext.ClippingIdCount;
             for (int i = 0; i < clipDrawCount; i++)
             {
                 int clipDrawIndex = clipContext.ClippingIdList[i];
 
-                // 頂点情報が更新されておらず、信頼性がない場合は描画をパスする
+                // 顶点信息未更新, 不可靠时跳过绘制
                 if (!model.GetDrawableDynamicFlagVertexPositionsDidChange(clipDrawIndex))
                 {
                     continue;
@@ -138,14 +138,14 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
 
                 renderer.IsCulling = model.GetDrawableCulling(clipDrawIndex) != 0;
 
-                // レンダーパス開始時にマスクはクリアされているのでクリアする必要なし
-                // 今回専用の変換を適用して描く
-                // チャンネルも切り替える必要がある(A,R,G,B)
+                // 渲染通道开始时遮罩已被清除, 因此无需再次清除
+                // 应用本次专用的变换进行绘制
+                // 还需要切换通道(A,R,G,B)
                 renderer.ClippingContextBufferForMask = clipContext;
                 renderer.DrawMeshVulkan(model, clipDrawIndex, commandBuffer, updateCommandBuffer);
             }
         }
-        // --- 後処理 ---
+        // --- 后处理 ---
         buffer.EndDraw(commandBuffer);
         renderer.ClippingContextBufferForMask = null;
     }

@@ -3,17 +3,17 @@ using Live2DCSharpSDK.Framework.Rendering;
 namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
-/// OpenGL 用のクリッピングコンテキスト（バックエンド固有のフック）。
-/// 現時点で GL 固有の状態は持たず、基底 <see cref="CubismClippingContext"/> にそのまま委譲する。
+/// OpenGL 用的 Clipping 上下文 (后端专用的钩子). 
+/// 目前不持有 GL 固有状态, 直接委托给基类 <see cref="CubismClippingContext"/>. 
 /// </summary>
 /// <remarks>
-/// v7/S6 補修: 主コンストラクタの <c>CubismModel model</c> 引数を削除した（CS9113 対応）。
-/// ・官方 R5 にはバックエンド固有の CubismClippingContext_OpenGLES2 が存在せず（OpenGL は
-///   Framework の CubismClippingContext を直接使う）、「官方と同じシグネチャ」という制約は無い。
-/// ・基底のコンストラクタは (manager, clippingDrawableIndices, clipCount) のみを取り、
-///   Vulkan 側の対称実装 CubismClippingContext_Vulkan も model を取らない。
-/// ・引数はクラス本体で一切読まれておらず（コンストラクタ本体は空）、副作用も無いため、
-///   削除しても clipping の挙動は変わらない。将来 model が必要になった時点で追加すればよい。
+/// 已删除主构造函数中的 <c>CubismModel model</c> 参数(用于消除 CS9113 警告).
+/// - 官方 R5 中不存在后端固有的 CubismClippingContext_OpenGLES2 (OpenGL 是
+///   直接使用 Framework 的 CubismClippingContext), 因此不存在 "与官方相同签名" 的约束. 
+/// - 基类构造函数只接收 (manager, clippingDrawableIndices, clipCount), 
+///   Vulkan 侧的对等实现 CubismClippingContext_Vulkan 也不接收 model. 
+/// - 该参数在类主体中完全未被读取 (构造函数体为空), 也没有副作用, 因此
+///   即使删除也不会改变 clipping 的行为. 将来需要 model 时再添加即可. 
 /// </remarks>
 public unsafe class CubismClippingContext_OpenGLES2(CubismClippingManager manager,
     int* clippingDrawableIndices, int clipCount) : CubismClippingContext(manager, clippingDrawableIndices, clipCount)

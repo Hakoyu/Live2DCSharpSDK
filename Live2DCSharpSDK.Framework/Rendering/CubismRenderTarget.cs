@@ -1,7 +1,7 @@
 ﻿namespace Live2DCSharpSDK.Framework.Rendering;
 
 /// <summary>
-/// オフスクリーン描画用レンダーターゲットの抽象基底（PLAN D-05）。
+/// 离屏绘制用渲染目标的抽象基类.
 /// バックエンド固有の生成・描画 API は派生クラス
 /// （CubismRenderTarget_OpenGLES2 / CubismRenderTarget_Vulkan）が持ち、
 /// ここには <see cref="ICubismOffscreenManager{T}"/> が共通利用する

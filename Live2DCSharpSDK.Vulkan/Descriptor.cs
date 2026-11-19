@@ -3,30 +3,30 @@
 namespace Live2DCSharpSDK.Vulkan;
 
 /// <summary>
-/// ディスクリプタセットとUBOを保持する構造体コマンドバッファでまとめて描画する場合、ディスクリプタセットをバインド後に更新してはならない。
+/// 保存 descriptor set 与 UBO 的结构体. 在使用命令缓冲区统一绘制时, 不得在绑定 descriptor set 之后更新它.
 /// <para></para>
-/// マスクされる描画対象のみ、フレームバッファをディスクリプタセットに設定する必要があるが、その際バインド済みのディスクリプタセットを更新しないよう、別でマスクされる用のディスクリプタセットを用意する。
+/// 只有被遮罩的绘制对象需要把 framebuffer 设置到 descriptor set 中, 此时为避免更新已绑定的 descriptor set, 需另外准备一份供被遮罩对象使用的 descriptor set.
 /// </summary>
 public class Descriptor
 {
     /// <summary>
-    /// ユニフォームバッファ
+    /// uniform buffer
     /// </summary>
     public CubismBufferVulkan UniformBuffer;
     /// <summary>
-    /// ディスクリプタセット
+    /// descriptor set
     /// </summary>
     public DescriptorSet DescriptorSet;
     /// <summary>
-    /// ディスクリプタセットが更新されたか
+    /// descriptor set 是否已更新
     /// </summary>
     public bool IsDescriptorSetUpdated;
     /// <summary>
-    /// マスクされる描画対象用のディスクリプタセット
+    /// 供被遮罩绘制对象使用的 descriptor set
     /// </summary>
     public DescriptorSet DescriptorSetMasked;
     /// <summary>
-    /// マスクされる描画対象用のディスクリプタセットが更新されたか
+    /// 供被遮罩绘制对象使用的 descriptor set 是否已更新
     /// </summary>
     public bool IsDescriptorSetMaskedUpdated;
 }

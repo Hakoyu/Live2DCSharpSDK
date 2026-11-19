@@ -58,7 +58,7 @@ public class CubismLookUpdater : ICubismUpdater
 
         _dragManager.Update(deltaTimeSeconds);
 
-        // 本地の CubismTargetPoint は官方の GetX()/GetY() ではなく FaceX/FaceY プロパティを持つ（P4 で Math は変更しない）。
+        // 本地的 CubismTargetPoint 提供 FaceX/FaceY 属性而非官方的 GetX()/GetY()(不改动 Math 层).
         float dragX = _dragManager.FaceX;
         float dragY = _dragManager.FaceY;
 

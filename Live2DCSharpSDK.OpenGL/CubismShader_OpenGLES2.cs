@@ -10,11 +10,11 @@ namespace Live2DCSharpSDK.OpenGL;
 /// OpenGLES2用のシェーダプログラムを生成・破棄するクラス
 /// （官方 OpenGL/CubismShader_OpenGLES2.hpp:54-340 / .cpp:48-1121）。
 ///
-/// 【D-11】GLSL は官方 R5 のように外部ファイル化せず、C# の文字列定数として内蔵する
-/// （csmLoadFileFunction 機構を持ち込まない）。
-/// 【D-09／官方との差異】官方 R5 は Initialize 時に 494 個の GL program を無条件生成する
-/// （初回フレーム 3〜10 秒）。本地は「初回使用時に 1 プログラムずつ生成」する遅延生成に変更する
-/// （Lazy／二重チェックロック）。この点は官方動作と異なる。
+/// GLSL 不像官方 R5 那样外置为文件, 而是作为 C# 字符串常量内置
+/// (不引入 csmLoadFileFunction 机制).
+/// 【与官方的差异】官方 R5 在 Initialize 时无条件生成 494 个 GL program
+/// (首帧耗时 3~10 秒), 本地改为首次使用时逐个生成的延迟生成
+/// (Lazy 与双检锁), 这一点与官方行为不同.
 /// </summary>
 internal class CubismShader_OpenGLES2(OpenGLApi gl)
 {
@@ -243,7 +243,7 @@ gl_FragColor = col_formask;
 
     public const string FragShaderSrcMaskInvertedPremultipliedAlphaTegra = Tegra + FragShaderSrcMaskInvertedPremultipliedAlpha_Base;
 
-    // ===== R5 追加: Copy（B10）=====
+    // ===== R5 追加: Copy =====
     private const string VertShaderSrcCopy_Base =
         @"attribute vec4 a_position;
 attribute vec2 a_texCoord;
@@ -263,7 +263,7 @@ void main()
 gl_FragColor = texture2D(s_texture0, v_texCoord) * u_baseColor;
 }";
 
-    // ===== R5 追加: ブレンドモード用バーテックス（B10）=====
+    // ===== R5 追加: blend 模式用顶点着色器 =====
     private const string VertShaderSrcBlend_Base =
         @"attribute vec4 a_position;
 attribute vec2 a_texCoord;
@@ -297,7 +297,7 @@ vec2 ndcPos = gl_Position.xy / gl_Position.w;
 v_blendCoord = ndcPos * 0.5 + 0.5;
 }";
 
-    // ===== R5 追加: ブレンドモード用フラグメント（B10）=====
+    // ===== R5 追加: blend 模式用片元着色器 =====
     private const string FragShaderSrcBlend_Base =
         @"varying vec2 v_texCoord;
 varying vec2 v_blendCoord;
@@ -463,7 +463,7 @@ gl_FragColor = AlphaBlend(ColorBlend(colorSource.rgb, colorDestination.rgb), col
     // ===== R5 追加: カラーブレンド / アルファブレンドの共通スニペット =====
     // 官方 .cpp:961-1004 は「#define CSM_COLOR_BLEND_MODE n」+ ColorBlendShaderPath の内容、
     // 「#define CSM_ALPHA_BLEND_MODE n」+ AlphaBlendShaderPath の内容をフラグメントソース末尾に連結する。
-    // 本地も同じ連結方式を採る（D-11）。
+    // 本地也采用相同的拼接方式.
     private const string FragShaderSrcColorBlendSnippet =
         @"vec4 ConvertPremultipliedToStraight(vec4 source)
 {
@@ -815,7 +815,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 #endif";
 
     /// <summary>
-    /// マスクの種類（B9、官方 CubismShader_OpenGLES2.hpp:128-136）。
+    /// 遮罩种类(官方 CubismShader_OpenGLES2.hpp:128-136).
     /// この enum の値がそのままシェーダ変種の offset（0..5）になる。
     /// </summary>
     private enum MaskType
@@ -890,18 +890,18 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     private readonly List<CubismShaderSet> _shaderSets = [];
 
     /// <summary>
-    /// 各シェーダの生成済みフラグ（D-09 の遅延生成用）
+    /// 各着色器的已生成标志(用于延迟生成).
     /// </summary>
     private readonly bool[] _compiled = new bool[ShaderNames.ShaderCount];
 
     /// <summary>
-    /// シェーダ生成のロック（D-09 二重チェックロック）
+    /// 着色器生成的锁(双检锁).
     /// </summary>
     private readonly object _generationLock = new();
 
     /// <summary>
     /// シェーダセット配列を確保する（官方 GenerateShaders の配列確保部分）。
-    /// 【D-09／官方との差異】実際の GL program 生成は GetShaderSet() の初回参照まで遅延する。
+    /// 【与官方的差异】实际的 GL program 生成延迟到 GetShaderSet() 首次引用时.
     /// 官方 R5 は Initialize 時に 494 個すべてを無条件生成する（CubismShader_OpenGLES2.cpp:324-542）。
     /// </summary>
     internal void EnsureGenerated()
@@ -926,7 +926,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 指定シェーダを取得する。初回参照時にコンパイルする（D-09、二重チェックロック）。
+    /// 获取指定的着色器, 首次引用时才编译(双检锁).
     /// </summary>
     /// <param name="index">ShaderNames の添字</param>
     internal CubismShaderSet GetShaderSet(int index)
@@ -1176,7 +1176,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
     /// <summary>
     /// CubismShaderSet にロケーションを設定する（官方 SetShaderSet .cpp:142-185）。
-    /// B9: MaskType で 1 か所に集約する（内聯 if 連鎖の錯配を排除）。
+    /// 统一由 MaskType 在一处集中处理(消除内联 if 链的错配).
     /// </summary>
     private void SetShaderSet(CubismShaderSet shaderSets, MaskType maskType, bool isBlendMode)
     {
@@ -1301,7 +1301,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
             SetColorChannelUniformVariables(shaderSet, draw);
         }
 
-        // ブレンド設定（B15: blend テクスチャは texture unit 2）
+        // blend 设置(blend 纹理使用纹理单元 2).
         if (isBlendMode)
         {
             gl.ActiveTexture(gl.GL_TEXTURE2);
@@ -1343,7 +1343,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     /// <summary>
     /// マスク用のシェーダプログラムの一連のセットアップを実行する
     /// （官方 SetupShaderProgramForMask .cpp:666-694）。
-    /// B14: 公式 R5 同様、マスク描画では乗算色・スクリーン色を設定しない。
+    /// 与官方 R5 相同, 遮罩绘制时不设置乘算色和屏幕色.
     /// </summary>
     internal void SetupShaderProgramForMask(CubismRenderer_OpenGLES2 renderer, CubismModel model, int index)
     {
@@ -1368,7 +1368,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
         gl.UniformMatrix4fv(shaderSet.UniformClipMatrixLocation, 1, false, draw.MatrixForMask.Tr);
 
-        // ユニフォーム変数設定（baseColor のみ。B14 により乗算色/スクリーン色は設定しない）
+        // 设置 uniform 变量(仅 baseColor, 不设置乘算色和屏幕色).
         RectF rect = draw.LayoutBounds;
         gl.Uniform4f(shaderSet.UniformBaseColorLocation,
             rect.X * 2.0f - 1.0f, rect.Y * 2.0f - 1.0f, rect.GetRight() * 2.0f - 1.0f, rect.GetBottom() * 2.0f - 1.0f);
@@ -1625,8 +1625,8 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
     /// <summary>
     /// シェーダの info-log を取得する（GL_INFO_LOG_LENGTH が 0 なら空文字）。
-    /// 【F1】info-log は「コンパイル成否」ではなくドライバからのメッセージであり、
-    /// コンパイル成功時にも警告（例: ANGLE の "unexpected end of file found in directive"）が入り得る。
+    /// info-log 是驱动输出的消息, 并不代表编译是否成功,
+    /// 编译成功时也可能包含警告(例如 ANGLE 的 "unexpected end of file found in directive").
     /// </summary>
     private unsafe string ReadShaderInfoLog(int shader)
     {
@@ -1659,7 +1659,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
     /// <summary>
     /// シェーダをコンパイルする。
-    /// 【F1】成否の判定は GL_COMPILE_STATUS のみで行う。
+    /// 成功与否只按 GL_COMPILE_STATUS 判定.
     /// glGetShaderiv(GL_COMPILE_STATUS) は「直近のコンパイルが成功なら GL_TRUE」を返し、
     /// GL_INFO_LOG_LENGTH は「情報ログの文字数」を返すだけで成否を表さない（Khronos glGetShaderiv 仕様）。
     /// よってコンパイル成功時に info-log が非空でも警告に降格して出力し、例外にしない。
@@ -1693,7 +1693,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
     /// <summary>
     /// シェーダプログラムをリンクする。
-    /// 【F1】成否の判定は GL_LINK_STATUS のみで行う（glGetProgramiv 仕様）。
+    /// 成功与否只按 GL_LINK_STATUS 判定(glGetProgramiv 规格).
     /// GL_INFO_LOG が非空でもリンク成功なら警告に降格する。
     /// </summary>
     internal unsafe bool LinkProgram(int shaderProgram)
@@ -1720,7 +1720,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
     /// <summary>
     /// シェーダプログラムを検証する。
-    /// 【F1】成否の判定は GL_VALIDATE_STATUS のみで行う（glGetProgramiv 仕様、リンクと同じ誤りの修正）。
+    /// 成功与否只按 GL_VALIDATE_STATUS 判定(与链接相同的误判修正).
     /// </summary>
     internal unsafe bool ValidateProgram(int shaderProgram)
     {

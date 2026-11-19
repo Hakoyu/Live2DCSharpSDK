@@ -150,8 +150,8 @@ public abstract class CubismRenderer
 
     /// <summary>
     /// オフスクリーンのサイズを設定する（官方 CubismRenderer::SetRenderTargetSize、CubismRenderer.cpp:76-80）。
-    /// 本地はモデル生成時にホストがレンダラを作る方式のため、D-06 に従って
-    /// ホストの OnRender から実サイズで毎フレーム呼ぶ。
+    /// 本地在创建模型时由宿主生成渲染器, 因此由宿主的 OnRender
+    /// 每帧按实际尺寸调用.
     /// </summary>
     /// <param name="width">モデルを描画するバッファの幅</param>
     /// <param name="height">モデルを描画するバッファの高さ</param>
@@ -163,9 +163,9 @@ public abstract class CubismRenderer
 
     /// <summary>
     /// blend モード使用時のマスク高精度化（官方 CubismRenderer.cpp:42-52）。
-    /// 官方は Initialize 内で model->IsBlendModeEnabled() を参照するが、本地の
-    /// CubismModel.IsBlendModeEnabled() は P2 で追加されるため、ここでは同じ判定結果を
-    /// 引数で受け取る形にしておく（P6 / P8 の初期化時に渡す）。
+    /// 官方在 Initialize 内引用 model->IsBlendModeEnabled(), 但本地的
+    /// CubismModel.IsBlendModeEnabled() 判定结果改由此处作为参数传入,
+    /// 由宿主在初始化时提供.
     /// </summary>
     /// <param name="isBlendModeEnabled">モデルが blend モードを使用するなら true</param>
     protected void ApplyBlendModeMaskPrecision(bool isBlendModeEnabled)

@@ -4,13 +4,13 @@ using Live2DCSharpSDK.Framework.Rendering;
 namespace Live2DCSharpSDK.App;
 
 /// <summary>
-/// アプリケーションクラス。
-/// Cubism SDK の管理を行う。
+/// 应用程序类.
+/// 负责 Cubism SDK 的管理.
 /// </summary>
 public abstract class LAppDelegate : IDisposable
 {
     /// <summary>
-    /// テクスチャマネージャー
+    /// 纹理管理器
     /// </summary>
     public LAppTextureManager TextureManager { get; private set; }
 
@@ -24,24 +24,24 @@ public abstract class LAppDelegate : IDisposable
     public CubismTextureColor BGColor { get; set; } = new(0, 0, 0, 0);
 
     /// <summary>
-    /// クリックしているか
+    /// 是否正在点击
     /// </summary>
     private bool _captured;
     /// <summary>
-    /// マウスX座標
+    /// 鼠标 X 坐标
     /// </summary>
     private float _mouseX;
     /// <summary>
-    /// マウスY座標
+    /// 鼠标 Y 坐标
     /// </summary>
     private float _mouseY;
 
     /// <summary>
-    /// Initialize関数で設定したウィンドウ幅
+    /// 由 Initialize 函数设置的窗口宽度
     /// </summary>
     public int WindowWidth { get; protected set; }
     /// <summary>
-    /// Initialize関数で設定したウィンドウ高さ
+    /// 由 Initialize 函数设置的窗口高度
     /// </summary>
     public int WindowHeight { get; protected set; }
 
@@ -54,11 +54,11 @@ public abstract class LAppDelegate : IDisposable
     {
         TextureManager = new LAppTextureManager(this);
 
-        // ウィンドウサイズ記憶
+        // 记录窗口尺寸
         GetWindowSize(out int width, out int height);
         WindowWidth = width;
         WindowHeight = height;
-        //AppViewの初期化
+        // AppView 的初始化
         View.Initialize(width, height);
 
         //load model
@@ -68,7 +68,7 @@ public abstract class LAppDelegate : IDisposable
     }
 
     /// <summary>
-    /// 解放する。
+    /// 释放资源.
     /// </summary>
     public void Dispose()
     {
@@ -80,15 +80,15 @@ public abstract class LAppDelegate : IDisposable
         GetWindowSize(out int width, out int height);
         if ((WindowWidth != width || WindowHeight != height) && width > 0 && height > 0)
         {
-            // サイズを保存しておく
+            // 先保存尺寸
             WindowWidth = width;
             WindowHeight = height;
-            //AppViewの初期化
+            // AppView 的初始化
             View.Initialize(width, height);
 
-            // モデルのレンダーターゲットサイズを実サイズに合わせる（官方 LAppDelegate.cpp:148。
-            // サンプル層で USE_RENDER_TARGET は有効にしていないが、CubismRenderer.SetRenderTargetSize は
-            // Blend モデルが使う model render target の解像度決定に効くため、公式同様に伝播させる。PLAN D-06）
+            // 将模型的渲染目标尺寸与实际尺寸对齐(官方 LAppDelegate.cpp:148.
+            // 示例层未启用 USE_RENDER_TARGET, 但 CubismRenderer.SetRenderTargetSize 会
+            // 影响 Blend 模型使用的渲染目标分辨率, 因此与官方一样向下传递).
             Live2dManager?.SetRenderTargetSize(width, height);
         }
     }
@@ -122,10 +122,10 @@ public abstract class LAppDelegate : IDisposable
     }
 
     /// <summary>
-    /// OpenGL用 glfwSetMouseButtonCallback用関数。
+    /// 供 OpenGL 使用的 glfwSetMouseButtonCallback 回调函数.
     /// </summary>
-    /// <param name="button">ボタン種類</param>
-    /// <param name="action">実行結果</param>
+    /// <param name="button">按钮种类</param>
+    /// <param name="action">执行结果</param>
     public void OnMouseCallBack(bool press)
     {
         if (press)
@@ -150,9 +150,9 @@ public abstract class LAppDelegate : IDisposable
     /// <param name="y">x座標</param>
     public void OnMouseCallBack(float x, float y)
     {
-        // 押下時のタップ判定（OnTouchesBegan/Ended）は直前の座標を使うため、
-        // 捕捉前でも座標は常に更新する（R1 からの移植では捕捉後のみ更新しており、
-        // ホストが押下時に座標を渡しても (0,0) で判定される不具合があった）。
+        // 按下时的点击判定(OnTouchesBegan/Ended)使用上一次的坐标,
+        // 因此即使尚未捕获也要始终更新坐标(旧实现只在捕获后更新,
+        // 宿主在按下时传入坐标也会被判定为 (0,0)).
         _mouseX = x;
         _mouseY = y;
 

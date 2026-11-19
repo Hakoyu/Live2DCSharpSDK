@@ -45,15 +45,15 @@ public abstract class OpenGLApi
     public readonly int GL_TEXTURE0 = 0x84C0;
     public readonly int GL_TEXTURE1 = 0x84C1;
     /// <summary>
-    /// テクスチャユニット2（blend 用、B15）
+    /// 纹理单元 2(blend 用).
     /// </summary>
     public readonly int GL_TEXTURE2 = 0x84C2;
     /// <summary>
-    /// テクスチャ繰り返し（B2、官方 CubismRenderTarget_OpenGLES2.cpp:102）
+    /// 纹理重复方式(对应官方 CubismRenderTarget_OpenGLES2.cpp:102).
     /// </summary>
     public readonly int GL_REPEAT = 0x2901;
     /// <summary>
-    /// 最近傍フィルタ（B2、官方 .cpp:105）
+    /// 最近邻过滤(对应官方 .cpp:105).
     /// </summary>
     public readonly int GL_NEAREST = 0x2600;
     public readonly int GL_ACTIVE_TEXTURE = 0x84E0;
@@ -73,41 +73,41 @@ public abstract class OpenGLApi
     public readonly int GL_STATIC_DRAW = 0x88E4;
     public readonly int GL_FRAMEBUFFER_BINDING = 0x8CA6;
     /// <summary>
-    /// 読み取り用フレームバッファ（B2、glBlitFramebuffer 用）
+    /// 读取用帧缓冲(glBlitFramebuffer 用).
     /// </summary>
     public readonly int GL_READ_FRAMEBUFFER = 0x8CA8;
     /// <summary>
-    /// 書き込み用フレームバッファ（B2、glBlitFramebuffer 用）
+    /// 写入用帧缓冲(glBlitFramebuffer 用).
     /// </summary>
     public readonly int GL_DRAW_FRAMEBUFFER = 0x8CA9;
     public readonly int GL_COLOR_ATTACHMENT0 = 0x8CE0;
     public readonly int GL_FRAMEBUFFER = 0x8D40;
     /// <summary>
-    /// フレームバッファが完全（描画可能）であることを示す値（S6、官方 glCheckFramebufferStatus）
+    /// 帧缓冲完整即可绘制的状态值(官方 glCheckFramebufferStatus).
     /// </summary>
     public readonly int GL_FRAMEBUFFER_COMPLETE = 0x8CD5;
     /// <summary>
-    /// 添付（attachment）が不完全（S6 診断用。ES2 / デスクトップ GL 共通）
+    /// 附件不完整(诊断用, ES2 / 桌面 GL 通用).
     /// </summary>
     public readonly int GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT = 0x8CD6;
     /// <summary>
-    /// 添付が 1 つも無い（S6 診断用）
+    /// 没有任何附件(诊断用).
     /// </summary>
     public readonly int GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT = 0x8CD7;
     /// <summary>
-    /// 添付のサイズが不一致（S6 診断用。ES2 のみ）
+    /// 附件尺寸不一致(诊断用, 仅 ES2).
     /// </summary>
     public readonly int GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS = 0x8CD9;
     /// <summary>
-    /// 実装がこの組み合わせをサポートしない（S6 診断用）
+    /// 实现不支持该组合(诊断用).
     /// </summary>
     public readonly int GL_FRAMEBUFFER_UNSUPPORTED = 0x8CDD;
     /// <summary>
-    /// 既定のフレームバッファが定義されていない（S6 診断用。デスクトップ GL）
+    /// 未定义默认帧缓冲(诊断用, 桌面 GL).
     /// </summary>
     public readonly int GL_FRAMEBUFFER_UNDEFINED = 0x8219;
     /// <summary>
-    /// テクスチャの最大サイズ（S6 診断用。サイズ超過の切り分けに使う）
+    /// 纹理最大尺寸(诊断用, 用于判断是否超限).
     /// </summary>
     public readonly int GL_MAX_TEXTURE_SIZE = 0x0D33;
 
@@ -160,25 +160,25 @@ public abstract class OpenGLApi
     public abstract int GenFramebuffer();
     public abstract void FramebufferTexture2D(int a, int b, int c, int buff, int data);
     /// <summary>
-    /// 現在バインドされているフレームバッファの完全性を検査する（公式 glCheckFramebufferStatus、S6）。
-    /// 戻り値が <see cref="GL_FRAMEBUFFER_COMPLETE"/> 以外なら描画先として使用できない。
-    /// 検査対象は <paramref name="target"/> にバインド中のフレームバッファなので、
-    /// 呼び出し側は対象の FBO をバインドした状態で呼ぶこと。
+    /// 检查当前绑定的帧缓冲是否完整(官方 glCheckFramebufferStatus).
+    /// 返回值不为 <see cref="GL_FRAMEBUFFER_COMPLETE"/> 时不能用作绘制目标. 
+    /// 检查对象是当前绑定到 <paramref name="target"/> 的帧缓冲, 因此
+    /// 调用方需要在绑定目标 FBO 的状态下调用. 
     /// </summary>
     /// <param name="target">GL_FRAMEBUFFER / GL_READ_FRAMEBUFFER / GL_DRAW_FRAMEBUFFER</param>
     public abstract int CheckFramebufferStatus(int target);
     public abstract void DeleteTexture(int data);
     public abstract void DeleteFramebuffer(int fb);
     /// <summary>
-    /// フレームバッファ間でビットブロック転送する（B2、官方 glBlitFramebuffer）
+    /// 在帧缓冲之间做位块传输(对应官方 glBlitFramebuffer).
     /// </summary>
     public abstract void BlitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, int mask, int filter);
     /// <summary>
-    /// バッファオブジェクトを削除する（§2.F 漏点①、公式 glDeleteBuffers）
+    /// 删除缓冲对象 (§2.F 漏点①, 官方 glDeleteBuffers)
     /// </summary>
     public abstract void DeleteBuffer(int index);
     /// <summary>
-    /// 頂点配列オブジェクトを削除する（§2.F 漏点①、公式 glDeleteVertexArrays）
+    /// 删除顶点数组对象 (§2.F 漏点①, 官方 glDeleteVertexArrays)
     /// </summary>
     public abstract void DeleteVertexArray(int index);
     public abstract void BlendFunc(int a, int b);

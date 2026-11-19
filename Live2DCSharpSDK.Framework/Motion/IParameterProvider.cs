@@ -27,7 +27,7 @@ public interface IParameterProvider
 }
 
 /// <summary>
-/// 常に 0 を返す IParameterProvider の最小実装（PLAN D-03）。
+/// 始终返回 0 的 IParameterProvider 最小实现.
 /// 本輪は wav デコードを導入しないため、口型は常に 0 のままとする。
 /// </summary>
 public sealed class ConstantParameterProvider : IParameterProvider

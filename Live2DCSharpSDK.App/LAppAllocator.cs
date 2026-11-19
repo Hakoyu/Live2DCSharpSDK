@@ -4,34 +4,34 @@ using Live2DCSharpSDK.Framework;
 namespace Live2DCSharpSDK.App;
 
 /// <summary>
-/// メモリ確保・解放処理のインターフェースの実装。
-/// フレームワークから呼び出される。
+/// 内存分配与释放接口的实现.
+/// 由框架调用.
 /// </summary>
 /// <remarks>
-/// S3（P0）: アラインメント付きの確保／解放は .NET 6+ の <see cref="NativeMemory"/> に委譲する。
-/// 旧実装は <see cref="IntPtr"/>（符号付き nint）でアドレス演算と剰余を行っていたため、
-/// アドレスの最上位ビットが立つ環境では `alignedAddress % alignment` が負になり、
-/// preamble を確保領域の外へ書いてヒープを破壊し得た。また `(int)(size + offset)` の
-/// 32bit 切り捨てと、確保失敗（null）時の preamble 書き込みも未処理だった。
-/// <see cref="NativeMemory.AlignedAlloc"/> / <see cref="NativeMemory.AlignedFree"/> は
-/// 確保と解放が同じ API で対になるため、元アドレスを保存する preamble そのものが不要になる。
+/// 带对齐的分配与释放委托给 .NET 6+ 的 <see cref="NativeMemory"/> 完成.
+/// 旧实现使用 <see cref="IntPtr"/>(有符号 nint)进行地址运算与取余,
+/// 因此在地址最高位为 1 的环境下 `alignedAddress % alignment` 会变成负数,
+/// 把 preamble 写到分配区域之外, 从而破坏堆. 此外 `(int)(size + offset)` 的
+/// 32 位截断, 以及分配失败(null)时仍写入 preamble 的问题也没有处理.
+/// <see cref="NativeMemory.AlignedAlloc"/> / <see cref="NativeMemory.AlignedFree"/> 的
+/// 分配与释放由同一套 API 成对完成, 因此保存原始地址的 preamble 本身不再需要.
 /// </remarks>
 public class LAppAllocator : ICubismAllocator
 {
     /// <summary>
-    /// 不正なアラインメントを渡されたときに使うフォールバック値。
-    /// （Framework が実際に要求するのは Moc = 64 / Model = 16。それ以外は呼び出し側の不備。）
+    /// 传入非法对齐值时使用的回退值.
+    /// (Framework 实际只要求 Moc = 64 / Model = 16, 其余情况属于调用方缺陷.)
     /// </summary>
     private const int FallbackAlignment = 16;
 
     /// <summary>
-    /// メモリ領域を割り当てる。
+    /// 分配内存区域.
     /// </summary>
-    /// <param name="size">割り当てたいサイズ。</param>
-    /// <returns>指定したメモリ領域。失敗した場合は <see cref="IntPtr.Zero"/>。</returns>
+    /// <param name="size">希望分配的字节数.</param>
+    /// <returns>指定的内存区域. 失败时返回 <see cref="IntPtr.Zero"/>.</returns>
     public IntPtr Allocate(int size)
     {
-        // ICubismAllocator 契約: 失敗時は 0 を返す（負数はサイズとして不正）。
+        // ICubismAllocator 契约: 失败时返回 0(负数不是合法尺寸).
         if (size < 0)
         {
             LogErrorNoThrow($"Allocate() called with a negative size: {size}.");
@@ -42,12 +42,12 @@ public class LAppAllocator : ICubismAllocator
     }
 
     /// <summary>
-    /// メモリ領域を解放する
+    /// 释放内存区域.
     /// </summary>
-    /// <param name="memory">解放するメモリ。</param>
+    /// <param name="memory">要释放的内存.</param>
     public void Deallocate(IntPtr memory)
     {
-        // 0 は「確保失敗」を表すため解放要求は無視する（Marshal.FreeHGlobal(0) も no-op）。
+        // 0 表示分配失败, 因此忽略释放请求(Marshal.FreeHGlobal(0) 本身也是 no-op).
         if (memory == IntPtr.Zero)
         {
             return;
@@ -57,11 +57,11 @@ public class LAppAllocator : ICubismAllocator
     }
 
     /// <summary>
-    /// アラインメント制約付きでメモリ領域を割り当てる。
+    /// 按对齐约束分配内存区域.
     /// </summary>
-    /// <param name="size">割り当てたいサイズ。</param>
-    /// <param name="alignment">メモリーブロックのアラインメント幅（2 の冪）。</param>
-    /// <returns>指定したアラインメントを満たすメモリ領域。失敗した場合は <see cref="IntPtr.Zero"/>。</returns>
+    /// <param name="size">希望分配的字节数.</param>
+    /// <param name="alignment">内存块的对齐宽度(2 的幂).</param>
+    /// <returns>满足指定对齐的内存区域. 失败时返回 <see cref="IntPtr.Zero"/>.</returns>
     public unsafe IntPtr AllocateAligned(int size, int alignment)
     {
         if (size < 0)
@@ -74,8 +74,8 @@ public class LAppAllocator : ICubismAllocator
 
         try
         {
-            // NativeMemory.AlignedAlloc は 2 の冪のアラインメントのみ受け付ける（上の正規化で保証済み）。
-            // 失敗時は OutOfMemoryException を投げる実装なので、契約（0 を返す）に合わせて捕捉する。
+            // NativeMemory.AlignedAlloc 只接受 2 的幂对齐(上面的规范化已保证).
+            // 该 API 失败时会抛出 OutOfMemoryException, 因此按契约(返回 0)捕获它.
             void* memory = NativeMemory.AlignedAlloc((nuint)size, (nuint)effectiveAlignment);
 
             if (memory == null)
@@ -94,14 +94,14 @@ public class LAppAllocator : ICubismAllocator
     }
 
     /// <summary>
-    /// アラインメント制約付きのメモリ領域を解放する。
+    /// 释放带对齐约束的内存区域.
     /// </summary>
-    /// <param name="alignedMemory">解放するメモリ</param>
+    /// <param name="alignedMemory">要释放的内存</param>
     /// <remarks>
-    /// 引数は <see cref="AllocateAligned"/> が返したアドレスでなければならない（確保／解放の対称性）。
-    /// 現行の呼び出し元は Framework の CubismMoc / CubismModel のみで、いずれも AllocateAligned の
-    /// 戻り値をそのまま渡している（Core は in-place API で同じアドレスを返すことを probe で確認済み）。
-    /// 0 は解放要求として無視する（旧実装はここで preamble[-1] を読みに行き AV していた）。
+    /// 参数必须是 <see cref="AllocateAligned"/> 返回的地址(分配与释放必须对称).
+    /// 当前调用方只有 Framework 的 CubismMoc / CubismModel, 两者都直接传递 AllocateAligned 的
+    /// 返回值(Core 的 in-place API 会返回同一地址, 已通过 probe 确认).
+    /// 0 作为释放请求忽略(旧实现会在这里读取 preamble[-1] 并触发访问违例).
     /// </remarks>
     public unsafe void DeallocateAligned(IntPtr alignedMemory)
     {
@@ -114,11 +114,11 @@ public class LAppAllocator : ICubismAllocator
     }
 
     /// <summary>
-    /// アラインメントを検証し、不正なら安全な既定値に丸める。
+    /// 校验对齐值, 非法时归入安全的默认值.
     /// </summary>
     private static int NormalizeAlignment(int alignment)
     {
-        // 1 は 2 の 0 乗なので有効。0 以下・非 2 の冪は無効。
+        // 1 是 2 的 0 次幂, 有效; 0 及以下, 非 2 的幂均无效.
         if (alignment > 0 && (alignment & (alignment - 1)) == 0)
         {
             return alignment;
@@ -129,17 +129,17 @@ public class LAppAllocator : ICubismAllocator
     }
 
     /// <summary>
-    /// Error レベルでログを出すが例外は投げない。
+    /// 以 Error 级别输出日志, 但不抛出异常.
     /// </summary>
     /// <remarks>
-    /// <see cref="CubismLog.Error"/> は出力後に必ず例外を投げる実装（analyse H-6、在本批不改其本体）であり、
-    /// 「確保失敗時は 0 を返す」という ICubismAllocator 契約と両立しない。
-    /// そのため出力条件（ログレベル）は CubismLog と同じにしたまま、throw だけを省く。
+    /// <see cref="CubismLog.Error"/> 输出日志后必定抛异常(本次不改其本体),
+    /// 与 ICubismAllocator "分配失败时返回 0" 的契约冲突.
+    /// 因此保持与 CubismLog 相同的输出条件(日志级别), 只省略 throw.
     /// </remarks>
     private static void LogErrorNoThrow(string message)
     {
-        // 出力条件は CubismLog と同じ（N-1: 旧実装は不等号が逆で、既定の LoggingLevel では
-        // エラーログが一切出なかった。LogLevel は重大度が大きいほど値が大きい）。
+        // 输出条件与 CubismLog 相同(旧实现不等号方向写反, 默认 LoggingLevel 下
+        // 完全不输出错误日志; LogLevel 的数值越大表示严重度越高).
         if (LogLevel.Error < CubismFramework.GetLoggingLevel())
         {
             return;

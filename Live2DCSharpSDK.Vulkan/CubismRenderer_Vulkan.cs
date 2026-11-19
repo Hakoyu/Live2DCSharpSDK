@@ -145,11 +145,11 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     private CubismClippingManager_Vulkan _clippingManager;
     /// <summary>
-    /// オフスクリーン用クリッピングマスク管理オブジェクト（P8c-offscreen）
+    /// 离屏用裁剪遮罩管理对象.
     /// </summary>
     private CubismClippingManager_Vulkan? _offscreenClippingManager;
     /// <summary>
-    /// オフスクリーン用クリッピングコンテキスト（P8c-offscreen）
+    /// 离屏用裁剪上下文.
     /// </summary>
     public CubismClippingContext_Vulkan? ClippingContextBufferForOffscreen { get; set; }
     /// <summary>
@@ -208,7 +208,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     private readonly int[] _sortedObjectsIndexList;
     /// <summary>
-    /// 描画順に並べたオブジェクト種別（G1 門禁: renderOrder は drawableCount + offscreenCount）
+    /// 按绘制顺序排列的对象种类(renderOrder 的长度为 drawableCount + offscreenCount).
     /// </summary>
     private readonly CsmEnum.DrawableObjectType[] _sortedObjectsTypeList;
     /// <summary>
@@ -276,12 +276,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
     private readonly VulkanManager _vulkanManager;
 
     /// <summary>
-    /// モデルのオフスクリーン数（t16 検証用）
+    /// 模型的离屏数量(用于验证).
     /// </summary>
     public int OffscreenCount => _offscreenList.Count;
 
     /// <summary>
-    /// DrawOffscreen 実行回数（t16 検証用）
+    /// DrawOffscreen 的执行次数(用于验证).
     /// </summary>
     public int OffscreenDrawCount { get; private set; }
 
@@ -296,7 +296,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             return;
         }
 
-        // G1 門禁（tester 実測）: csmGetRenderOrders の配列長 = drawableCount + offscreenCount。
+        // 实测: csmGetRenderOrders 的数组长度 = drawableCount + offscreenCount.
         // drawable / offscreen を合わせた順序配列を確保する（官方 DrawObjectLoop:2714-2727）。
         int childCount = model.GetDrawableCount() + model.GetOffscreenCount();
         _sortedObjectsIndexList = new int[childCount];
@@ -327,7 +327,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             }
         }
 
-        //------------ オフスクリーン用クリッピングマスク（P8c-offscreen）------------
+        //------------ 离屏用裁剪遮罩 ------------
         if (model.IsUsingMaskingForOffscreen())
         {
             _offscreenClippingManager = new CubismClippingManager_Vulkan(_vk)
@@ -348,7 +348,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             }
         }
 
-        //------------ 描画順ソート + オフスクリーン一覧（P8c-offscreen）------------
+        //------------ 绘制顺序排序 + 离屏列表 ------------
         int offscreenCount = model.GetOffscreenCount();
         if (offscreenCount > 0)
         {
@@ -666,7 +666,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         // ディスクリプタプールの作成
         int drawableCount = Model.GetDrawableCount();
         int offscreenCount = Model.GetOffscreenCount();
-        // テクスチャは 3 枚: binding1=モデル, binding2=マスク, binding3=blend 用（P8c）
+        // 共 3 张纹理: binding1=模型, binding2=遮罩, binding3=blend 用.
         int textureCount = 3;
         int drawModeCount = 2; // マスクされる描画と通常の描画
         // drawable 用 + offscreen 合成用（masked/unmasked）+ copy 用
@@ -837,7 +837,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
     /// <summary>
     /// モデル RT / オフスクリーン合成用のフルスクリーンクワッドバッファを作成する。
-    /// 公式 modelRenderTargetVertexArray / modelRenderTargetIndexArray と同じ頂点列（P8c-offscreen）。
+    /// 与官方 modelRenderTargetVertexArray / modelRenderTargetIndexArray 相同的顶点列.
     /// </summary>
     private unsafe void CreateQuadBuffers()
     {
@@ -1574,7 +1574,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _clippingManager?.Dispose();
         _offscreenClippingManager?.Dispose();
 
-        // モデル RT / オフスクリーン用マスク / 合成用バッファの解放（P8c-offscreen）
+        // 释放模型渲染目标 / 离屏用遮罩 / 合成用缓冲.
         for (int i = 0; i < _modelRenderTargets.Count; i++)
         {
             _modelRenderTargets[i].DestroyRenderTarget();
@@ -1739,7 +1739,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             return;
         }
 
-        // P6 の glBlitFramebuffer と等価な画像コピー（Vulkan の texture barrier 代替）。
+        // 与 glBlitFramebuffer 等价的图像拷贝(Vulkan 中作为 texture barrier 的替代).
         // Copy シェーダ（ExecuteDrawForRenderTarget）はクワッド経由の代替実装として残すが、
         // モデル RT → swapchain の合成はレイアウト遷移込みの vkCmdCopyImage で行う。
         var srcImage = src.GetTextureImage();
@@ -1927,7 +1927,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     private unsafe void AddOffscreen(int offscreenIndex)
     {
-        // 越界/所有権チェック: drawable index を offscreen として使わない（t16 §5）
+        // 越界与所有权检查: 不把 drawable 索引当作 offscreen 使用.
         if ((uint)offscreenIndex >= (uint)_offscreenList.Count)
         {
             CubismLog.Error("[Vulkan] offscreenIndex out of range: {0} (offscreenCount={1})",
@@ -2435,7 +2435,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             }
         }
 
-        //------------ オフスクリーン用クリッピングマスク前処理（P8c-offscreen）------------
+        //------------ 离屏用裁剪遮罩前处理 ------------
         if (_offscreenClippingManager != null)
         {
             for (int i = 0; i < _offscreenClippingManager.RenderTextureCount; ++i)
@@ -2479,9 +2479,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
         var totalCount = drawableCount + offscreenCount;
         var renderOrder = Model.GetRenderOrders();
         // インデックスを描画順でソート
-        // G1 門禁（tester 実測）: renderOrder の配列長は totalCount。drawable だけで走査すると
-        // offscreen の順序（および order 値が drawableCount 以上になる場合）を壊す。
-        // 官方 DrawObjectLoop（CubismRenderer_Vulkan.cpp:2714-2727）と同じ二重ソートにする。
+        // 实测: renderOrder 的数组长度是 totalCount, 只遍历 drawable 会
+        // 破坏 offscreen 的顺序(以及 order 值大于等于 drawableCount 的情况).
+        // 与官方 DrawObjectLoop(CubismRenderer_Vulkan.cpp:2714-2727)一样使用双重排序.
         for (int i = 0; i < totalCount; ++i)
         {
             int order = renderOrder[i];
@@ -2504,8 +2504,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         for (int i = 0; i < totalCount; ++i)
         {
-            // offscreen の実描画（AddOffscreen / blend）は P8c の担当。
-            // G1 門禁の順序配列だけ先に用意し、本フェーズは drawable のみ描画する（R1 语义維持）。
+            // 离屏的实际绘制(AddOffscreen / blend)尚未实现.
+            // 这里只先准备好顺序数组, 本阶段仅绘制 drawable(保持既有语义).
             if (_sortedObjectsTypeList[i] == CsmEnum.DrawableObjectType.Offscreen)
             {
                 // インデックスは AddOffscreen 内で offscreen 空間として検証する

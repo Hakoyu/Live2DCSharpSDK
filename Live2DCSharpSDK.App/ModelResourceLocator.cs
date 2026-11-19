@@ -3,82 +3,82 @@ using Live2DCSharpSDK.Framework;
 namespace Live2DCSharpSDK.App;
 
 /// <summary>
-/// モデルリソース（model3.json / moc3 / テクスチャ）の場所を解決する。
+/// 解析模型资源(model3.json / moc3 / 纹理)所在的位置.
 /// </summary>
 /// <remarks>
-/// 解決順（v6: 相对推导。本仓库不再保有任何本机绝对路径）:
-/// 1. 環境変数 <c>LIVE2D_MODEL_DIR</c>（+ <c>LIVE2D_MODEL_NAME</c>）— 明示指定を最優先。
-/// 2. <see cref="AppContext.BaseDirectory"/> から親ディレクトリへ最大 <see cref="MaxParentSearchDepth"/> 階層たどり、
-///    公式 SDK パッケージの <c>CubismSdkForNative-5-r.5/Samples/Resources</c> を探す（見つかった時点で採用）。
-/// 3. 実行ファイル隣の <c>Resources</c>（配布物を想定）。
+/// 解析顺序(全部基于相对路径推导, 不保留任何本机绝对路径):
+/// 1. 环境变量 <c>LIVE2D_MODEL_DIR</c>(以及 <c>LIVE2D_MODEL_NAME</c>) — 显式指定最优先.
+/// 2. 从 <see cref="AppContext.BaseDirectory"/> 向上最多追溯 <see cref="MaxParentSearchDepth"/> 层父目录,
+///    查找官方 SDK 包中的 <c>CubismSdkForNative-5-r.5/Samples/Resources</c>(一旦找到即采用).
+/// 3. 可执行文件旁边的 <c>Resources</c>(面向发布包).
 ///
-/// どこにも見つからない場合も例外は投げない。<see cref="CubismLog.Warning"/> に試行したパスを列挙して false を返し、
-/// 呼び出し側（ホスト）は空のシーンで起動を続ける。
-/// 上位ディレクトリが存在しない場合でも <see cref="Directory.Exists(string)"/> は false を返し、
-/// <see cref="Directory.GetParent(string)"/> は語彙的に親を返すだけなので、探索中に IOException は発生しない
-/// （念のため例外は捕捉して探索を打ち切る）。
+/// 任何位置都找不到时也不抛出异常. 在 <see cref="CubismLog.Warning"/> 中列出尝试过的路径并返回 false,
+/// 调用方(宿主)继续以空场景启动.
+/// 即使上级目录不存在, <see cref="Directory.Exists(string)"/> 也只是返回 false,
+/// <see cref="Directory.GetParent(string)"/> 只是按路径文本返回父目录, 因此搜索过程中不会产生 IOException
+/// (保险起见仍捕获异常并终止搜索).
 /// </remarks>
 public static class ModelResourceLocator
 {
     /// <summary>
-    /// モデルディレクトリを指定する環境変数名
+    /// 指定模型目录的环境变量名
     /// </summary>
     public const string ModelDirEnvName = "LIVE2D_MODEL_DIR";
 
     /// <summary>
-    /// モデル名を指定する環境変数名
+    /// 指定模型名的环境变量名
     /// </summary>
     public const string ModelNameEnvName = "LIVE2D_MODEL_NAME";
 
     /// <summary>
-    /// モデル名の既定値（公式サンプルと同じ Haru）
+    /// 模型名的默认值(与官方示例相同的 Haru)
     /// </summary>
     public const string DefaultModelName = "Haru";
 
     /// <summary>
-    /// 公式 SDK パッケージのディレクトリ名（相対探索の目印）
+    /// 官方 SDK 包的目录名(相对搜索的标记)
     /// </summary>
     public const string SdkPackageDirectoryName = "CubismSdkForNative-5-r.5";
 
     /// <summary>
-    /// <see cref="AppContext.BaseDirectory"/> から親方向へたどる最大階層数。
-    /// 0 が BaseDirectory 自身で、合計 <see cref="MaxParentSearchDepth"/> + 1 箇所を調べる。
+    /// 从 <see cref="AppContext.BaseDirectory"/> 向父方向追溯的最大层数.
+    /// 0 表示 BaseDirectory 自身, 合计检查 <see cref="MaxParentSearchDepth"/> + 1 个位置.
     /// </summary>
     public const int MaxParentSearchDepth = 5;
 
     /// <summary>
-    /// SDK パッケージ内のサンプルモデル格納先（相対パス）
+    /// SDK 包内示例模型的存放位置(相对路径)
     /// </summary>
     public static string SdkSamplesRelativePath => Path.Combine(SdkPackageDirectoryName, "Samples", "Resources");
 
     /// <summary>
-    /// 実行ファイル隣の <c>Resources</c> ディレクトリ（配布物を想定）
+    /// 可执行文件旁边的 <c>Resources</c> 目录(面向发布包)
     /// </summary>
     public static string LocalResourcesDirectory => Path.Combine(AppContext.BaseDirectory, "Resources");
 
     /// <summary>
-    /// 公式 SDK パッケージの <c>Samples/Resources</c> を、指定ディレクトリから親方向へ探す。
+    /// 从指定目录向父方向查找官方 SDK 包中的 <c>Samples/Resources</c>.
     /// </summary>
     /// <param name="startDirectory">
-    /// 探索開始ディレクトリ。null/空白 の場合は <see cref="AppContext.BaseDirectory"/>。
+    /// 搜索起始目录. 为 null 或空白时使用 <see cref="AppContext.BaseDirectory"/>.
     /// </param>
-    /// <returns>見つかった絶対パス。見つからなければ null。</returns>
+    /// <returns>找到的绝对路径. 未找到时为 null.</returns>
     public static string? FindSdkSamplesResources(string? startDirectory = null)
         => FindSdkSamplesResourcesCore(startDirectory, null);
 
     /// <summary>
-    /// モデルの場所を解決する。見つからない場合も例外は投げない（false + Warning）。
+    /// 解析模型的位置. 找不到时也不抛出异常(false + Warning).
     /// </summary>
-    /// <param name="modelName">モデル名。null/空 の場合は環境変数 LIVE2D_MODEL_NAME → 既定値 Haru</param>
-    /// <param name="dir">解決したモデルディレクトリ（見つからない場合は最後に試した候補）</param>
-    /// <param name="name">解決したモデル名</param>
-    /// <returns>モデルが見つかったら true</returns>
+    /// <param name="modelName">模型名. 为 null 或空时依次取环境变量 LIVE2D_MODEL_NAME, 默认值 Haru</param>
+    /// <param name="dir">解析出的模型目录(找不到时为最后尝试的候选)</param>
+    /// <param name="name">解析出的模型名</param>
+    /// <returns>找到模型时为 true</returns>
     public static bool TryResolve(string? modelName, out string dir, out string name)
     {
         name = ResolveName(modelName);
         List<string> attempted = [];
 
-        // 1. 環境変数（明示指定があれば最優先。誤指定時は相対探索へフォールバックする）
+        // 1. 环境变量(有显式指定时最优先, 指定有误时回退到相对搜索)
         string? envDir = Environment.GetEnvironmentVariable(ModelDirEnvName);
         if (!string.IsNullOrWhiteSpace(envDir))
         {
@@ -93,7 +93,7 @@ public static class ModelResourceLocator
             CubismLog.Warning($"[Live2D App]{ModelDirEnvName}=\"{envDir}\" にモデル '{name}' が見つからないため、相対探索を試します。");
         }
 
-        // 2. BaseDirectory から親方向への SDK 相対探索
+        // 2. 从 BaseDirectory 向父方向的 SDK 相对搜索
         string? sdkSamples = FindSdkSamplesResourcesCore(null, attempted);
         if (sdkSamples is not null && IsModelPresent(sdkSamples, name))
         {
@@ -102,7 +102,7 @@ public static class ModelResourceLocator
             return true;
         }
 
-        // 3. 実行ファイル隣の Resources（配布物）
+        // 3. 可执行文件旁边的 Resources(发布包)
         string localResources = LocalResourcesDirectory;
         attempted.Add(localResources);
         if (IsModelPresent(localResources, name))
@@ -120,10 +120,10 @@ public static class ModelResourceLocator
     }
 
     /// <summary>
-    /// モデル名を決める（引数 → 環境変数 → 既定値）。
+    /// 决定模型名(参数 → 环境变量 → 默认值).
     /// </summary>
-    /// <param name="modelName">引数のモデル名</param>
-    /// <returns>使用するモデル名</returns>
+    /// <param name="modelName">参数传入的模型名</param>
+    /// <returns>实际使用的模型名</returns>
     private static string ResolveName(string? modelName)
     {
         if (!string.IsNullOrWhiteSpace(modelName))
@@ -136,7 +136,7 @@ public static class ModelResourceLocator
     }
 
     /// <summary>
-    /// 相対探索の本体。<paramref name="attempted"/> を渡すと、試行した候補パスを順に追記する。
+    /// 相对搜索的主体实现. 传入 <paramref name="attempted"/> 时会依次追加尝试过的候选路径.
     /// </summary>
     private static string? FindSdkSamplesResourcesCore(string? startDirectory, List<string>? attempted)
     {
@@ -162,7 +162,7 @@ public static class ModelResourceLocator
     }
 
     /// <summary>
-    /// 探索起点を絶対パスへ正規化する。不正なパスは Warning を出して null を返す（例外にしない）。
+    /// 把搜索起点规范化为绝对路径. 非法路径输出 Warning 并返回 null(不抛异常).
     /// </summary>
     private static string? NormalizeDirectory(string? directory)
     {
@@ -170,10 +170,10 @@ public static class ModelResourceLocator
 
         try
         {
-            // 相対指定も受け付けるが、探索は絶対パスで行う（GetParent の終端判定を確実にするため）。
-            // 末尾のディレクトリ区切りは落とす: AppContext.BaseDirectory は "…\net10.0\" のように
-            // 末尾区切り付きで、そのまま GetParent すると同じ階層がもう一度返り探索段数が 1 層損なわれる。
-            // ルート（C:\ / \\server\share）は TrimEndingDirectorySeparator がそのまま維持する。
+            // 也接受相对路径指定, 但搜索以绝对路径进行(以确保 GetParent 的终点判定可靠).
+            // 去掉末尾的目录分隔符: AppContext.BaseDirectory 形如 "…\net10.0\" 那样
+            // 带末尾分隔符, 直接调用 GetParent 会再返回同一层, 使搜索层数少一层.
+            // 根路径(C:\ / \\server\share)会被 TrimEndingDirectorySeparator 原样保留.
             return Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or System.Security.SecurityException)
@@ -184,13 +184,13 @@ public static class ModelResourceLocator
     }
 
     /// <summary>
-    /// 親ディレクトリを返す。ルートに達した場合や取得できない場合は null（例外にしない）。
+    /// 返回父目录. 到达根路径或无法取得时返回 null(不抛异常).
     /// </summary>
     private static string? GetParentDirectory(string directory)
     {
         try
         {
-            // 存在しないパスでも語彙的に親を返す。ルート（C:\ / \\server\share）では null。
+            // 即使路径不存在也按文本返回父目录. 根路径(C:\ / \\server\share)返回 null.
             return Directory.GetParent(directory)?.FullName;
         }
         catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException or PathTooLongException or System.Security.SecurityException)
@@ -201,12 +201,12 @@ public static class ModelResourceLocator
     }
 
     /// <summary>
-    /// 指定ディレクトリにモデルが存在するか判定する。
-    /// LAppLive2DManager.LoadModel が受け付ける 3 形態（ファイル / .model3.json / 同名サブディレクトリ）を確認する。
+    /// 判定指定目录中是否存在模型.
+    /// 检查 LAppLive2DManager.LoadModel 接受的 3 种形态(文件 / .model3.json / 同名子目录).
     /// </summary>
-    /// <param name="dir">モデルディレクトリ</param>
-    /// <param name="name">モデル名</param>
-    /// <returns>存在すれば true</returns>
+    /// <param name="dir">模型目录</param>
+    /// <param name="name">模型名</param>
+    /// <returns>存在时为 true</returns>
     private static bool IsModelPresent(string dir, string name)
     {
         if (!Directory.Exists(dir))

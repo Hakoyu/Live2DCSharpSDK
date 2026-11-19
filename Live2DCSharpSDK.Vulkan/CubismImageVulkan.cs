@@ -4,51 +4,51 @@ using Silk.NET.Vulkan;
 namespace Live2DCSharpSDK.Vulkan;
 
 /// <summary>
-/// イメージを扱うクラス
+/// 处理 image 的类
 /// </summary>
 public class CubismImageVulkan(Vk vk)
 {
     /// <summary>
-    /// バッファ
+    /// image
     /// </summary>
     public Image Image => _image;
 
     private Image _image;
 
     /// <summary>
-    /// メモリ
+    /// 内存
     /// </summary>
     public DeviceMemory Memory => _memory;
 
     private DeviceMemory _memory;
 
     /// <summary>
-    /// ビュー
+    /// 视图
     /// </summary>
     public ImageView View => _view;
 
     private ImageView _view;
 
     /// <summary>
-    /// サンプラー
+    /// sampler
     /// </summary>
     public Sampler Sampler => _sampler;
 
     private Sampler _sampler;
 
     /// <summary>
-    /// 現在のイメージレイアウト
+    /// 当前的 image 布局
     /// </summary>
     public ImageLayout CurrentLayout { get; private set; }
     public uint Width { get; private set; }
     public uint Height { get; private set; }
 
     /// <summary>
-    /// 物理デバイスのメモリタイプのインデックスを探す
+    /// 查找物理设备内存类型的索引
     /// </summary>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="typeFilter">メモリタイプが存在していたら設定されるビットマスク</param>
-    /// <param name="properties">メモリがデバイスにアクセスするときのタイプ</param>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="typeFilter">存在内存类型时被设置的位掩码</param>
+    /// <param name="properties">内存访问设备时的类型</param>
     /// <returns></returns>
     public unsafe int FindMemoryType(PhysicalDevice physicalDevice, uint typeFilter, MemoryPropertyFlags properties)
     {
@@ -66,16 +66,16 @@ public class CubismImageVulkan(Vk vk)
     }
 
     /// <summary>
-    /// イメージを作成する
+    /// 创建 image
     /// </summary>
-    /// <param name="device">デバイス</param>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="w">横幅</param>
-    /// <param name="h">高さ</param>
-    /// <param name="mipLevel">ミップマップのレベル</param>
-    /// <param name="format">フォーマット</param>
-    /// <param name="tiling">タイリング配置の設定</param>
-    /// <param name="usage">イメージの使用目的を指定するビットマスク</param>
+    /// <param name="device">设备</param>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="w">宽度</param>
+    /// <param name="h">高度</param>
+    /// <param name="mipLevel">mipmap 的层级</param>
+    /// <param name="format">格式</param>
+    /// <param name="tiling">tiling 布局设置</param>
+    /// <param name="usage">指定 image 用途的位掩码</param>
     public unsafe void CreateImage(Device device, PhysicalDevice physicalDevice, uint w, uint h,
                      uint mipLevel, Format format, ImageTiling tiling, ImageUsageFlags usage)
     {
@@ -124,12 +124,12 @@ public class CubismImageVulkan(Vk vk)
     }
 
     /// <summary>
-    /// ビューを作成する
+    /// 创建视图
     /// </summary>
-    /// <param name="device">デバイス</param>
-    /// <param name="format">フォーマット</param>
-    /// <param name="aspectFlags">どのアスペクトマスクがビューに含まれるかを指定するビットマスク</param>
-    /// <param name="mipLevel">ミップマップのレベル</param>
+    /// <param name="device">设备</param>
+    /// <param name="format">格式</param>
+    /// <param name="aspectFlags">指定视图包含哪些 aspect mask 的位掩码</param>
+    /// <param name="mipLevel">mipmap 的层级</param>
     public unsafe void CreateView(Device device, Format format, ImageAspectFlags aspectFlags, uint mipLevel)
     {
         var viewInfo = new ImageViewCreateInfo()
@@ -148,11 +148,11 @@ public class CubismImageVulkan(Vk vk)
     }
 
     /// <summary>
-    /// サンプラーを作成する
+    /// 创建 sampler
     /// </summary>
-    /// <param name="device">デバイス</param>
-    /// <param name="maxAnistropy">異方性の値の最大値</param>
-    /// <param name="mipLevel">ミップマップのレベル</param>
+    /// <param name="device">设备</param>
+    /// <param name="maxAnistropy">各向异性值的最大值</param>
+    /// <param name="mipLevel">mipmap 的层级</param>
     public unsafe void CreateSampler(Device device, float maxAnistropy, uint mipLevel)
     {
         var samplerInfo = new SamplerCreateInfo()
@@ -182,11 +182,11 @@ public class CubismImageVulkan(Vk vk)
     }
 
     /// <summary>
-    /// イメージのレイアウトを変更する
+    /// 变更 image 的布局
     /// </summary>
-    /// <param name="commandBuffer">コマンドバッファ</param>
-    /// <param name="newLayout">新しいレイアウト</param>
-    /// <param name="mipLevels">ミップマップのレベル</param>
+    /// <param name="commandBuffer">命令缓冲区</param>
+    /// <param name="newLayout">新的布局</param>
+    /// <param name="mipLevels">mipmap 的层级</param>
     /// <param name="aspectMask"></param>
     public unsafe void SetImageLayout(CommandBuffer commandBuffer, ImageLayout newLayout, uint mipLevels, ImageAspectFlags aspectMask)
     {
@@ -245,11 +245,11 @@ public class CubismImageVulkan(Vk vk)
                 destinationStage = PipelineStageFlags.TransferBit;
                 break;
 
-            // 読み取り専用レイアウトへの遷移は断片シェーダーでの読み取りを待つ。
-            // 公式 5-r.5（Framework/src/Rendering/Vulkan/CubismClass_Vulkan.cpp）はここで
-            // VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR を後置代入して FragmentShaderBit を
-            // 上書きしているが、本デバイスは光線追跡拡張を有効化していないため使わない
-            // （上流由来のバグ。テクスチャは fragment shader でのみサンプルされる）。
+            // 向只读布局的转换需要等待 fragment shader 的读取.
+            // 官方 5-r.5(Framework/src/Rendering/Vulkan/CubismClass_Vulkan.cpp) 在此处
+            // 用 VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR 后置赋值, 覆盖了 FragmentShaderBit,
+            // 但本设备未启用光线追踪扩展, 因此不使用
+            // (源自上游的 bug. 纹理仅在 fragment shader 中被采样).
             case ImageLayout.ReadOnlyOptimal:
                 barrier.DstAccessMask = AccessFlags.ShaderReadBit;
                 destinationStage = PipelineStageFlags.FragmentShaderBit;
@@ -276,18 +276,18 @@ public class CubismImageVulkan(Vk vk)
     }
 
     /// <summary>
-    /// vkCmdEndRendering後のパイプラインバリアで変わってしまうイメージレイアウトを保存する
+    /// 保存 vkCmdEndRendering 后因 pipeline barrier 而改变的 image 布局
     /// </summary>
-    /// <param name="newLayout">新しいレイアウト</param>
+    /// <param name="newLayout">新的布局</param>
     public void SetCurrentLayout(ImageLayout newLayout)
     {
         CurrentLayout = newLayout;
     }
 
     /// <summary>
-    /// リソースを破棄する
+    /// 销毁资源
     /// </summary>
-    /// <param name="device">デバイス</param>
+    /// <param name="device">设备</param>
     public unsafe void Destroy(Device device)
     {
         if (_image.Handle != 0)

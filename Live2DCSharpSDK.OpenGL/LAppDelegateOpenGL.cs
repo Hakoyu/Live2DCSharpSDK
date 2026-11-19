@@ -8,7 +8,7 @@ namespace Live2DCSharpSDK.OpenGL;
 public class LAppDelegateOpenGL : LAppDelegate
 {
     /// <summary>
-    /// モデルごとのマスクバッファ枚数の上限（4 枚 = 128 グループまで）
+    /// 每个模型的掩码缓冲张数上限 (4 张 = 最多 128 组)
     /// </summary>
     private const int MaxMaskBufferCount = 4;
 
@@ -18,14 +18,14 @@ public class LAppDelegateOpenGL : LAppDelegate
     {
         GL = gl;
 
-        //テクスチャサンプリング設定
+        // 纹理采样设置
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR);
 
         //透過設定
-        //R5: モデルのシェーダ出力は乗算済みアルファ（FragShaderSrc.frag の gl_FragColor = vec4(rgb*a, a)）のため、
-        //    グローバルブレンドも ONE / ONE_MINUS_SRC_ALPHA に合わせる（官方 Samples/OpenGL LAppDelegate.cpp:94）。
-        //    R1 は SRC_ALPHA / ONE_MINUS_SRC_ALPHA で、半透明エッジが二重に暗くなる（PLAN R2）。
+        // R5: 模型的 Shader 输出为预乘 Alpha (FragShaderSrc.frag 的 gl_FragColor = vec4(rgb*a, a)), 因此, 
+        //    全局混合也调整为 ONE / ONE_MINUS_SRC_ALPHA (官方 Samples/OpenGL LAppDelegate.cpp:94). 
+        //    旧实现用 SRC_ALPHA / ONE_MINUS_SRC_ALPHA, 半透明边缘会被重复压暗.
         GL.Enable(GL.GL_BLEND);
         GL.BlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA);
 
@@ -41,7 +41,7 @@ public class LAppDelegateOpenGL : LAppDelegate
 
     public override bool RunPre()
     {
-        // 画面の初期化
+        // 画面初始化
         GL.ClearColor(BGColor.R, BGColor.G, BGColor.B, BGColor.A);
         GL.Clear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
         GL.ClearDepthf(1.0f);
@@ -51,16 +51,16 @@ public class LAppDelegateOpenGL : LAppDelegate
 
     public override CubismRenderer CreateRenderer(CubismModel model)
     {
-        // 【官方との差異】官方 sample は CubismUserModel::CreateRenderer の既定値どおり
-        // maskBufferCount = 1 固定で生成するが、本地はモデルの実際のマスクグループ数から
-        // 必要枚数を決める（大肥魚: 49 グループ > 1 枚あたり上限 36 の対策）。
+        // [与官方的差异] 官方 sample 按 CubismUserModel::CreateRenderer 的默认值
+        // 固定以 maskBufferCount = 1 生成, 而本地根据模型实际的掩码组数
+        // 决定所需张数 (大肥鱼: 49 组 > 每张上限 36 的对策). 
         int maskBufferCount = CalculateMaskBufferCount(model);
         return new CubismRenderer_OpenGLES2(GL, this, model, maskBufferCount);
     }
 
     /// <summary>
-    /// モデルのマスクグループ数から必要な maskBufferCount を算出する。
-    /// 1 枚あたり 36 グループ、2 枚以上は 1 枚あたり 32 グループ（官方の上限式）。
+    /// 根据模型的掩码组数计算所需的 maskBufferCount. 
+    /// 每张 36 组, 2 张以上时每张 32 组 (官方的上限公式). 
     /// </summary>
     private static int CalculateMaskBufferCount(CubismModel model)
     {
@@ -85,7 +85,7 @@ public class LAppDelegateOpenGL : LAppDelegate
             }
         }
 
-        // モデル名は CubismModel が保持しないため、識別用に drawable / offscreen 数を併記する
+        // 模型名不由 CubismModel 持有, 因此为便于识别同时输出 drawable / offscreen 数量
         CubismLog.Info("[Live2D OpenGL]maskBufferCount={0} maskGroups={1} drawables={2} offscreens={3}",
             maskBufferCount, groups, model.GetDrawableCount(), model.GetOffscreenCount());
 

@@ -5,7 +5,7 @@ namespace Live2DCSharpSDK.Framework.Motion;
 /// </summary>
 /// <remarks>
 /// 官方は生 JSON を走査するが、本地は <see cref="CubismMotionObj"/> の DTO を走査して
-/// Curves / Segments / Points の実数と Meta の宣言値を照合する（scout 01-framework U02）。
+/// 核对 Curves / Segments / Points 的实际数值与 Meta 的声明值.
 /// </remarks>
 public static class CubismMotionJson
 {

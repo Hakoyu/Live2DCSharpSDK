@@ -6,8 +6,8 @@ namespace Live2DCSharpSDK.Framework.Motion;
 /// リップシンクの更新処理（官方 CubismLipSyncUpdater）。
 /// </summary>
 /// <remarks>
-/// PLAN D-03: 本輪は wav デコードを導入しない。外部から IParameterProvider を注入する形だけを用意し、
-/// 既定では ConstantParameterProvider（常に 0）を使う。App 層は登録しない。
+/// 本轮不引入 wav 解码, 只提供从外部注入 IParameterProvider 的形式,
+/// 默认使用 ConstantParameterProvider(始终返回 0), App 层不注册.
 /// </remarks>
 public class CubismLipSyncUpdater : ICubismUpdater
 {

@@ -5,74 +5,74 @@ using Silk.NET.Vulkan;
 namespace Live2DCSharpSDK.Vulkan;
 
 /// <summary>
-/// オフスクリーン描画用レンダーターゲット（官方 FW5/Vulkan/CubismRenderTarget_Vulkan）。
-/// R1 の CubismOffscreenSurface_Vulkan をリネームし、P5 の <see cref="CubismRenderTarget"/> 契約
-/// （DestroyRenderTarget / GetBufferWidth / GetBufferHeight / IsValid）を実装する。
+/// 离屏绘制用的渲染目标(对应官方 Framework/Rendering/Vulkan/CubismRenderTarget_Vulkan).
+/// 由旧的 CubismOffscreenSurface_Vulkan 更名而来, 实现 <see cref="CubismRenderTarget"/> 契约
+/// 即 (DestroyRenderTarget / GetBufferWidth / GetBufferHeight / IsValid).
 /// </summary>
 public class CubismRenderTarget_Vulkan : CubismRenderTarget
 {
     private readonly Vk _vk;
 
     /// <summary>
-    /// 論理デバイス（官方 _device）。DestroyRenderTarget() を引数なしにするため保持する。
+    /// 逻辑设备(官方 _device). 为让 DestroyRenderTarget() 不带参数而保留.
     /// </summary>
     private Device _device;
 
     /// <summary>
-    /// オフスクリーンの横幅
+    /// 离屏的宽度
     /// </summary>
     public uint BufferWidth { get; private set; }
 
     /// <summary>
-    /// オフスクリーンの縦幅
+    /// 离屏的高度
     /// </summary>
     public uint BufferHeight { get; private set; }
 
     /// <summary>
-    /// カラーバッファ
+    /// 颜色缓冲区
     /// </summary>
     private CubismImageVulkan? _colorImage;
 
     /// <summary>
-    /// 深度バッファ
+    /// 深度缓冲区
     /// </summary>
     private CubismImageVulkan? _depthImage;
 
     /// <summary>
-    /// レンダリングパスがアクティブかどうか（官方 _isRendering）
+    /// 渲染通道是否处于活动状态(官方 _isRendering)
     /// </summary>
     private bool _isRendering;
 
     /// <summary>
-    /// パラメータなしコンストラクタ。
-    /// P5 の ICubismOffscreenManager&lt;T&gt; は new T() で生成するため必須（官方も引数なし）。
+    /// 无参构造函数.
+    /// ICubismOffscreenManager&lt;T&gt; 用 new T() 创建实例, 因此必须提供无参构造(官方同样无参).
     /// </summary>
     public CubismRenderTarget_Vulkan() : this(Vk.GetApi())
     {
     }
 
     /// <summary>
-    /// コンストラクタ
+    /// 构造函数
     /// </summary>
-    /// <param name="vk">Vulkan API インスタンス</param>
+    /// <param name="vk">Vulkan API 实例</param>
     public CubismRenderTarget_Vulkan(Vk vk)
     {
         _vk = vk;
     }
 
     /// <summary>
-    /// レンダリングターゲットのクリア
-    /// 呼ぶ場合はBeginDrawの後で呼ぶこと
+    /// 清除渲染目标
+    /// 调用时须在 BeginDraw 之后调用
     /// </summary>
-    /// <param name="commandBuffer">コマンドバッファ</param>
-    /// <param name="r">赤(0.0~1.0)</param>
-    /// <param name="g">緑(0.0~1.0)</param>
-    /// <param name="b">青(0.0~1.0)</param>
+    /// <param name="commandBuffer">命令缓冲区</param>
+    /// <param name="r">红色(0.0~1.0)</param>
+    /// <param name="g">绿色(0.0~1.0)</param>
+    /// <param name="b">蓝色(0.0~1.0)</param>
     /// <param name="a">α(0.0~1.0)</param>
-    /// <param name="isClear">レンダーターゲットをクリアするか（官方 R5 追加引数）</param>
+    /// <param name="isClear">是否清除渲染目标(官方 R5 新增参数)</param>
     public unsafe void BeginDraw(CommandBuffer commandBuffer, float r, float g, float b, float a, bool isClear = true)
     {
-        // レンダリングパスがアクティブの場合はスキップ（官方 R5）
+        // 渲染通道处于活动状态时跳过(官方 R5)
         if (_isRendering)
         {
             return;
@@ -130,13 +130,13 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// 描画終了
+    /// 结束绘制
     /// </summary>
-    /// <param name="commandBuffer">コマンドバッファ</param>
-    /// <param name="currentLayout">現在のイメージレイアウト（官方 R5 引数）</param>
+    /// <param name="commandBuffer">命令缓冲区</param>
+    /// <param name="currentLayout">当前的 image 布局(官方 R5 参数)</param>
     public unsafe void EndDraw(CommandBuffer commandBuffer, ImageLayout currentLayout = ImageLayout.ColorAttachmentOptimal)
     {
-        // レンダリングパスがアクティブでない場合はスキップ（官方 R5）
+        // 渲染通道未处于活动状态时跳过(官方 R5)
         if (!_isRendering)
         {
             return;
@@ -152,7 +152,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
 
         _vk.CmdEndRendering(commandBuffer);
 
-        // レイアウト変更
+        // 变更布局
         var memoryBarrier = new ImageMemoryBarrier
         {
             SType = StructureType.ImageMemoryBarrier,
@@ -175,10 +175,10 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
             return;
         }
 
-        // 深度/ステンシルの書き込みは early / late fragment tests で発生するため、
-        // ソース段は ColorAttachmentOutputBit ではなく EarlyFragmentTests|LateFragmentTests を使う
-        // （公式 5-r.5 は ColorAttachmentOutputBit のままだが、深度アタッチメントの書き込み段と一致しない）。
-        // srcAccessMask も深度書き込みに合わせる（段とアクセス種別の組み合わせを揃える。dstAccessMask は None のまま）。
+        // depth/stencil 的写入发生在 early / late fragment tests 中,
+        // 因此源阶段应使用 EarlyFragmentTests|LateFragmentTests 而不是 ColorAttachmentOutputBit
+        // (官方 5-r.5 仍为 ColorAttachmentOutputBit, 但与深度附件的写入阶段不一致).
+        // srcAccessMask 也配合深度写入(阶段与访问类型的组合保持一致. dstAccessMask 仍为 None).
         memoryBarrier.SrcAccessMask = AccessFlags.DepthStencilAttachmentWriteBit;
         memoryBarrier.DstAccessMask = AccessFlags.None;
         memoryBarrier.OldLayout = ImageLayout.DepthStencilAttachmentOptimal;
@@ -194,14 +194,14 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// CubismRenderTargetを作成する（官方 CreateRenderTarget）。
+    /// 创建 CubismRenderTarget(对应官方 CreateRenderTarget).
     /// </summary>
-    /// <param name="device">論理デバイス</param>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="displayBufferWidth">オフスクリーンの横幅</param>
-    /// <param name="displayBufferHeight">オフスクリーンの縦幅</param>
-    /// <param name="surfaceFormat">サーフェスフォーマット</param>
-    /// <param name="depthFormat">深度フォーマット</param>
+    /// <param name="device">逻辑设备</param>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="displayBufferWidth">离屏的宽度</param>
+    /// <param name="displayBufferHeight">离屏的高度</param>
+    /// <param name="surfaceFormat">surface 格式</param>
+    /// <param name="depthFormat">深度格式</param>
     public void CreateRenderTarget(Device device, PhysicalDevice physicalDevice,
         uint displayBufferWidth, uint displayBufferHeight, Format surfaceFormat, Format depthFormat)
     {
@@ -227,7 +227,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// レンダーターゲットを削除する（官方 DestroyRenderTarget、P5 契約の引数なし版）
+    /// 删除渲染目标(官方 DestroyRenderTarget 的无参版本).
     /// </summary>
     public override void DestroyRenderTarget()
     {
@@ -246,7 +246,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// イメージへのアクセッサ
+    /// image 的访问器
     /// </summary>
     public Image GetTextureImage()
     {
@@ -260,7 +260,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// テクスチャビューへのアクセッサ
+    /// texture view 的访问器
     /// </summary>
     public ImageView GetTextureView()
     {
@@ -274,7 +274,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// テクスチャサンプラーへのアクセッサ
+    /// texture sampler 的访问器
     /// </summary>
     public Sampler GetTextureSampler()
     {
@@ -288,7 +288,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// バッファ幅を返す（P5 契約）
+    /// 返回缓冲区宽度.
     /// </summary>
     public override uint GetBufferWidth()
     {
@@ -296,7 +296,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// バッファ高さを返す（P5 契約）
+    /// 返回缓冲区高度.
     /// </summary>
     public override uint GetBufferHeight()
     {
@@ -304,7 +304,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// 現在有効かどうかを返す（P5 契約）
+    /// 返回当前是否有效.
     /// </summary>
     public override bool IsValid()
     {
@@ -312,7 +312,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// レンダリングパスがアクティブかどうかを返す（官方 IsRendering）
+    /// 返回渲染通道是否处于活动状态(官方 IsRendering)
     /// </summary>
     public bool IsRendering()
     {
@@ -320,9 +320,9 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     }
 
     /// <summary>
-    /// カラーイメージの現在のレイアウトを設定する（官方 SetColorImageCurrentLayout）
+    /// 设置颜色 image 的当前布局(对应官方 SetColorImageCurrentLayout)
     /// </summary>
-    /// <param name="newLayout">新しいレイアウト</param>
+    /// <param name="newLayout">新的布局</param>
     public void SetColorImageCurrentLayout(ImageLayout newLayout)
     {
         _colorImage?.SetCurrentLayout(newLayout);

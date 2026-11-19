@@ -18,7 +18,7 @@ public record ModelSettingObj
             // 注: [DefaultValue(-1f)] は System.Text.Json（source-gen 含む）では
             // 逆シリアル化時の既定値に反映されない（未記載プロパティは 0 になる）。
             // 官方 GetMotionFadeInTimeValue の「未記載 = -1（上書きしない）」に合わせるため、
-            // 等価な手段であるプロパティ初期化子で -1 を既定値にする（t15）。
+            // 用等价的手段(属性初始化器)将 -1 设为默认值.
             [DefaultValue(-1f)]
             public float FadeInTime { get; set; } = -1f;
             [DefaultValue(-1f)]

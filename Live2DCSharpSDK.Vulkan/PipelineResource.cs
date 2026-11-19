@@ -8,31 +8,31 @@ namespace Live2DCSharpSDK.Vulkan;
 public class PipelineResource(Vk vk, Device device)
 {
     /// <summary>
-    /// normal, add, multi, maskそれぞれのパイプライン
-    /// （5.3 以降の blend / Copy は 1 本のみ）
+    /// normal, add, multi, mask 各自的 pipeline
+    /// (5.3 以后的 blend / Copy 只有 1 个)
     /// </summary>
     private Pipeline[] _pipeline;
     /// <summary>
-    /// normal, add, multi, maskそれぞれのパイプラインレイアウト
+    /// normal, add, multi, mask 各自的 pipeline layout
     /// </summary>
     private PipelineLayout[] _pipelineLayout;
     /// <summary>
-    /// 単一パイプライン（Copy / 5.3 以降の blend）かどうか
+    /// 是否为单一 pipeline(Copy / 5.3 以后的 blend)
     /// </summary>
     private bool _singlePipeline;
 
     /// <summary>
-    /// シェーダーモジュールを作成する
+    /// 创建 shader module
     /// </summary>
-    /// <param name="device">論理デバイス</param>
-    /// <param name="filename">ファイル名</param>
+    /// <param name="device">逻辑设备</param>
+    /// <param name="filename">文件名</param>
     /// <returns></returns>
     public unsafe ShaderModule CreateShaderModule(Device device, string filename)
     {
         var assm = Assembly.GetExecutingAssembly();
         string name = "Live2DCSharpSDK.Vulkan.spv." + filename;
         // 内嵌 shader 资源缺失时必须立刻失败：原实现先对返回值加 ! 再判空，
-        // 判空分支永远不成立，随后 item.CopyTo 抛 NullReferenceException（P8a / V0-2）。
+        // 判空分支永远不成立, 随后 item.CopyTo 抛 NullReferenceException.
         using var item = assm.GetManifestResourceStream(name);
         if (item == null)
         {
@@ -66,14 +66,14 @@ public class PipelineResource(Vk vk, Device device)
     }
 
     /// <summary>
-    /// パイプラインを作成する
+    /// 创建 pipeline
     /// </summary>
-    /// <param name="vertFileName">Vertexシェーダーのファイル</param>
-    /// <param name="fragFileName">Fragmentシェーダーのファイル</param>
-    /// <param name="descriptorSetLayout">ディスクリプタセットレイアウト</param>
-    /// <param name="shaderName">ShaderNames の添字（Copy 判定用）</param>
-    /// <param name="colorBlendMode">カラーブレンドモード（5.3 以降のみ）</param>
-    /// <param name="alphaBlendMode">アルファブレンドモード（5.3 以降のみ）</param>
+    /// <param name="vertFileName">Vertex shader 的文件</param>
+    /// <param name="fragFileName">Fragment shader 的文件</param>
+    /// <param name="descriptorSetLayout">descriptor set layout</param>
+    /// <param name="shaderName">ShaderNames 的下标(用于 Copy 判定)</param>
+    /// <param name="colorBlendMode">颜色混合模式(仅 5.3 以后)</param>
+    /// <param name="alphaBlendMode">alpha 混合模式(仅 5.3 以后)</param>
     public unsafe void CreateGraphicsPipeline(string vertFileName, string fragFileName,
                                     DescriptorSetLayout descriptorSetLayout,
                                     int shaderName = -1, int colorBlendMode = -1, int alphaBlendMode = -1)
@@ -81,7 +81,7 @@ public class PipelineResource(Vk vk, Device device)
         var vertShaderModule = CreateShaderModule(device, vertFileName);
         var fragShaderModule = CreateShaderModule(device, fragFileName);
 
-        // 官方 CubismRenderer_Vulkan.cpp:544-551: Copy と 5.3 以降の blend は単一パイプライン
+        // 官方 CubismRenderer_Vulkan.cpp:544-551: Copy 与 5.3 以后的 blend 均为单一 pipeline
         _singlePipeline = shaderName == ShaderNames.Copy
             || (colorBlendMode != -1 && alphaBlendMode != -1);
 
@@ -162,7 +162,7 @@ public class PipelineResource(Vk vk, Device device)
             RasterizationSamples = SampleCountFlags.Count1Bit
         };
 
-        // 初期値: 通常（Blend_Normal）
+        // 初始值: 通常(Blend_Normal)
         var colorBlendAttachment = new PipelineColorBlendAttachmentState
         {
             ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit
@@ -255,7 +255,7 @@ public class PipelineResource(Vk vk, Device device)
 
         if (_singlePipeline)
         {
-            // Copy は通常の alpha blend、5.3 以降の blend は shader 内で合成するため ONE/ZERO
+            // Copy 使用通常的 alpha blend, 5.3 以后的 blend 在 shader 内部合成, 因此为 ONE/ZERO
             if (shaderName == ShaderNames.Copy)
             {
                 colorBlendAttachment.SrcColorBlendFactor = BlendFactor.One;
@@ -284,7 +284,7 @@ public class PipelineResource(Vk vk, Device device)
         }
         else
         {
-            // 5.2 以前: 通常 / 加算 / 乗算 / マスク の 4 本
+            // 5.2 以前: 通常 / 加法 / 乘法 / 遮罩 共 4 个
             if (vk.CreatePipelineLayout(device, ref pipelineLayoutInfo, null,
                 out _pipelineLayout[Blend.Normal]) != Result.Success)
             {
@@ -299,7 +299,7 @@ public class PipelineResource(Vk vk, Device device)
                 CubismLog.Error("failed to create graphics _pipeline!");
             }
 
-            // 加算
+            // 加法
             colorBlendAttachment.SrcColorBlendFactor = BlendFactor.One;
             colorBlendAttachment.DstColorBlendFactor = BlendFactor.One;
             colorBlendAttachment.SrcAlphaBlendFactor = BlendFactor.Zero;
@@ -318,7 +318,7 @@ public class PipelineResource(Vk vk, Device device)
                 CubismLog.Error("failed to create graphics _pipeline!");
             }
 
-            // 乗算
+            // 乘法
             colorBlendAttachment.SrcColorBlendFactor = BlendFactor.DstColor;
             colorBlendAttachment.DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha;
             colorBlendAttachment.SrcAlphaBlendFactor = BlendFactor.Zero;
@@ -337,7 +337,7 @@ public class PipelineResource(Vk vk, Device device)
                 CubismLog.Error("failed to create graphics _pipeline!");
             }
 
-            // マスク
+            // 遮罩
             colorBlendAttachment.SrcColorBlendFactor = BlendFactor.Zero;
             colorBlendAttachment.DstColorBlendFactor = BlendFactor.OneMinusSrcColor;
             colorBlendAttachment.SrcAlphaBlendFactor = BlendFactor.Zero;

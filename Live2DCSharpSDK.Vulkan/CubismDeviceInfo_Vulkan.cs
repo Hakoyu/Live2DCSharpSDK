@@ -3,21 +3,21 @@ using Silk.NET.Vulkan;
 namespace Live2DCSharpSDK.Vulkan;
 
 /// <summary>
-/// デバイスに紐づいているデータを管理するクラス
-/// （官方 FW5/Vulkan/CubismDeviceInfo_Vulkan.hpp:19-70）。
-/// VkDevice.Handle をキーに、デバイスごとのパイプラインとオフスクリーンマネージャを保持する。
+/// 管理绑定到设备的数据的类
+/// (对应官方 Framework/Rendering/Vulkan/CubismDeviceInfo_Vulkan.hpp:19-70).
+/// 以 VkDevice.Handle 为键, 保持每个设备的 pipeline 与离屏管理器.
 /// </summary>
 public class CubismDeviceInfo_Vulkan
 {
     /// <summary>
-    /// デバイスごとのデータ（官方 s_deviceInfoList: csmMap&lt;VkDevice, CubismDeviceInfo_Vulkan&gt;）
+    /// 每个设备的数据(官方 s_deviceInfoList: csmMap&lt;VkDevice, CubismDeviceInfo_Vulkan&gt;)
     /// </summary>
     private static readonly Dictionary<nint, CubismDeviceInfo_Vulkan> DeviceInfoList = [];
 
     /// <summary>
-    /// 同一デバイスを複数レンダラが共有できるようにするための参照カウント。
-    /// 官方はレンダラ破棄時に解放しないが、C# 側は IDisposable に合わせて
-    /// 最後の参照が外れた時点で解放する（P8b の裁定、報告 §2.2）。
+    /// 为了让多个渲染器共享同一设备而引入的引用计数.
+    /// 官方在渲染器销毁时不释放, 而 C# 侧配合 IDisposable
+    /// 最后一次引用释放时销毁.
     /// </summary>
     private int _referenceCount;
 
@@ -31,10 +31,10 @@ public class CubismDeviceInfo_Vulkan
     }
 
     /// <summary>
-    /// デバイスに紐づいているデータを取得する（官方 GetDeviceInfo）
+    /// 获取绑定到设备的数据(对应官方 GetDeviceInfo)
     /// </summary>
-    /// <param name="device">使用デバイス</param>
-    /// <returns>デバイスに紐づいているデータ</returns>
+    /// <param name="device">使用的设备</param>
+    /// <returns>绑定到设备的数据</returns>
     public static CubismDeviceInfo_Vulkan GetDeviceInfo(Device device)
     {
         nint key = device.Handle;
@@ -50,10 +50,10 @@ public class CubismDeviceInfo_Vulkan
     }
 
     /// <summary>
-    /// デバイスに紐づいているデータの使用を開放する（官方 ReleaseDeviceInfo）。
-    /// 参照カウントが 0 になった時点でパイプライン／オフスクリーンを解放する。
+    /// 释放绑定到设备的数据的使用(对应官方 ReleaseDeviceInfo).
+    /// 引用计数变为 0 时释放 pipeline 与离屏资源.
     /// </summary>
-    /// <param name="device">使用デバイス</param>
+    /// <param name="device">使用的设备</param>
     public static void ReleaseDeviceInfo(Device device)
     {
         nint key = device.Handle;
@@ -78,7 +78,7 @@ public class CubismDeviceInfo_Vulkan
     }
 
     /// <summary>
-    /// デバイスに紐づいているデータの使用を全て開放する（官方 ReleaseAllDeviceInfo）
+    /// 释放所有绑定到设备的数据的使用(对应官方 ReleaseAllDeviceInfo)
     /// </summary>
     public static void ReleaseAllDeviceInfo()
     {
@@ -91,17 +91,17 @@ public class CubismDeviceInfo_Vulkan
     }
 
     /// <summary>
-    /// パイプラインを取得する（官方 GetPipeline）
+    /// 获取 pipeline(对应官方 GetPipeline)
     /// </summary>
     public CubismPipeline_Vulkan Pipeline => _pipeline;
 
     /// <summary>
-    /// オフスクリーンマネージャーを取得する（官方 GetOffscreenManager）
+    /// 获取离屏管理器(对应官方 GetOffscreenManager)
     /// </summary>
     public CubismOffscreenManager_Vulkan OffscreenManager => _offscreenManager;
 
     /// <summary>
-    /// 保持リソースを解放する
+    /// 释放持有的资源
     /// </summary>
     private void Release()
     {

@@ -3,17 +3,17 @@
 namespace Live2DCSharpSDK.App;
 
 /// <summary>
-/// 画像読み込み、管理を行うクラス。
+/// 负责图像读取与管理的类.
 /// </summary>
 public class LAppTextureManager(LAppDelegate lapp)
 {
     private readonly List<TextureInfo> _textures = [];
 
     /// <summary>
-    /// 画像読み込み
+    /// 读取图像
     /// </summary>
-    /// <param name="fileName">読み込む画像ファイルパス名</param>
-    /// <returns>画像情報。読み込み失敗時はNULLを返す</returns>
+    /// <param name="fileName">要读取的图像文件路径名</param>
+    /// <returns>图像信息. 读取失败时返回 NULL</returns>
     public unsafe TextureInfo CreateTextureFromPngFile(LAppModel model, int index, string fileName)
     {
         //search loaded texture already.
@@ -26,7 +26,7 @@ public class LAppTextureManager(LAppDelegate lapp)
         info1.ColorType = SKColorType.Rgba8888;
         using var image = SKBitmap.Decode(fileName, info1);
 
-        // OpenGL用のテクスチャを生成する
+        // 生成供 OpenGL 使用的纹理
         var info = lapp.CreateTexture(model, index, image.Width, image.Height, image.GetPixels());
         info.FileName = fileName;
         info.Width = image.Width;
@@ -39,9 +39,9 @@ public class LAppTextureManager(LAppDelegate lapp)
     }
 
     /// <summary>
-    /// 指定したテクスチャIDの画像を解放する
+    /// 释放指定纹理 ID 的图像
     /// </summary>
-    /// <param name="textureId">解放するテクスチャID</param>
+    /// <param name="textureId">要释放的纹理 ID</param>
     public void ReleaseTexture(TextureInfo info)
     {
         info.Dispose();

@@ -4,8 +4,8 @@ namespace Live2DCSharpSDK.Framework.Rendering;
 
 /// <summary>
 /// ブレンドモードを定義するクラス（官方 Framework/src/Rendering/csmBlendMode.hpp:20-87 / csmBlendMode.cpp:13-111）。
-/// 既存の CubismBlendMode 列挙と並存させ、置き換えない（PLAN D-12）。
-/// 官方の csmString 戻り値は static readonly string[] の索引参照に置き換える（PLAN D-12）。
+/// 与既有的 CubismBlendMode 枚举并存, 不做替换.
+/// 官方返回的 csmString 改为 static readonly string[] 的索引引用.
 /// </summary>
 public struct CsmBlendMode
 {

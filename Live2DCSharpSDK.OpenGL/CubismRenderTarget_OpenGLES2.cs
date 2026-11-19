@@ -4,30 +4,30 @@ using Live2DCSharpSDK.Framework.Rendering;
 namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
-/// OpenGL 用のレンダーターゲット（官方 OpenGL/CubismRenderTarget_OpenGLES2.hpp:48-145 / .cpp:28-185）。
-/// 旧 CubismOffscreenSurface_OpenGLES2 を R5 の名前・契約へ移行したもの（B1/B2）。
-/// Framework 側 CubismRenderTarget を継承し、ICubismOffscreenManager&lt;T&gt; の
-/// new() 制約から生成できるよう無引数コンストラクタを持つ（P5 報告 §2.4）。
+/// OpenGL 用的渲染目标 (官方 OpenGL/CubismRenderTarget_OpenGLES2.hpp:48-145 / .cpp:28-185). 
+/// 由旧的 CubismOffscreenSurface_OpenGLES2 迁移到 R5 的名称与契约.
+/// 继承 Framework 侧的 CubismRenderTarget, 并对 ICubismOffscreenManager&lt;T&gt;, 
+/// 提供无参构造, 以满足 new() 约束.
 /// </summary>
 public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
 {
     /// <summary>
-    /// 無引数コンストラクタ用の既定 API。
-    /// 官方はグローバルな GL 関数を直接呼ぶため、同等の扱いとしてレンダラ生成時に設定する。
+    /// 无参构造函数使用的默认 API. 
+    /// 官方直接调用全局 GL 函数, 因此作为对等处理, 在创建渲染器时设置. 
     /// </summary>
     private static OpenGLApi? s_defaultApi;
 
     private readonly OpenGLApi? _gl;
 
     /// <summary>
-    /// 無引数コンストラクタ（ICubismOffscreenManager&lt;T&gt; の new() 制約用）。
+    /// 无参构造函数 (为满足 ICubismOffscreenManager&lt;T&gt; 的 new() 约束). 
     /// </summary>
     public CubismRenderTarget_OpenGLES2()
     {
     }
 
     /// <summary>
-    /// 引数付きコンストラクタ
+    /// 带参数的构造函数
     /// </summary>
     /// <param name="gl">OpenGL API</param>
     public CubismRenderTarget_OpenGLES2(OpenGLApi gl)
@@ -36,7 +36,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// 無引数コンストラクタ用の既定 API を設定する。
+    /// 设置无参构造函数使用的默认 API. 
     /// </summary>
     internal static void SetDefaultApi(OpenGLApi gl)
     {
@@ -47,33 +47,33 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         ?? throw new InvalidOperationException("[Live2D OpenGL]CubismRenderTarget_OpenGLES2: OpenGLApi is not set.");
 
     /// <summary>
-    /// レンダリングターゲットとしてのアドレス
+    /// 作为渲染目标的地址
     /// </summary>
     public int RenderTexture { get; private set; }
     /// <summary>
-    /// 描画の際使用するテクスチャとしてのアドレス
+    /// 绘制时作为纹理使用的地址
     /// </summary>
     public int ColorBuffer { get; private set; }
 
     /// <summary>
-    /// 旧フレームバッファ
+    /// 旧帧缓冲
     /// </summary>
     private int _oldFBO;
     /// <summary>
-    /// 旧ビューポート（官方 _oldViewport[4]、B2/B13）
+    /// 旧视口(对应官方 _oldViewport[4]).
     /// </summary>
     private readonly int[] _oldViewport = new int[4];
 
     /// <summary>
-    /// Create時に指定された幅（ローカル互換の int 公開）
+    /// Create 时指定的宽度 (本地兼容的 int 公开)
     /// </summary>
     public int BufferWidth => _bufferWidth;
     /// <summary>
-    /// Create時に指定された高さ（ローカル互換の int 公開）
+    /// Create 时指定的高度 (本地兼容的 int 公开)
     /// </summary>
     public int BufferHeight => _bufferHeight;
     /// <summary>
-    /// 引数によって設定されたカラーバッファか？
+    /// 是否为由参数设置的色彩缓冲? 
     /// </summary>
     private bool _isColorBufferInherited;
 
@@ -81,14 +81,14 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     private int _bufferHeight;
 
     /// <summary>
-    /// バッファーの内容をコピーする（官方 CopyBuffer、texture barrier 非対応環境用）。
+    /// 复制缓冲的内容 (官方 CopyBuffer, 用于不支持 texture barrier 的环境). 
     /// </summary>
-    /// <param name="src">コピー元</param>
-    /// <param name="dst">コピー先</param>
+    /// <param name="src">复制源</param>
+    /// <param name="dst">复制目标</param>
     public static void CopyBuffer(CubismRenderTarget_OpenGLES2 src, CubismRenderTarget_OpenGLES2 dst)
     {
-        // S6: どちらかが作成に失敗している場合はコピーしない。
-        // RenderTexture == 0 を書き込み先にすると既定のフレームバッファ（画面）へ転送してしまう。
+        // 任一方创建失败时不执行拷贝.
+        // 若把 RenderTexture == 0 作为写入目标, 会转送到默认帧缓冲 (画面). 
         if (!src.IsValid() || !dst.IsValid())
         {
             return;
@@ -107,9 +107,9 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// 指定の描画ターゲットに向けて描画開始
+    /// 朝向指定的绘制目标开始绘制
     /// </summary>
-    /// <param name="restoreFBO">0以上の場合、EndDrawでこの値をglBindFramebufferする</param>
+    /// <param name="restoreFBO">大于等于 0 时, 在 EndDraw 中用该值 glBindFramebuffer</param>
     public void BeginDraw(int restoreFBO = -1)
     {
         if (RenderTexture == 0)
@@ -117,7 +117,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
             return;
         }
 
-        // バックバッファのサーフェイスを記憶しておく
+        // 记住后台缓冲的表面
         if (restoreFBO < 0)
         {
             GL.GetIntegerv(GL.GL_FRAMEBUFFER_BINDING, out _oldFBO);
@@ -127,10 +127,10 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
             _oldFBO = restoreFBO;
         }
 
-        // ビューポートを記憶しておく（官方 .cpp:57）
+        // 记住视口 (官方 .cpp:57)
         GL.GetIntegerv(GL.GL_VIEWPORT, _oldViewport);
 
-        //マスク用RenderTextureをactiveにセット
+        // 将用于 Mask 的 RenderTexture 设为 active
         GL.BindFramebuffer(GL.GL_FRAMEBUFFER, RenderTexture);
     }
 
@@ -144,15 +144,15 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
             return;
         }
 
-        // 描画対象を戻す
+        // 还原绘制目标
         GL.BindFramebuffer(GL.GL_FRAMEBUFFER, _oldFBO);
-        // ビューポートも戻す（官方 .cpp:72、CHANGELOG「viewport 保存・復帰の改善」）
+        // 视口也一并还原 (官方 .cpp:72, CHANGELOG "viewport 保存, 恢复的改善")
         GL.Viewport(_oldViewport[0], _oldViewport[1], _oldViewport[2], _oldViewport[3]);
     }
 
     /// <summary>
-    /// レンダリングターゲットのクリア
-    /// 呼ぶ場合はBeginDrawの後で呼ぶこと
+    /// 渲染目标的清除
+    /// 调用时需在 BeginDraw 之后调用
     /// </summary>
     /// <param name="r">赤(0.0~1.0)</param>
     /// <param name="g">緑(0.0~1.0)</param>
@@ -160,38 +160,38 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// <param name="a">α(0.0~1.0)</param>
     public void Clear(float r, float g, float b, float a)
     {
-        // S6: 作成に失敗した（RenderTexture == 0）場合は描画先が不定（直前の FBO）になるため何もしない。
+        // 创建失败(RenderTexture == 0)时绘制目标不确定(沿用上一个 FBO), 因此不执行任何操作.
         if (RenderTexture == 0)
         {
             return;
         }
 
-        // マスクをクリアする
+        // 清除 Mask
         GL.ClearColor(r, g, b, a);
         GL.Clear(GL.GL_COLOR_BUFFER_BIT);
     }
 
     /// <summary>
-    /// CubismRenderTarget作成（官方 CreateRenderTarget、B1）
+    /// 创建渲染目标(对应官方 CreateRenderTarget).
     /// </summary>
-    /// <param name="displayBufferWidth">作成するバッファ幅</param>
-    /// <param name="displayBufferHeight">作成するバッファ高さ</param>
-    /// <param name="colorBuffer">0以外の場合、ピクセル格納領域としてcolorBufferを使用する</param>
-    /// <returns>作成できて、かつフレームバッファが完全（GL_FRAMEBUFFER_COMPLETE）なら true</returns>
+    /// <param name="displayBufferWidth">要创建的缓冲宽度</param>
+    /// <param name="displayBufferHeight">要创建的缓冲高度</param>
+    /// <param name="colorBuffer">非 0 时, 将 colorBuffer 用作像素存储区域</param>
+    /// <returns>创建成功且帧缓冲完整 (GL_FRAMEBUFFER_COMPLETE) 时为 true</returns>
     /// <remarks>
-    /// S6: 作成直後に glCheckFramebufferStatus で完全性を検査する。
-    /// 不完全だった場合は GL リソースを破棄して false を返す（false のとき
-    /// <see cref="IsValid"/> は false、<see cref="RenderTexture"/> / <see cref="ColorBuffer"/> は 0）。
-    /// 幅・高さは要求値のまま残すので、同じサイズで呼び直しても再作成は走らない
-    /// （作成に失敗し続ける環境で毎フレーム作り直してログが溢れるのを避ける）。
+    /// 创建后立即用 glCheckFramebufferStatus 校验完整性.
+    /// 不完整时销毁 GL 资源并返回 false (为 false 时
+    /// <see cref="IsValid"/> 为 false, <see cref="RenderTexture"/> / <see cref="ColorBuffer"/> 为 0). 
+    /// 宽度, 高度保留为请求值, 因此以相同尺寸再次调用时不会重新创建
+    /// (避免在创建持续失败的环境中每帧重建导致日志刷屏). 
     /// </remarks>
     public unsafe bool CreateRenderTarget(int displayBufferWidth, int displayBufferHeight, int colorBuffer = 0)
     {
         // 一旦削除
         DestroyRenderTarget();
 
-        // S6: 0 以下のサイズは glTexImage2D が GL_INVALID_VALUE になり、
-        // ストレージを持たないテクスチャを添付した「不完全な FBO」が成功扱いになる。GL を呼ぶ前に弾く。
+        // 尺寸小于等于 0 时 glTexImage2D 会返回 GL_INVALID_VALUE,
+        // 并留下一个未分配存储却仍被视为成功的"不完整 FBO". 因此在调用 GL 之前就拦截.
         if (displayBufferWidth <= 0 || displayBufferHeight <= 0)
         {
             CubismLog.Warning(
@@ -200,14 +200,14 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
             return false;
         }
 
-        // 新しく生成する
+        // 新生成
         if (colorBuffer == 0)
         {
             ColorBuffer = GL.GenTexture();
 
             GL.BindTexture(GL.GL_TEXTURE_2D, ColorBuffer);
             GL.TexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, displayBufferWidth, displayBufferHeight, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, 0);
-            // 官方 .cpp:98-106（桌面 GL は REPEAT / NEAREST）
+            // 官方 .cpp:98-106 (桌面 GL 为 REPEAT / NEAREST)
             GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
             GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
             GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
@@ -218,7 +218,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         }
         else
         {
-            // 指定されたものを使用
+            // 使用指定的对象
             ColorBuffer = colorBuffer;
 
             _isColorBufferInherited = true;
@@ -230,8 +230,8 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         GL.BindFramebuffer(GL.GL_FRAMEBUFFER, ret);
         GL.FramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0, GL.GL_TEXTURE_2D, ColorBuffer, 0);
 
-        // S6: 添付直後（FBO をバインド中）にフレームバッファの完全性を検査する。
-        // 不完全な FBO に描くと描画結果は未定義になるため、ここで失敗として扱う。
+        // 附加纹理后(FBO 仍绑定中)校验帧缓冲完整性.
+        // 向不完整的 FBO 绘制会使绘制结果未定义, 因此在此处按失败处理. 
         int status = GL.CheckFramebufferStatus(GL.GL_FRAMEBUFFER);
 
         GL.BindFramebuffer(GL.GL_FRAMEBUFFER, tmpFramebufferObject);
@@ -243,10 +243,10 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
 
         if (status != GL.GL_FRAMEBUFFER_COMPLETE)
         {
-            // S6: 状態コード・サイズ・添付情報を出力し、GL リソースを破棄して失敗を返す
+            // 输出状态码 / 尺寸 / 附件信息, 销毁 GL 资源并返回失败.
             ReportIncompleteFramebuffer(status, displayBufferWidth, displayBufferHeight);
 
-            // 失敗したので削除（継承テクスチャは DestroyRenderTarget が消さないので、参照だけ落とす）
+            // 失败后删除 (继承的纹理不会被 DestroyRenderTarget 清除, 因此只解除引用)
             DestroyRenderTarget();
             ColorBuffer = 0;
             _isColorBufferInherited = false;
@@ -259,13 +259,13 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// S6: フレームバッファが不完全だったときの診断ログ。
-    /// 状態コード・要求サイズ・添付（COLOR_ATTACHMENT0 に付けたテクスチャ）・GL_MAX_TEXTURE_SIZE を出す。
+    /// 帧缓冲不完整时的诊断日志.
+    /// 输出状态码 / 请求尺寸 / 附件(绑定到 COLOR_ATTACHMENT0 的纹理)以及 GL_MAX_TEXTURE_SIZE.
     /// </summary>
     /// <remarks>
-    /// 既存の <see cref="CubismLog.Error"/> は出力後に例外を投げるため、失敗を bool で返すこの API では
-    /// 呼び出し元（描画ループ）を巻き込まないよう Warning へ降格して出力する
-    /// （PLAN-03 §2「CubismLog.Error 本体は変えず、呼び出し点でのみ降格」）。
+    /// 既有的 <see cref="CubismLog.Error"/> 在输出后会抛出异常, 因此对以 bool 返回失败的此 API, 
+    /// 为不牵连调用方 (绘制循环), 降级为 Warning 输出
+    /// (只降级调用点, 不改变 CubismLog.Error 本体).
     /// </remarks>
     private void ReportIncompleteFramebuffer(int status, int width, int height)
     {
@@ -280,7 +280,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// S6: glCheckFramebufferStatus の戻り値を読みやすい名前にする。
+    /// 将 glCheckFramebufferStatus 的返回值转换为可读名称.
     /// </summary>
     private string GetFramebufferStatusName(int status)
     {
@@ -295,7 +295,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// CubismRenderTargetの削除（官方 DestroyRenderTarget）
+    /// 删除 CubismRenderTarget (官方 DestroyRenderTarget)
     /// </summary>
     public override void DestroyRenderTarget()
     {
@@ -313,7 +313,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// レンダーテクスチャメンバーへのアクセッサ（官方 GetRenderTexture、B8）
+    /// 渲染纹理成员的访问器(对应官方 GetRenderTexture).
     /// </summary>
     public int GetRenderTexture()
     {
@@ -321,7 +321,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// カラーバッファメンバーへのアクセッサ（官方 GetColorBuffer、B8）
+    /// 颜色缓冲成员的访问器(对应官方 GetColorBuffer).
     /// </summary>
     public int GetColorBuffer()
     {
@@ -329,7 +329,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// 現在有効かどうか（官方 IsValid）
+    /// 当前是否有效 (官方 IsValid)
     /// </summary>
     public override bool IsValid()
     {
@@ -337,7 +337,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// バッファ幅取得（官方 GetBufferWidth）
+    /// 获取缓冲宽度 (官方 GetBufferWidth)
     /// </summary>
     public override uint GetBufferWidth()
     {
@@ -345,7 +345,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// バッファ高さ取得（官方 GetBufferHeight）
+    /// 获取缓冲高度 (官方 GetBufferHeight)
     /// </summary>
     public override uint GetBufferHeight()
     {
@@ -353,7 +353,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// 旧フレームバッファの取得（官方 GetOldFBO、B8）
+    /// 旧帧缓冲的获取(对应官方 GetOldFBO).
     /// </summary>
     public int GetOldFBO()
     {

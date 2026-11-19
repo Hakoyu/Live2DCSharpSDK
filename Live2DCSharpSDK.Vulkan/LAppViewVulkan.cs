@@ -9,9 +9,9 @@ public class LAppViewVulkan(LAppDelegateVulkan lapp) : LAppView(lapp)
     }
 
     /// <summary>
-    /// 背景クリアはレンダラ側で行う。ここでは acquire 済みイメージのセマフォを
-    /// 最初の描画前に消費するための空コマンドを 1 回だけ Submit する
-    /// （旧実装の clear はレイアウト遷移なしで validation error の原因だった）。
+    /// 背景清理由渲染器侧执行. 
+    /// 这里只 Submit 一次空命令, 以便在首次绘制前消耗已 acquire 图像的 semaphore
+    /// (旧实现的 clear 缺少布局转换, 曾是 validation error 的成因).
     /// </summary>
     public override unsafe void RenderPre()
     {

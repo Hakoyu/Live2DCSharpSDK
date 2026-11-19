@@ -7,28 +7,28 @@ using Live2DCSharpSDK.Framework.Rendering;
 namespace Live2DCSharpSDK.Framework.Model;
 
 /// <summary>
-/// ユーザーが実際に使用するモデルの基底クラス。これを継承してユーザーが実装する。
+/// 用户实际使用的模型的基类. 用户继承此类进行实现.
 /// </summary>
 public abstract class CubismUserModel : IDisposable
 {
     /// <summary>
-    /// レンダラ
+    /// 渲染器
     /// </summary>
     public CubismRenderer? Renderer { get; protected set; }
     /// <summary>
-    /// モデル行列
+    /// 模型矩阵
     /// </summary>
     public CubismModelMatrix ModelMatrix { get; protected set; }
     /// <summary>
-    /// Modelインスタンス
+    /// Model 实例
     /// </summary>
     public CubismModel Model => _moc.Model;
     /// <summary>
-    /// 初期化されたかどうか
+    /// 是否已初始化
     /// </summary>
     public bool Initialized { get; set; }
     /// <summary>
-    /// 更新されたかどうか
+    /// 是否已更新
     /// </summary>
     public bool Updating { get; set; }
     /// <summary>
@@ -37,22 +37,22 @@ public abstract class CubismUserModel : IDisposable
     public float Opacity { get; set; }
 
     /// <summary>
-    /// Mocデータ
+    /// Moc 数据
     /// </summary>
     protected CubismMoc _moc;
 
     /// <summary>
-    /// 破棄済みか（S1: Dispose の冪等ガード）
+    /// 是否已释放(Dispose 的幂等保护).
     /// </summary>
     private bool _disposed;
 
     /// <summary>
-    /// 更新処理のスケジューラ（官方 5-r.5 で CubismUserModel に追加された）
+    /// 更新处理的调度器 (官方 5-r.5 中添加到 CubismUserModel)
     /// </summary>
     protected readonly CubismUpdateScheduler _updateScheduler;
 
     /// <summary>
-    /// モーション管理
+    /// 动作管理
     /// </summary>
     protected CubismMotionManager _motionManager;
     /// <summary>
@@ -60,7 +60,7 @@ public abstract class CubismUserModel : IDisposable
     /// </summary>
     protected CubismExpressionMotionManager _expressionManager;
     /// <summary>
-    /// 自動まばたき
+    /// 自动眨眼
     /// </summary>
     protected CubismEyeBlink? _eyeBlink;
     /// <summary>
@@ -68,11 +68,11 @@ public abstract class CubismUserModel : IDisposable
     /// </summary>
     protected CubismBreath _breath;
     /// <summary>
-    /// ポーズ管理
+    /// 姿势管理
     /// </summary>
     protected CubismPose? _pose;
     /// <summary>
-    /// マウスドラッグ
+    /// 鼠标拖拽
     /// </summary>
     protected CubismTargetPoint _dragManager;
     /// <summary>
@@ -80,73 +80,73 @@ public abstract class CubismUserModel : IDisposable
     /// </summary>
     protected CubismPhysics? _physics;
     /// <summary>
-    /// ユーザデータ
+    /// 用户数据
     /// </summary>
     protected CubismModelUserData? _modelUserData;
     /// <summary>
-    /// 最後のリップシンクの制御値
+    /// 最后一次口型同步的控制值
     /// </summary>
     protected float _lastLipSyncValue;
     /// <summary>
-    /// X軸方向の加速度
+    /// X 轴方向的加速度
     /// </summary>
     protected float _accelerationX;
     /// <summary>
-    /// Y軸方向の加速度
+    /// Y 轴方向的加速度
     /// </summary>
     protected float _accelerationY;
     /// <summary>
-    /// Z軸方向の加速度
+    /// Z 轴方向的加速度
     /// </summary>
     protected float _accelerationZ;
     /// <summary>
-    /// MOC3整合性検証するかどうか
+    /// 是否进行 MOC3 一致性校验
     /// </summary>
     protected bool _mocConsistency;
     /// <summary>
-    /// モーション整合性検証するかどうか（官方 5-r.5 で追加）
+    /// 是否进行动作一致性校验 (官方 5-r.5 中追加)
     /// </summary>
     protected bool _motionConsistency;
 
-    // 注: 5-r.5 で _lipSync / _dragX / _dragY は基底クラスから削除された
-    // （口型は CubismLipSyncUpdater、ドラッグは CubismLookUpdater が担当する。PLAN U11 / U12 / D-03）。
+    // 注: 5-r.5 中 _lipSync / _dragX / _dragY 已从基类中删除
+    // (口型同步由 CubismLipSyncUpdater 负责, 拖拽由 CubismLookUpdater 负责).
 
     /// <summary>
-    /// CubismMotionQueueManagerにイベント用に登録するためのCallback。
-    /// CubismUserModelの継承先のEventFiredを呼ぶ。
+    /// 用于向 CubismMotionQueueManager 注册事件的 Callback.
+    /// 调用 CubismUserModel 继承类的 EventFired.
     /// </summary>
-    /// <param name="eventValue">発火したイベントの文字列データ</param>
-    /// <param name="customData">CubismUserModelを継承したインスタンスを想定</param>
+    /// <param name="eventValue">已触发事件的字符串数据</param>
+    /// <param name="customData">预期为继承 CubismUserModel 的实例</param>
     public static void CubismDefaultMotionEventCallback(CubismUserModel? customData, string eventValue)
     {
         customData?.MotionEventFired(eventValue);
     }
 
     /// <summary>
-    /// コンストラクタ。
+    /// 构造函数.
     /// </summary>
     public CubismUserModel()
     {
         Opacity = 1.0f;
 
-        // 更新処理のスケジューラを作成
+        // 创建更新处理的调度器
         _updateScheduler = new();
 
-        // モーションマネージャーを作成
-        // MotionQueueManagerクラスからの継承なので使い方は同じ
+        // 创建动作管理器
+        // 由于继承自 MotionQueueManager 类, 用法相同
         _motionManager = new();
         _motionManager.SetEventCallback(CubismDefaultMotionEventCallback, this);
 
-        // 表情モーションマネージャを作成
+        // 创建表情动作管理器
         _expressionManager = new();
 
-        // ドラッグによるアニメーション
+        // 基于拖拽的动画
         _dragManager = new();
     }
 
     /// <summary>
-    /// 解放する（G2 finding F1: 派生クラスの Dispose が確実に呼ばれるよう virtual にする。
-    /// S1: 冪等。二重呼び出しで Moc / Model を二重解放しない）。
+    /// 释放资源(Dispose 改为 virtual, 确保派生类的释放逻辑一定执行.
+    /// 幂等: 重复调用不会二次释放 Moc / Model).
     /// </summary>
     public virtual void Dispose()
     {
@@ -159,38 +159,38 @@ public abstract class CubismUserModel : IDisposable
 
         _updateScheduler.Dispose();
 
-        // LoadModel 前に解放された場合は _moc が未生成（.editorconfig で CS8618 を無効化しているため
-        // 非 null 注釈でも実行時 null になり得る。analyse.md H-1）。
+        // 如果在 LoadModel 之前被释放, 则 _moc 尚未生成 (.editorconfig 中禁用了 CS8618,
+        // 非 null 注解也可能在运行时为 null).
         _moc?.Dispose();
 
         DeleteRenderer();
     }
 
     /// <summary>
-    /// 更新処理をスケジューラに登録する（官方 5-r.5 の _updateScheduler.AddUpdatableList のラッパー）。
+    /// 把更新处理注册到调度器 (官方 5-r.5 的 _updateScheduler.AddUpdatableList 的封装).
     /// </summary>
-    /// <param name="updater">登録する更新処理</param>
+    /// <param name="updater">要注册的更新处理</param>
     protected void RegisterUpdater(ICubismUpdater updater)
     {
         _updateScheduler.AddUpdatableList(updater);
     }
 
     /// <summary>
-    /// マウスドラッグの情報を設定する。
+    /// 设置鼠标拖拽的信息.
     /// </summary>
-    /// <param name="x">ドラッグしているカーソルのX位置</param>
-    /// <param name="y">ドラッグしているカーソルのY位置</param>
+    /// <param name="x">正在拖拽的光标的 X 位置</param>
+    /// <param name="y">正在拖拽的光标的 Y 位置</param>
     public void SetDragging(float x, float y)
     {
         _dragManager.Set(x, y);
     }
 
     /// <summary>
-    /// 加速度の情報を設定する。
+    /// 设置加速度的信息.
     /// </summary>
-    /// <param name="x">X軸方向の加速度</param>
-    /// <param name="y">Y軸方向の加速度</param>
-    /// <param name="z">Z軸方向の加速度</param>
+    /// <param name="x">X 轴方向的加速度</param>
+    /// <param name="y">Y 轴方向的加速度</param>
+    /// <param name="z">Z 轴方向的加速度</param>
     protected void SetAcceleration(float x, float y, float z)
     {
         _accelerationX = x;
@@ -199,10 +199,10 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// モデルデータを読み込む。
+    /// 读入模型数据.
     /// </summary>
-    /// <param name="buffer">moc3ファイルが読み込まれているバッファ</param>
-    /// <param name="shouldCheckMocConsistency">MOCの整合性チェックフラグ(初期値 : false)</param>
+    /// <param name="buffer">已读入 moc3 文件的缓冲区</param>
+    /// <param name="shouldCheckMocConsistency">MOC 一致性检查标志(初始值 : false)</param>
     protected void LoadModel(byte[] buffer, bool shouldCheckMocConsistency = false)
     {
         _moc = new CubismMoc(buffer, shouldCheckMocConsistency);
@@ -211,16 +211,16 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// モーションデータを読み込む（官方 5-r.5 の CubismUserModel::LoadMotion）。
-    /// ローカルは moc3 と同様にファイルパスを受け取る形にしている。
-    /// model3.json のフェード値で上書きしない版（fade 引数は null 相当）。
+    /// 读入动作数据 (官方 5-r.5 的 CubismUserModel::LoadMotion).
+    /// 本地与 moc3 一样采用接收文件路径的形式.
+    /// 不使用 model3.json 的淡入淡出值覆盖的版本 (fade 参数相当于 null).
     /// </summary>
-    /// <param name="buffer">motion3.jsonのファイルパス</param>
-    /// <param name="name">モーション名（ログ用）</param>
-    /// <param name="onFinishedMotionHandler">モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
-    /// <param name="onBeganMotionHandler">モーション再生開始時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
-    /// <param name="shouldCheckMotionConsistency">motion3.jsonの整合性を検証するかどうか</param>
-    /// <returns>生成したモーションデータ。読み込めない場合は null</returns>
+    /// <param name="buffer">motion3.json 的文件路径</param>
+    /// <param name="name">动作名 (用于日志)</param>
+    /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不被调用.</param>
+    /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不被调用.</param>
+    /// <param name="shouldCheckMotionConsistency">是否校验 motion3.json 的一致性</param>
+    /// <returns>生成的动作数据. 无法读入时为 null</returns>
     protected ACubismMotion? LoadMotion(string buffer, string name,
         FinishedMotionCallback? onFinishedMotionHandler = null,
         BeganMotionCallback? onBeganMotionHandler = null,
@@ -231,19 +231,19 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// モデル設定からモーションデータを読み込む（官方 5-r.5 の CubismUserModel::LoadMotion の modelSetting 版）。
-    /// 官方の ICubismModelSetting* に相当するものは、本地では ModelSettingObj（model3.json の DTO）である。
-    /// model3.json の FadeInTime / FadeOutTime が 0 以上の場合、motion3.json 側のフェード値を上書きする
-    /// （官方 GetMotionFadeInTimeValue / GetMotionFadeOutTimeValue と同じ判定）。
+    /// 从模型设置中读入动作数据 (官方 5-r.5 的 CubismUserModel::LoadMotion 的 modelSetting 版本).
+    /// 相当于官方 ICubismModelSetting* 的东西, 在本地是 ModelSettingObj (model3.json 的 DTO).
+    /// model3.json 的 FadeInTime / FadeOutTime 为 0 以上时, 覆盖 motion3.json 侧的淡入淡出值
+    /// (与官方 GetMotionFadeInTimeValue / GetMotionFadeOutTimeValue 相同的判定).
     /// </summary>
-    /// <param name="modelSetting">モデル設定（公式 ICubismModelSetting* の本地等価物）</param>
-    /// <param name="group">モーショングループ名</param>
-    /// <param name="index">グループ内のインデックス</param>
-    /// <param name="shouldCheckMotionConsistency">motion3.jsonの整合性を検証するかどうか</param>
-    /// <param name="onFinishedMotionHandler">モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
-    /// <param name="onBeganMotionHandler">モーション再生開始時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
-    /// <param name="modelHomeDir">model3.json が置かれたディレクトリ（motion の相対パス解決用）。NULL の場合はカレントディレクトリ基準</param>
-    /// <returns>生成したモーションデータ。グループ/インデックス/ファイルが無い場合は null</returns>
+    /// <param name="modelSetting">模型设置 (官方 ICubismModelSetting* 的本地等价物)</param>
+    /// <param name="group">动作组名</param>
+    /// <param name="index">组内的索引</param>
+    /// <param name="shouldCheckMotionConsistency">是否校验 motion3.json 的一致性</param>
+    /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不被调用.</param>
+    /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不被调用.</param>
+    /// <param name="modelHomeDir">model3.json 所在的目录 (用于解析 motion 的相对路径). 为 NULL 时以当前目录为基准</param>
+    /// <returns>生成的动作数据. 没有组/索引/文件时为 null</returns>
     protected ACubismMotion? LoadMotion(ModelSettingObj? modelSetting, string group, int index,
         bool shouldCheckMotionConsistency = false,
         FinishedMotionCallback? onFinishedMotionHandler = null,
@@ -267,7 +267,7 @@ public abstract class CubismUserModel : IDisposable
             ? Path.GetFullPath(fileName)
             : Path.GetFullPath(modelHomeDir + fileName);
 
-        // 負値は「motion3.json 側の値を上書きしない」を意味する（官方と同じ）
+        // 负值表示 "不覆盖 motion3.json 侧的值" (与官方相同)
         var fadeInTime = modelSetting.GetMotionFadeInTimeValue(group, index);
         var fadeOutTime = modelSetting.GetMotionFadeOutTimeValue(group, index);
 
@@ -278,16 +278,16 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// モーションデータ読み込みの共通処理。
+    /// 读入动作数据的公共处理.
     /// </summary>
-    /// <param name="buffer">motion3.jsonのファイルパス</param>
-    /// <param name="name">モーション名（ログ用）</param>
-    /// <param name="fadeInTime">上書きするフェードイン時間（null は上書きしない）</param>
-    /// <param name="fadeOutTime">上書きするフェードアウト時間（null は上書きしない）</param>
-    /// <param name="onFinishedMotionHandler">モーション再生終了時に呼び出されるコールバック関数</param>
-    /// <param name="onBeganMotionHandler">モーション再生開始時に呼び出されるコールバック関数</param>
-    /// <param name="shouldCheckMotionConsistency">motion3.jsonの整合性を検証するかどうか</param>
-    /// <returns>生成したモーションデータ。読み込めない場合は null</returns>
+    /// <param name="buffer">motion3.json 的文件路径</param>
+    /// <param name="name">动作名 (用于日志)</param>
+    /// <param name="fadeInTime">要覆盖的淡入时间 (null 则不覆盖)</param>
+    /// <param name="fadeOutTime">要覆盖的淡出时间 (null 则不覆盖)</param>
+    /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数</param>
+    /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数</param>
+    /// <param name="shouldCheckMotionConsistency">是否校验 motion3.json 的一致性</param>
+    /// <returns>生成的动作数据. 无法读入时为 null</returns>
     private ACubismMotion? LoadMotionCore(string buffer, string name,
         float? fadeInTime, float? fadeOutTime,
         FinishedMotionCallback? onFinishedMotionHandler,
@@ -309,14 +309,14 @@ public abstract class CubismUserModel : IDisposable
         }
         catch (CubismMotionConsistencyException e)
         {
-            // 官方 CubismMotion::Create は整合性不一致時に NULL を返し、呼び出し側（LAppModel）はそのモーションをスキップする。
-            // 本地はコンストラクタで例外を投げるため、ここで捕捉して NULL 相当（null）に変換する（G2 finding F2）。
-            // 注意: 引数不正・ファイル不在・JSON 破損など他の例外は握りつぶさず、そのまま伝播させる。
+            // 官方 CubismMotion::Create 在一致性不一致时返回 NULL, 调用侧 (LAppModel) 会跳过该动作.
+            // 本地构造函数会抛异常, 因此在此捕获并转换为 NULL 等价的 null(其他异常不吞掉).
+            // 注意: 参数非法, 文件不存在, JSON 损坏等其他异常不予吞掉, 直接向上传播.
             CubismLog.Warning("[Live2D SDK]failed to load motion (inconsistent): {0} : {1}", name, e.Message);
             return null;
         }
 
-        // 官方 LoadMotion: model3.json の FadeInTime / FadeOutTime が 0 以上なら上書きする
+        // 官方 LoadMotion: 如果 model3.json 的 FadeInTime / FadeOutTime 为 0 以上则覆盖
         if (fadeInTime.HasValue)
         {
             motion.FadeInSeconds = fadeInTime.Value;
@@ -331,36 +331,36 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// ポーズデータを読み込む。
+    /// 读入姿势数据.
     /// </summary>
-    /// <param name="buffer">pose3.jsonが読み込まれているバッファ</param>
+    /// <param name="buffer">已读入 pose3.json 的缓冲区</param>
     protected void LoadPose(string buffer)
     {
         _pose = new CubismPose(buffer);
     }
 
     /// <summary>
-    /// 物理演算データを読み込む。
+    /// 读入物理演算数据.
     /// </summary>
-    /// <param name="buffer">physics3.jsonが読み込まれているバッファ</param>
+    /// <param name="buffer">已读入 physics3.json 的缓冲区</param>
     protected void LoadPhysics(string buffer)
     {
         _physics = new CubismPhysics(buffer);
     }
 
     /// <summary>
-    /// ユーザーデータを読み込む。
+    /// 读入用户数据.
     /// </summary>
-    /// <param name="buffer">userdata3.jsonが読み込まれているバッファ</param>
+    /// <param name="buffer">已读入 userdata3.json 的缓冲区</param>
     protected void LoadUserData(string buffer)
     {
         _modelUserData = new CubismModelUserData(buffer);
     }
 
     /// <summary>
-    /// 未復元の Moc バッファから .moc3 のバージョンを取得する（官方 CubismUserModel::GetMocVersionFromBuffer）。
+    /// 从未还原的 Moc 缓冲区获取 .moc3 的版本 (官方 CubismUserModel::GetMocVersionFromBuffer).
     /// </summary>
-    /// <param name="buffer">moc3ファイルが読み込まれているバッファ</param>
+    /// <param name="buffer">已读入 moc3 文件的缓冲区</param>
     /// <returns>.moc3 Version</returns>
     public static uint GetMocVersionFromBuffer(byte[] buffer)
     {
@@ -368,13 +368,13 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// 指定した位置にDrawableがヒットしているかどうかを取得する。
+    /// 获取指定位置上是否命中了 Drawable.
     /// </summary>
-    /// <param name="drawableId">検証したいDrawableのID</param>
+    /// <param name="drawableId">要校验的 Drawable 的 ID</param>
     /// <param name="pointX">X位置</param>
     /// <param name="pointY">Y位置</param>
-    /// <returns>true    ヒットしている
-    /// false   ヒットしていない</returns>
+    /// <returns>true    已命中
+    /// false   未命中</returns>
     public unsafe bool IsHit(string drawableId, float pointX, float pointY)
     {
         var drawIndex = Model.GetDrawableIndex(drawableId);
@@ -387,9 +387,9 @@ public abstract class CubismUserModel : IDisposable
         var count = Model.GetDrawableVertexCount(drawIndex);
         var vertices = Model.GetDrawableVertices(drawIndex);
 
-        // S2: 頂点が空（count == 0）または null の場合はヒット判定しない。
-        // 旧実装は count / vertices を検証せず vertices[0] / vertices[1] を直接読んでいたため、
-        // 空メッシュや解放済みモデル（CubismModel.Dispose 後は count=0, vertices=null）で AV になっていた。
+        // 顶点为空(count == 0)或 null 时不做命中判定.
+        // 旧实现没有校验 count / vertices 就直接读取 vertices[0] / vertices[1],
+        // 因此在空网格或已释放的模型 (CubismModel.Dispose 后为 count=0, vertices=null) 上会发生 AV.
         if (count <= 0 || vertices == null)
         {
             return false;
@@ -433,8 +433,8 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// レンダラを生成して初期化を実行する。
-    /// 本地は「ホストが生成したレンダラを設定する」方式を維持する（PLAN D-06）。
+    /// 生成渲染器并执行初始化.
+    /// 本地保持由宿主创建渲染器并注入模型的方式.
     /// </summary>
     protected void CreateRenderer(CubismRenderer renderer)
     {
@@ -442,18 +442,18 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// オフスクリーン（レンダーターゲット）のサイズを設定する（官方 5-r.5 の新規 API）。
-    /// ホストが実サイズで毎フレーム呼ぶ想定（PLAN D-06）。
+    /// 设置 Offscreen (渲染目标) 的尺寸 (官方 5-r.5 的新增 API).
+    /// 由宿主按实际尺寸每帧调用.
     /// </summary>
-    /// <param name="width">モデルを描画するバッファの幅</param>
-    /// <param name="height">モデルを描画するバッファの高さ</param>
+    /// <param name="width">绘制模型的缓冲区宽度</param>
+    /// <param name="height">绘制模型的缓冲区高度</param>
     public void SetRenderTargetSize(uint width, uint height)
     {
         Renderer?.SetRenderTargetSize(width, height);
     }
 
     /// <summary>
-    /// レンダラを解放する。
+    /// 释放渲染器.
     /// </summary>
     protected void DeleteRenderer()
     {
@@ -465,10 +465,10 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// Eventが再生処理時にあった場合の処理をする。
-    /// 継承で上書きすることを想定している。
-    /// 上書きしない場合はログ出力をする。
+    /// 处理播放过程中发生 Event 时的逻辑.
+    /// 预期通过继承进行重写.
+    /// 不重写时输出日志.
     /// </summary>
-    /// <param name="eventValue">発火したイベントの文字列データ</param>
+    /// <param name="eventValue">已触发事件的字符串数据</param>
     protected abstract void MotionEventFired(string eventValue);
 }

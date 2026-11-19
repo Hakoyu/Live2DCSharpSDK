@@ -3,7 +3,7 @@ using System.Numerics;
 namespace Live2DCSharpSDK.Framework.Math;
 
 /// <summary>
-/// 数値計算などに使用するユーティリティクラス
+/// 用于数值计算等的工具类
 /// </summary>
 public static class CubismMath
 {
@@ -11,12 +11,12 @@ public static class CubismMath
     public const float Epsilon = 0.00001f;
 
     /// <summary>
-    /// 第一引数の値を最小値と最大値の範囲に収めた値を返す
+    /// 返回把第一个参数的值限制在最小值与最大值范围内的结果
     /// </summary>
-    /// <param name="value">収められる値</param>
-    /// <param name="min">範囲の最小値</param>
-    /// <param name="max">範囲の最大値</param>
-    /// <returns>最小値と最大値の範囲に収めた値</returns>
+    /// <param name="value">被限制的值</param>
+    /// <param name="min">范围的最小值</param>
+    /// <param name="max">范围的最大值</param>
+    /// <returns>限制在最小值与最大值范围内的值</returns>
     public static float RangeF(float value, float min, float max)
     {
         if (value < min) value = min;
@@ -25,7 +25,7 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// サイン関数の値を返す（官方 5-r.5 の CubismMath::SinF）。
+    /// 返回正弦函数的值 (官方 5-r.5 的 CubismMath::SinF).
     /// </summary>
     /// <param name="x">角度[rad]</param>
     /// <returns>sin(x)</returns>
@@ -35,7 +35,7 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// コサイン関数の値を返す（官方 5-r.5 の CubismMath::CosF）。
+    /// 返回余弦函数的值 (官方 5-r.5 的 CubismMath::CosF).
     /// </summary>
     /// <param name="x">角度[rad]</param>
     /// <returns>cos(x)</returns>
@@ -45,9 +45,9 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// 絶対値を返す（官方 5-r.5 の CubismMath::AbsF）。
+    /// 返回绝对值 (官方 5-r.5 的 CubismMath::AbsF).
     /// </summary>
-    /// <param name="x">絶対値を求める値</param>
+    /// <param name="x">要求绝对值的值</param>
     /// <returns>絶対値</returns>
     public static float AbsF(float x)
     {
@@ -55,9 +55,9 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// 平方根を返す（官方 5-r.5 の CubismMath::SqrtF）。
+    /// 返回平方根 (官方 5-r.5 的 CubismMath::SqrtF).
     /// </summary>
-    /// <param name="x">平方根を求める値</param>
+    /// <param name="x">要求平方根的值</param>
     /// <returns>平方根</returns>
     public static float SqrtF(float x)
     {
@@ -65,11 +65,11 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// イージング処理されたサインを求める
-    /// フェードイン・アウト時のイージングに利用できる
+    /// 求经过缓动处理的正弦值
+    /// 可用于淡入淡出时的缓动
     /// </summary>
-    /// <param name="value">イージングを行う値</param>
-    /// <returns>イージング処理されたサイン値</returns>
+    /// <param name="value">进行缓动的值</param>
+    /// <returns>经过缓动处理的正弦值</returns>
     public static float GetEasingSine(float value)
     {
         if (value < 0.0f) return 0.0f;
@@ -79,53 +79,53 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// 大きい方の値を返す。
+    /// 返回较大的值.
     /// </summary>
-    /// <param name="l">左辺の値</param>
-    /// <param name="r">右辺の値</param>
-    /// <returns>大きい方の値</returns>
+    /// <param name="l">左侧的值</param>
+    /// <param name="r">右侧的值</param>
+    /// <returns>较大的值</returns>
     public static float Max(float l, float r)
     {
         return (l > r) ? l : r;
     }
 
     /// <summary>
-    /// 小さい方の値を返す。
+    /// 返回较小的值.
     /// </summary>
-    /// <param name="l">左辺の値</param>
-    /// <param name="r">右辺の値</param>
-    /// <returns>小さい方の値</returns>
+    /// <param name="l">左侧的值</param>
+    /// <param name="r">右侧的值</param>
+    /// <returns>较小的值</returns>
     public static float Min(float l, float r)
     {
         return (l > r) ? r : l;
     }
 
     /// <summary>
-    /// 角度値をラジアン値に変換します。
+    /// 将角度值转换为弧度值.
     /// </summary>
     /// <param name="degrees">角度値</param>
-    /// <returns>角度値から変換したラジアン値</returns>
+    /// <returns>由角度值转换得到的弧度值</returns>
     public static float DegreesToRadian(float degrees)
     {
         return degrees / 180.0f * Pi;
     }
 
     /// <summary>
-    /// ラジアン値を角度値に変換します。
+    /// 将弧度值转换为角度值.
     /// </summary>
-    /// <param name="radian">ラジアン値</param>
-    /// <returns>ラジアン値から変換した角度値</returns>
+    /// <param name="radian">弧度值</param>
+    /// <returns>由弧度值转换得到的角度值</returns>
     public static float RadianToDegrees(float radian)
     {
         return radian * 180.0f / Pi;
     }
 
     /// <summary>
-    /// 2つのベクトルからラジアン値を求めます。
+    /// 由两个向量求弧度值.
     /// </summary>
-    /// <param name="from">始点ベクトル</param>
-    /// <param name="to">終点ベクトル</param>
-    /// <returns>ラジアン値から求めた方向ベクトル</returns>
+    /// <param name="from">起点向量</param>
+    /// <param name="to">终点向量</param>
+    /// <returns>由弧度值求得的向量</returns>
     public static float DirectionToRadian(Vector2 from, Vector2 to)
     {
         float q1;
@@ -151,11 +151,11 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// 2つのベクトルから角度値を求めます。
+    /// 由两个向量求角度值.
     /// </summary>
-    /// <param name="from">始点ベクトル</param>
-    /// <param name="to">終点ベクトル</param>
-    /// <returns>角度値から求めた方向ベクトル</returns>
+    /// <param name="from">起点向量</param>
+    /// <param name="to">终点向量</param>
+    /// <returns>由角度值求得的向量</returns>
     public static float DirectionToDegrees(Vector2 from, Vector2 to)
     {
         float radian;
@@ -173,23 +173,23 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// ラジアン値を方向ベクトルに変換します。
+    /// 将弧度值转换为向量.
     /// </summary>
-    /// <param name="totalAngle">ラジアン値</param>
-    /// <returns>ラジアン値から変換した方向ベクトル</returns>
+    /// <param name="totalAngle">弧度值</param>
+    /// <returns>由弧度值转换得到的向量</returns>
     public static Vector2 RadianToDirection(float totalAngle)
     {
         return new Vector2(MathF.Sin(totalAngle), MathF.Cos(totalAngle));
     }
 
     /// <summary>
-    /// 三次方程式の三次項の係数が0になったときに補欠的に二次方程式の解をもとめる。
+    /// 三次方程的三次项系数为 0 时, 作为补充求解二次方程.
     /// a * x^2 + b * x + c = 0
     /// </summary>
-    /// <param name="a">二次項の係数値</param>
-    /// <param name="b">一次項の係数値</param>
-    /// <param name="c">定数項の値</param>
-    /// <returns>二次方程式の解</returns>
+    /// <param name="a">二次项的系数值</param>
+    /// <param name="b">一次项的系数值</param>
+    /// <param name="c">常数项的值</param>
+    /// <returns>二次方程的解</returns>
     public static float QuadraticEquation(float a, float b, float c)
     {
         if (MathF.Abs(a) < Epsilon)
@@ -205,16 +205,16 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// カルダノの公式によってベジェのt値に該当する３次方程式の解を求める。
-    /// 重解になったときには0.0～1.0の値になる解を返す。
+    /// 通过卡尔达诺公式求与贝塞尔 t 值对应的三次方程的解.
+    /// 出现重根时, 返回取值在 0.0 到 1.0 之间的解.
     /// 
     /// a * x^3 + b * x^2 + c * x + d = 0
     /// </summary>
-    /// <param name="a">三次項の係数値</param>
-    /// <param name="b">二次項の係数値</param>
-    /// <param name="c">一次項の係数値</param>
-    /// <param name="d">定数項の値</param>
-    /// <returns>0.0～1.0の間にある解</returns>
+    /// <param name="a">三次项的系数值</param>
+    /// <param name="b">二次项的系数值</param>
+    /// <param name="c">一次项的系数值</param>
+    /// <param name="d">常数项的值</param>
+    /// <returns>位于 0.0 到 1.0 之间的解</returns>
     public static float CardanoAlgorithmForBezier(float a, float b, float c, float d)
     {
         if (MathF.Abs(a) < Epsilon)
@@ -293,12 +293,12 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// 値を範囲内に納めて返す
+    /// 返回限制在范围内的值
     /// </summary>
-    /// <param name="val">範囲内か確認する値</param>
+    /// <param name="val">要确认是否在范围内的值</param>
     /// <param name="min">最小値</param>
     /// <param name="max">最大値</param>
-    /// <returns>範囲内に収まった値</returns>
+    /// <returns>限制在范围内的值</returns>
     public static int Clamp(int val, int min, int max)
     {
         if (val < min)
@@ -314,12 +314,12 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// 値を範囲内に納めて返す
+    /// 返回限制在范围内的值
     /// </summary>
-    /// <param name="val">範囲内か確認する値</param>
+    /// <param name="val">要确认是否在范围内的值</param>
     /// <param name="min">最小値</param>
     /// <param name="max">最大値</param>
-    /// <returns>範囲内に収まった値</returns>
+    /// <returns>限制在范围内的值</returns>
     public static float ClampF(float val, float min, float max)
     {
         if (val < min)
@@ -335,11 +335,11 @@ public static class CubismMath
     }
 
     /// <summary>
-    /// 浮動小数点の余りを求める。
+    /// 求浮点数的余数.
     /// </summary>
-    /// <param name="dividend">被除数（割られる値）</param>
-    /// <param name="divisor">除数（割る値）</param>
-    /// <returns>余り</returns>
+    /// <param name="dividend">被除数 (被分割的值)</param>
+    /// <param name="divisor">除数 (用于分割的值)</param>
+    /// <returns>余数</returns>
     public static float ModF(float dividend, float divisor)
     {
         if (!float.IsFinite(dividend) || divisor == 0 || float.IsNaN(dividend) || float.IsNaN(divisor))
@@ -348,14 +348,14 @@ public static class CubismMath
             return float.NaN;
         }
 
-        // 絶対値に変換する。
+        // 转换为绝对值.
         float absDividend = MathF.Abs(dividend);
         float absDivisor = MathF.Abs(divisor);
 
-        // 絶対値で割り算する。
+        // 使用绝对值进行除法.
         float result = absDividend - MathF.Floor(absDividend / absDivisor) * absDivisor;
 
-        // 符号を被除数のものに指定する。
+        // 符号与被除数保持一致.
         return MathF.CopySign(result, dividend);
     }
 }

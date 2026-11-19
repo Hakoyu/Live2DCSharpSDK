@@ -4,7 +4,7 @@
 /// オフスクリーン用のレンダーターゲットを管理するクラス
 /// （官方 Framework/src/Rendering/ICubismOffscreenRenderTarget.hpp:19-141）。
 /// C++ の CRTP（T = 継承先の子クラス自身、U = レンダーターゲット型）を
-/// 自引用ジェネリック制約で模擬する（PLAN D-07）。
+/// 用自引用泛型约束模拟.
 /// </summary>
 /// <typeparam name="TSelf">継承先の子クラス自身</typeparam>
 /// <typeparam name="TRenderTarget">レンダーターゲットの型</typeparam>

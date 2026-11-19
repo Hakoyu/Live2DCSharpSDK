@@ -5,15 +5,15 @@ namespace Live2DCSharpSDK.Vulkan;
 public class SwapchainSupportDetails
 {
     /// <summary>
-    /// 基本的な機能
+    /// 基本功能
     /// </summary>
     public SurfaceCapabilitiesKHR Capabilities;
     /// <summary>
-    /// 利用可能なフォーマット
+    /// 可用的格式
     /// </summary>
     public SurfaceFormatKHR[] Formats;
     /// <summary>
-    /// 利用可能な表示モード
+    /// 可用的显示模式
     /// </summary>
     public PresentModeKHR[] PresentModes;
 }

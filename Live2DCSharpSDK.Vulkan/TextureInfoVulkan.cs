@@ -13,12 +13,12 @@ public class TextureInfoVulkan : TextureInfo
     private readonly CubismImageVulkan _image;
 
     /// <summary>
-    /// 画像ファイルを読み込む
+    /// 读取图像文件
     /// </summary>
-    /// <param name="fileName">読み込む画像ファイルパス名</param>
-    /// <param name="format">画像フォーマット</param>
-    /// <param name="tiling">画像データのタイリング配置の設定</param>
-    /// <param name="usage">画像の使用フラグ</param>
+    /// <param name="fileName">要读取的图像文件路径名</param>
+    /// <param name="format">图像格式</param>
+    /// <param name="tiling">图像数据的 tiling 布局设置</param>
+    /// <param name="usage">图像的使用标志</param>
     /// <param name="imageProperties"></param>
     public unsafe TextureInfoVulkan(Vk vk, LAppDelegateVulkan lapp, LAppModel model,
         Format format, ImageTiling tiling, ImageUsageFlags usage,
@@ -58,13 +58,13 @@ public class TextureInfoVulkan : TextureInfo
     }
 
     /// <summary>
-    /// バッファをイメージにコピーする
+    /// 把 buffer 复制到 image
     /// </summary>
-    /// <param name="commandBuffer">コマンドバッファ</param>
-    /// <param name="buffer">バッファ</param>
-    /// <param name="image">イメージ</param>
-    /// <param name="width">画像の横幅</param>
-    /// <param name="height">画像の縦幅</param>
+    /// <param name="commandBuffer">命令缓冲区</param>
+    /// <param name="buffer">buffer</param>
+    /// <param name="image">image</param>
+    /// <param name="width">图像的宽度</param>
+    /// <param name="height">图像的高度</param>
     public unsafe void CopyBufferToImage(CommandBuffer commandBuffer, Buffer buffer, Image image, uint width,
                            uint height)
     {
@@ -88,12 +88,12 @@ public class TextureInfoVulkan : TextureInfo
     }
 
     /// <summary>
-    /// ミップマップを作成する
+    /// 生成 mipmap
     /// </summary>
-    /// <param name="image">イメージ</param>
-    /// <param name="texWidth">画像の幅</param>
-    /// <param name="texHeight">画像の高さ</param>
-    /// <param name="mipLevels">ミップレべル</param>
+    /// <param name="image">image</param>
+    /// <param name="texWidth">图像的宽度</param>
+    /// <param name="texHeight">图像的高度</param>
+    /// <param name="mipLevels">mip 层级</param>
     public unsafe void GenerateMipmaps(CubismImageVulkan image, uint texWidth, uint texHeight,
                          uint mipLevels)
     {
@@ -193,7 +193,7 @@ public class TextureInfoVulkan : TextureInfo
     }
 
     /// <summary>
-    /// 画像の解放
+    /// 释放图像
     /// </summary>
     public override void Dispose()
     {

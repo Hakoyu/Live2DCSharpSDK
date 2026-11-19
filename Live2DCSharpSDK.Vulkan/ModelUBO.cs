@@ -3,33 +3,33 @@
 namespace Live2DCSharpSDK.Vulkan;
 
 /// <summary>
-/// モデル用ユニフォームバッファオブジェクトの中身を保持する構造体
+/// 保持模型用 uniform buffer 对象内容的结构体
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct ModelUBO
 {
     /// <summary>
-    /// シェーダープログラムに渡すデータ(ProjectionMatrix)
+    /// 传递给 shader program 的数据(ProjectionMatrix)
     /// </summary>
     public fixed float ProjectionMatrix[16];
     /// <summary>
-    /// シェーダープログラムに渡すデータ(ClipMatrix)
+    /// 传递给 shader program 的数据(ClipMatrix)
     /// </summary>
     public fixed float ClipMatrix[16];
     /// <summary>
-    /// シェーダープログラムに渡すデータ(BaseColor)
+    /// 传递给 shader program 的数据(BaseColor)
     /// </summary>
     public fixed float BaseColor[4];
     /// <summary>
-    /// シェーダープログラムに渡すデータ(MultiplyColor)
+    /// 传递给 shader program 的数据(MultiplyColor)
     /// </summary>
     public fixed float MultiplyColor[4];
     /// <summary>
-    /// シェーダープログラムに渡すデータ(ScreenColor)
+    /// 传递给 shader program 的数据(ScreenColor)
     /// </summary>
     public fixed float ScreenColor[4];
     /// <summary>
-    /// シェーダープログラムに渡すデータ(ChannelFlag)
+    /// 传递给 shader program 的数据(ChannelFlag)
     /// </summary>
     public fixed float ChannelFlag[4];
 }

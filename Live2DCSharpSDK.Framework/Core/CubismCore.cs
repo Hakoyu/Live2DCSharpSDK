@@ -208,7 +208,7 @@ public static class CsmEnum
 
     //Rendering object types.
     //官方来源是 Framework/src/Rendering/CubismRenderer.hpp:33-37（非 Core C API）。
-    //Cubism 5-r.5 只保留 Drawable=0 / Offscreen=2，值 1 已被官方删除，不要补（PLAN D-15）。
+    // Cubism 5-r.5 只保留 Drawable=0 / Offscreen=2, 值 1 已被官方删除, 不要补回.
 
     /// <summary>
     /// Type of rendering object.
@@ -536,9 +536,9 @@ public static partial class CubismCore
     /// <param name="model">Model to query.</param>
     /// <returns>Valid pointer on success; '0' otherwise.</returns>
     /// <remarks>
-    /// R5 改名：R1 的 csmGetDrawableRenderOrders 在 5-r.5 已从 Core 头文件中删除，
-    /// 新入口点为 csmGetRenderOrders（Live2DCubismCore.h:332）。EntryPoint 是字符串，
-    /// 改错不会编译报错，但运行期首次调用会抛 EntryPointNotFoundException。
+    // R5 改名: 5-r.5 的 Core 头文件已删除旧的 csmGetDrawableRenderOrders,
+    // 新入口点为 csmGetRenderOrders(Live2DCubismCore.h:332). EntryPoint 是字符串,
+    // 改错不会编译报错, 但运行期首次调用会抛 EntryPointNotFoundException.
     /// </remarks>
     [LibraryImport("Live2DCubismCore", EntryPoint = "csmGetRenderOrders")]
     internal static unsafe partial int* GetRenderOrders(IntPtr model);

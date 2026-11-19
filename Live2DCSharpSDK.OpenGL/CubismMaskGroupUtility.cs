@@ -3,19 +3,19 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
-/// クリッピングマスクグループの数え上げユーティリティ。
+/// Clipping 掩码组的计数工具. 
 /// 官方 CubismClippingManager::FindSameClip（Framework/Rendering CubismClippingManager.tpp:144-173）
-/// と同じ判定で Core の drawable mask 配列を去重する。
-/// LAppDelegateOpenGL.CreateRenderer が maskBufferCount を決めるために使用する
-/// （判定ロジックを 2 箇所に複製しないための共通ユーティリティ）。
+/// 采用与之相同的判定, 对 Core 的 drawable mask 数组去重. 
+/// 供 LAppDelegateOpenGL.CreateRenderer 决定 maskBufferCount 使用
+/// (为避免判定逻辑在两处重复的公共工具). 
 /// </summary>
 internal static class CubismMaskGroupUtility
 {
     /// <summary>
-    /// drawable のマスクグループ数を返す（maskCount が 0 以下の drawable は対象外）。
+    /// 返回 drawable 的掩码组数 (maskCount 小于等于 0 的 drawable 不计入). 
     /// </summary>
-    /// <param name="model">モデルのインスタンス</param>
-    /// <returns>ユニークなマスクグループ数</returns>
+    /// <param name="model">模型实例</param>
+    /// <returns>唯一的掩码组数</returns>
     public static unsafe int CountDrawableMaskGroups(CubismModel model)
     {
         int drawableCount = model.GetDrawableCount();
@@ -43,7 +43,7 @@ internal static class CubismMaskGroupUtility
                     continue;
                 }
 
-                // FindSameClip と同じ「要素数が同じで、全 ID が一致すれば同一」判定
+                // 与 FindSameClip 相同的判定: 元素个数相同, 且全部 ID 都一致即视为同一
                 int sameCount = 0;
                 for (int j = 0; j < count; j++)
                 {

@@ -3,7 +3,7 @@
 /// <summary>
 /// オフスクリーン用レンダーターゲットマネージャの非ジェネリック基底。
 /// drawable 用 / offscreen 用の 2 系統の manager を、型引数に依存しない形で
-/// 保持・列挙するための共通型（P6 / P8 が 2 系統の manager を保持する際に利用）。
+/// 用于持有与枚举的公共类型(两套 manager 各持一份时使用).
 /// </summary>
 public abstract class CubismOffscreenManager
 {

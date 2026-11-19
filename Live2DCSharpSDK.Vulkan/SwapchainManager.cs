@@ -7,11 +7,11 @@ namespace Live2DCSharpSDK.Vulkan;
 public class SwapchainManager
 {
     /// <summary>
-    /// 物理デバイスのサポートを確認する
+    /// 确认物理设备的支持情况
     /// </summary>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="surface">スワップチェーンサーフェス</param>
-    /// <returns>物理デバイスのサポート情報</returns>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="surface">swapchain surface</param>
+    /// <returns>物理设备的支持信息</returns>
     public static unsafe SwapchainSupportDetails QuerySwapchainSupport(KhrSurface vk, PhysicalDevice physicalDevice, SurfaceKHR surface)
     {
         var details = new SwapchainSupportDetails();
@@ -44,9 +44,9 @@ public class SwapchainManager
     }
 
     /// <summary>
-    /// 表示モードを選択する
+    /// 选择显示模式
     /// </summary>
-    /// <param name="availablePresentModes">使えるフォーマット</param>
+    /// <param name="availablePresentModes">可用的格式</param>
     /// <returns></returns>
     public static PresentModeKHR ChooseSwapPresentMode(PresentModeKHR[] availablePresentModes)
     {
@@ -61,33 +61,33 @@ public class SwapchainManager
     }
 
     /// <summary>
-    /// イメージの解像度
+    /// image 的分辨率
     /// </summary>
     public Extent2D Extent { get; private set; } = new(0, 0);
     /// <summary>
-    /// イメージ数
+    /// image 数量
     /// </summary>
     public uint ImageCount => _imageCount;
 
     private uint _imageCount;
 
     /// <summary>
-    /// スワップチェーンのイメージ
+    /// swapchain 的 image
     /// </summary>
     public Image[] Images { get; private set; } = [];
     /// <summary>
-    /// スワップチェーンのイメージビュー
+    /// swapchain 的 image view
     /// </summary>
     public ImageView[] ImageViews { get; private set; } = [];
     /// <summary>
-    /// スワップチェーン
+    /// swapchain
     /// </summary>
     public SwapchainKHR Swapchain => _swapchain;
 
     private SwapchainKHR _swapchain;
 
     /// <summary>
-    /// スワップチェーンのフォーマット
+    /// swapchain 的格式
     /// </summary>
     public Format SwapchainFormat { get; private set; } = Format.B8G8R8A8Unorm;
 
@@ -97,14 +97,14 @@ public class SwapchainManager
     private readonly Vk _vk;
 
     /// <summary>
-    /// コンストラクタ
+    /// 构造函数
     /// </summary>
     /// <param name="api"></param>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="device">デバイス</param>
-    /// <param name="surface">サーフェス</param>
-    /// <param name="graphicsFamily">描画コマンドに使うキューファミリ</param>
-    /// <param name="presentFamily">表示コマンドに使うキューファミリ</param>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="device">设备</param>
+    /// <param name="surface">surface</param>
+    /// <param name="graphicsFamily">绘制命令使用的队列族</param>
+    /// <param name="presentFamily">显示命令使用的队列族</param>
     public SwapchainManager(KhrSwapchain swapchain, KhrSurface khr, VulkanApi api, Vk vk, PhysicalDevice physicalDevice, Device device, SurfaceKHR surface, int graphicsFamily, int presentFamily)
     {
         _khrs = swapchain;
@@ -116,10 +116,10 @@ public class SwapchainManager
     }
 
     /// <summary>
-    /// サーフェスフォーマットを選択する
+    /// 选择 surface 格式
     /// </summary>
-    /// <param name="availableFormats">使えるサーフェスフォーマット</param>
-    /// <returns>選択するサーフェスフォーマット</returns>
+    /// <param name="availableFormats">可用的 surface 格式</param>
+    /// <returns>选定的 surface 格式</returns>
     public SurfaceFormatKHR ChooseSwapSurfaceFormat(SurfaceFormatKHR[] availableFormats)
     {
         for (int i = 0; i < availableFormats.Length; i++)
@@ -129,15 +129,15 @@ public class SwapchainManager
                 return availableFormats[i];
             }
         }
-        //他に使えるフォーマットが無かったら最初のフォーマットを使う
+        // 若没有其他可用的格式则使用第一个格式
         return availableFormats[0];
     }
 
     /// <summary>
-    /// スワップチェーンイメージの解像度を選択する
+    /// 选择 swapchain image 的分辨率
     /// </summary>
-    /// <param name="capabilities">サーフェスの機能を保持する構造体</param>
-    /// <returns>スワップチェーンイメージの解像度</returns>
+    /// <param name="capabilities">保存 surface 功能的结构体</param>
+    /// <returns>swapchain image 的分辨率</returns>
     public Extent2D ChooseSwapExtent(SurfaceCapabilitiesKHR capabilities)
     {
         if (capabilities.CurrentExtent.Width != uint.MaxValue)
@@ -173,13 +173,13 @@ public class SwapchainManager
     }
 
     /// <summary>
-    /// スワップチェーンを作成する
+    /// 创建 swapchain
     /// </summary>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="device">デバイス</param>
-    /// <param name="surface">サーフェス</param>
-    /// <param name="graphicsFamily">描画コマンドに使うキューファミリ</param>
-    /// <param name="presentFamily">表示コマンドに使うキューファミリ</param>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="device">设备</param>
+    /// <param name="surface">surface</param>
+    /// <param name="graphicsFamily">绘制命令使用的队列族</param>
+    /// <param name="presentFamily">显示命令使用的队列族</param>
     public unsafe void CreateSwapchain(PhysicalDevice physicalDevice, Device device, SurfaceKHR surface, int graphicsFamily, int presentFamily)
     {
         var swapChainSupport = QuerySwapchainSupport(_khr, physicalDevice, surface);
@@ -231,7 +231,7 @@ public class SwapchainManager
             CubismLog.Error("failed to create swap chain");
         }
 
-        // swapchain imageを取得する
+        // 获取 swapchain image
         _khrs.GetSwapchainImages(device, _swapchain, ref _imageCount, null);
         Images = new Image[_imageCount];
 
@@ -261,10 +261,10 @@ public class SwapchainManager
     }
 
     /// <summary>
-    /// 表示コマンドをキューに積む
+    /// 把显示命令放入队列
     /// </summary>
-    /// <param name="queue">キュー</param>
-    /// <param name="imageIndex">イメージのインデックス</param>
+    /// <param name="queue">队列</param>
+    /// <param name="imageIndex">image 的索引</param>
     /// <returns></returns>
     public unsafe Result QueuePresent(Queue queue, uint imageIndex)
     {
@@ -281,11 +281,11 @@ public class SwapchainManager
     }
 
     /// <summary>
-    /// スワップチェーンのレイアウトの変更
+    /// 变更 swapchain 的布局
     /// </summary>
-    /// <param name="device">論理デバイス</param>
-    /// <param name="commandPool">コマンドプール</param>
-    /// <param name="queue">キュー</param>
+    /// <param name="device">逻辑设备</param>
+    /// <param name="commandPool">命令池</param>
+    /// <param name="queue">队列</param>
     public unsafe void ChangeLayout(Device device, CommandPool commandPool, Queue queue)
     {
         for (int i = 0; i < _imageCount; i++)
@@ -354,9 +354,9 @@ public class SwapchainManager
     }
 
     /// <summary>
-    /// リソースを破棄＆再作成する
+    /// 销毁并重建资源
     /// </summary>
-    /// <param name="device">デバイス</param>
+    /// <param name="device">设备</param>
     public unsafe void Cleanup(Device device)
     {
         if (_swapchain.Handle != 0)

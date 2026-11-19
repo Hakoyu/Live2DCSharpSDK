@@ -50,7 +50,7 @@
         </StackPanel>
         <Panel>
             <pages:OpenGlPageControl Name="GL" />
-            <!-- 入力の受け皿。Background が null だとヒットテストされないため Transparent を指定する -->
+            <!-- 输入的接收层. Background 为 null 时不会被命中测试, 因此指定 Transparent -->
             <Panel Name="GLTop" Background="Transparent" />
         </Panel>
     </DockPanel>

@@ -3,9 +3,9 @@ namespace Live2DCSharpSDK.OpenGL;
 /// <summary>
 /// モデル描画直前のOpenGLES2のステートを保持・復帰させるクラス
 /// （官方 OpenGL/CubismRenderer_OpenGLES2.hpp:116-173）。
-/// B13: FBO / viewport は Profile では保持しない（官方 R5 は DoDrawModel のローカル変数へ移動）。
-/// B15: blend モード用にテクスチャユニット2も保存・復帰する（官方は 0/1 のみだが、
-/// blend 用テクスチャの漏れを防ぐためローカルで補強）。
+/// FBO / viewport 不由 Profile 保存(官方 R5 已移到 DoDrawModel 的局部变量).
+/// blend 模式下额外保存并恢复纹理单元 2(官方只处理 0/1,
+/// 本地为防止 blend 纹理泄漏而补强).
 /// </summary>
 internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
 {
@@ -34,7 +34,7 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     /// </summary>
     internal int LastTexture1Binding2D;
     /// <summary>
-    /// モデル描画直前のテクスチャユニット2（blend 用、B15）
+    /// 模型绘制前的纹理单元 2(blend 用).
     /// </summary>
     internal int LastTexture2Binding2D;
     /// <summary>

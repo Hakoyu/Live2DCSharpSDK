@@ -10,7 +10,7 @@ namespace Live2DCSharpSDK.OpenGL;
 /// <summary>
 /// クリッピングマスクの処理を実行するクラス
 /// （官方 OpenGL/CubismRenderer_OpenGLES2.hpp:62-76 / .cpp:35-194）。
-/// D-08: Drawable / Offscreen の区別は manager の Type プロパティで行う。
+/// Drawable / Offscreen 的区分由 manager 的 Type 属性完成.
 /// </summary>
 public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManager
 {
@@ -19,7 +19,7 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
     public override unsafe CubismClippingContext CreateClippingContext(CubismClippingManager manager, CubismModel model,
         int* clippingDrawableIndices, int clipCount)
     {
-        // v7: 派生コンテキストは model を受け取らない（基底 / Vulkan 側と同形。詳細は CubismClippingContext_OpenGLES2 の remarks）。
+        // 派生上下文不接收 model 参数(与基类 / Vulkan 侧保持同形, 详见 CubismClippingContext_OpenGLES2 的 remarks).
         return new CubismClippingContext_OpenGLES2(manager, clippingDrawableIndices, clipCount);
     }
 
@@ -54,7 +54,7 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
             return;
         }
 
-        // N-2: マスク用レンダーターゲットの作成に失敗している場合、そのバッファへは一切描画しない。
+        // 遮罩用渲染目标创建失败时, 不再向该缓冲区绘制任何内容.
         //      RenderTexture == 0 のまま BeginDraw / PreDraw / Clear を実行すると BeginDraw が無視され、
         //      直前にバインドされている FBO（画面や親 FBO）に対して Clear とマスク描画が行われてしまう。
         //      まず RT が有効な最初のバッファを初期バッファとして選ぶ（元実装のバッファ 0 固定の代替）。
@@ -120,7 +120,7 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
             // --- 実際に１つのマスクを描く ---
             var clipContext = ClippingContextListForMask[clipIndex];
 
-            // N-2: このマスク用 RT が作成できていない場合は、Clear / Viewport / マスク描画を行わない
+            // 该遮罩用渲染目标未创建成功时, 不执行 Clear / Viewport / 遮罩绘制.
             if (renderer.IsMaskBufferUsable(Type, clipContext.BufferIndex) is false)
             {
                 continue;

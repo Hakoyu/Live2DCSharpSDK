@@ -3,8 +3,8 @@
 namespace Live2DCSharpSDK.App;
 
 /// <summary>
-/// アプリケーションクラス。
-/// Cubism SDK の管理を行う。
+/// 应用程序类.
+/// 负责 Cubism SDK 的管理.
 /// </summary>
 public static class LAppDefine
 {
@@ -23,29 +23,29 @@ public static class LAppDefine
     public const float ViewLogicalMaxBottom = -2.0f;
     public const float ViewLogicalMaxTop = 2.0f;
 
-    // 外部定義ファイル(json)と合わせる
-    public const string MotionGroupIdle = "Idle"; // アイドリング
-    public const string MotionGroupTapBody = "TapBody"; // 体をタップしたとき
+    // 与外部定义文件(json)保持一致
+    public const string MotionGroupIdle = "Idle"; // 待机
+    public const string MotionGroupTapBody = "TapBody"; // 点击身体时
 
-    // 外部定義ファイル(json)と合わせる
+    // 与外部定义文件(json)保持一致
     public const string HitAreaNameHead = "Head";
     public const string HitAreaNameBody = "Body";
 
-    // MOC3の整合性検証オプション
+    // MOC3 一致性校验选项
     public const bool MocConsistencyValidationEnable = true;
 
-    // motion3.jsonの整合性検証オプション（官方 5-r.5 の LAppDefine.cpp と同じ既定値）
+    // motion3.json 一致性校验选项(与官方 5-r.5 的 LAppDefine.cpp 使用相同默认值)
     public const bool MotionConsistencyValidationEnable = true;
 
-    // デバッグ用ログの表示オプション（官方 LAppDefine.cpp:64-66）
+    // 调试日志输出选项(官方 LAppDefine.cpp:64-66)
     public const bool DebugLogEnable = true;
     public const bool DebugTouchLogEnable = false;
 
-    // Frameworkから出力するログのレベル設定
+    // Framework 输出日志的级别设置
     public const LogLevel CubismLoggingLevel = LogLevel.Verbose;
 
-    // デフォルトのレンダーターゲットサイズ（官方 LAppDefine.cpp:71-72）
-    // 注: 本移植はサンプル層で USE_RENDER_TARGET を有効にしていない（PLAN D-05）。値だけ公式と揃えておく。
+    // 默认渲染目标尺寸(官方 LAppDefine.cpp:71-72)
+    // 注: 本移植在示例层未启用 USE_RENDER_TARGET, 仅保持取值与官方一致.
     public const int RenderTargetWidth = 1900;
     public const int RenderTargetHeight = 1000;
 }

@@ -4,35 +4,35 @@ using Silk.NET.Vulkan;
 namespace Live2DCSharpSDK.Vulkan;
 
 /// <summary>
-/// オフスクリーン用のレンダーターゲットを管理するクラス
-/// （官方 FW5/Vulkan/CubismOffscreenManager_Vulkan.hpp:19-56）。
-/// 実際のリソース管理は P5 の ICubismOffscreenManager&lt;T&gt; が持つ。
+/// 管理离屏用渲染目标的类
+/// (对应官方 Framework/Rendering/Vulkan/CubismOffscreenManager_Vulkan.hpp:19-56).
+/// 实际资源管理由 ICubismOffscreenManager&lt;T&gt; 负责.
 /// </summary>
 public class CubismOffscreenManager_Vulkan : ICubismOffscreenManager<CubismRenderTarget_Vulkan>
 {
     /// <summary>
-    /// 使用可能なレンダーターゲットの取得（官方 GetOffscreenRenderTarget）
+    /// 获取可用的渲染目标 (对应官方 GetOffscreenRenderTarget)
     /// </summary>
-    /// <param name="device">論理デバイス</param>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="displayBufferWidth">オフスクリーンの横幅</param>
-    /// <param name="displayBufferHeight">オフスクリーンの縦幅</param>
-    /// <param name="surfaceFormat">サーフェスフォーマット</param>
-    /// <param name="depthFormat">深度フォーマット</param>
-    /// <returns>使用可能なレンダーターゲット</returns>
+    /// <param name="device">逻辑设备</param>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="displayBufferWidth">离屏的宽度</param>
+    /// <param name="displayBufferHeight">离屏的高度</param>
+    /// <param name="surfaceFormat">surface 格式</param>
+    /// <param name="depthFormat">深度格式</param>
+    /// <returns>可用的渲染目标</returns>
     public CubismRenderTarget_Vulkan GetOffscreenRenderTarget(
         Device device, PhysicalDevice physicalDevice,
         uint displayBufferWidth, uint displayBufferHeight,
         Format surfaceFormat, Format depthFormat)
     {
-        // 使用数を更新
+        // 更新使用数量
         UpdateRenderTargetCount();
 
-        // 使われていないリソースコンテナがあればそれを返す
+        // 若存在未被使用的资源容器则直接返回
         CubismRenderTarget_Vulkan? offscreenRenderTarget = GetUnusedOffscreenRenderTarget();
         if (offscreenRenderTarget != null)
         {
-            // サイズが違う場合は再作成する
+            // 尺寸不同时重新创建
             if (offscreenRenderTarget.GetBufferWidth() != displayBufferWidth ||
                 offscreenRenderTarget.GetBufferHeight() != displayBufferHeight)
             {
@@ -40,11 +40,11 @@ public class CubismOffscreenManager_Vulkan : ICubismOffscreenManager<CubismRende
                 offscreenRenderTarget.CreateRenderTarget(device, physicalDevice,
                     displayBufferWidth, displayBufferHeight, surfaceFormat, depthFormat);
             }
-            // 既存の未使用レンダーターゲットを返す
+            // 返回已有的未使用渲染目标
             return offscreenRenderTarget;
         }
 
-        // 新規にレンダーターゲットを作成して登録する
+        // 新建渲染目标并登记
         offscreenRenderTarget = CreateOffscreenRenderTarget();
         offscreenRenderTarget.CreateRenderTarget(device, physicalDevice,
             displayBufferWidth, displayBufferHeight, surfaceFormat, depthFormat);

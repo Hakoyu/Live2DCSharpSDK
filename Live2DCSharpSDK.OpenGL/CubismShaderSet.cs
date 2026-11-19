@@ -7,47 +7,47 @@ internal record CubismShaderSet
     /// </summary>
     internal int ShaderProgram;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(Position)
+    /// 传给 Shader 程序的变量地址(Position)
     /// </summary>
     internal int AttributePositionLocation;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(TexCoord)
+    /// 传给 Shader 程序的变量地址(TexCoord)
     /// </summary>
     internal int AttributeTexCoordLocation;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(Matrix)
+    /// 传给 Shader 程序的变量地址(Matrix)
     /// </summary>
     internal int UniformMatrixLocation;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(ClipMatrix)
+    /// 传给 Shader 程序的变量地址(ClipMatrix)
     /// </summary>
     internal int UniformClipMatrixLocation;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(Texture0)
+    /// 传给 Shader 程序的变量地址(Texture0)
     /// </summary>
     internal int SamplerTexture0Location;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(Texture1)
+    /// 传给 Shader 程序的变量地址(Texture1)
     /// </summary>
     internal int SamplerTexture1Location;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(BlendTexture)（B15、官方 .hpp:184）
+    /// 传给着色器程序的变量地址(BlendTexture, 官方 .hpp:184).
     /// </summary>
     internal int SamplerBlendTextureLocation;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(BaseColor)
+    /// 传给 Shader 程序的变量地址(BaseColor)
     /// </summary>
     internal int UniformBaseColorLocation;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(MultiplyColor)
+    /// 传给 Shader 程序的变量地址(MultiplyColor)
     /// </summary>
     internal int UniformMultiplyColorLocation;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(ScreenColor)
+    /// 传给 Shader 程序的变量地址(ScreenColor)
     /// </summary>
     internal int UniformScreenColorLocation;
     /// <summary>
-    /// シェーダプログラムに渡す変数のアドレス(ChannelFlag)
+    /// 传给 Shader 程序的变量地址(ChannelFlag)
     /// </summary>
     internal int UnifromChannelFlagLocation;
 };

@@ -7,7 +7,7 @@ public abstract class TextureInfo
 {
     public int Index;
     /// <summary>
-    /// テクスチャID
+    /// 纹理 ID
     /// </summary>
     public int Id;
     /// <summary>
@@ -15,16 +15,16 @@ public abstract class TextureInfo
     /// </summary>
     public int Width;
     /// <summary>
-    /// 高さ
+    /// 高度
     /// </summary>
     public int Height;
     /// <summary>
-    /// ファイル名
+    /// 文件名
     /// </summary>
     public string FileName;
 
     /// <summary>
-    /// 画像の解放
+    /// 释放图像
     /// </summary>
     public abstract void Dispose();
 };

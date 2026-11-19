@@ -105,7 +105,7 @@ public class Window : GameWindow
             lapp?.Dispose();
 
             // プロセス共有の offscreen manager を解放する（官方 LAppLive2DManager::ReleaseInstance()）。
-            // renderer 側は G2-F3 対応で manager のグローバル解放を行わないため、アプリ終了時はここが唯一の解放点。
+            // 渲染器侧不再负责全局释放 manager, 因此应用退出时这里是唯一的释放点.
             CubismOffscreenManager_OpenGLES2.ReleaseInstance();
             Console.WriteLine("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
         }

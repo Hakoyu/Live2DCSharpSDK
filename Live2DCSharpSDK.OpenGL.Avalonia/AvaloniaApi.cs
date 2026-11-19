@@ -242,7 +242,7 @@ public class AvaloniaApi(OpenGlControlBase con, GlInterface gl) : OpenGLApi
     }
 
     /// <summary>
-    /// 現在バインドされているフレームバッファの完全性を検査する（S6）。
+    /// 检查当前绑定的帧缓冲是否完整.
     /// </summary>
     public override int CheckFramebufferStatus(int target)
     {

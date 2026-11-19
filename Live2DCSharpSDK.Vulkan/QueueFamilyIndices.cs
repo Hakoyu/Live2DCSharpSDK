@@ -2,19 +2,19 @@
 
 public class QueueFamilyIndices
 {
-    // 描画用と表示用のキューファミリは必ずしも一致するとは限らないので分ける
+    // 绘制用与显示用的队列族未必一致, 因此分开保存
 
     /// <summary>
-    /// 描画コマンドに使用するキューファミリ
+    /// 用于绘制命令的队列族
     /// </summary>
     public int GraphicsFamily = -1;
     /// <summary>
-    /// 表示に使用するキューファミリ
+    /// 用于显示的队列族
     /// </summary>
     public int PresentFamily = -1;
 
     /// <summary>
-    /// 対応するキューファミリがあるか
+    /// 是否存在对应的队列族
     /// </summary>
     /// <returns></returns>
     public bool IsComplete()

@@ -4,15 +4,15 @@ using Silk.NET.Vulkan;
 namespace Live2DCSharpSDK.Vulkan;
 
 /// <summary>
-/// オフスクリーン用のレンダーターゲットを管理するクラス
-/// （官方 FW5/Vulkan/CubismOffscreenRenderTarget_Vulkan.hpp:15-72）。
-/// CRTP は P5 の自参照ジェネリック制約（PLAN D-07）をそのまま使う。
+/// 管理离屏用渲染目标的类
+/// (对应官方 Framework/Rendering/Vulkan/CubismOffscreenRenderTarget_Vulkan.hpp:15-72).
+/// CRTP 直接沿用自引用泛型约束的做法.
 /// </summary>
 public class CubismOffscreenRenderTarget_Vulkan
     : ICubismOffscreenRenderTarget<CubismOffscreenRenderTarget_Vulkan, CubismRenderTarget_Vulkan>
 {
     /// <summary>
-    /// オフスクリーン描画用レンダーターゲットを設定する（官方 SetOffscreenRenderTarget）
+    /// 设置离屏绘制用的渲染目标 (对应官方 SetOffscreenRenderTarget)
     /// </summary>
     public void SetOffscreenRenderTarget(
         Device device, PhysicalDevice physicalDevice,
@@ -37,7 +37,7 @@ public class CubismOffscreenRenderTarget_Vulkan
     }
 
     /// <summary>
-    /// レンダーターゲットの使用状態を取得する（官方 GetUsingRenderTextureState）
+    /// 获取渲染目标的使用状态 (对应官方 GetUsingRenderTextureState)
     /// </summary>
     public bool GetUsingRenderTextureState(CubismOffscreenManager_Vulkan offscreenManager)
     {
@@ -45,7 +45,7 @@ public class CubismOffscreenRenderTarget_Vulkan
     }
 
     /// <summary>
-    /// オフスクリーン描画用レンダーターゲットの使用を終了する（官方 StopUsingRenderTexture）
+    /// 结束离屏绘制用渲染目标的使用 (对应官方 StopUsingRenderTexture)
     /// </summary>
     public void StopUsingRenderTexture(CubismOffscreenManager_Vulkan offscreenManager)
     {

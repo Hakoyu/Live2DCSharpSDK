@@ -6,7 +6,7 @@ using Buffer = Silk.NET.Vulkan.Buffer;
 namespace Live2DCSharpSDK.Vulkan;
 
 /// <summary>
-/// バッファを扱うクラス
+/// 处理 buffer 的类
 /// </summary>
 /// <param name="vk"></param>
 public class CubismBufferVulkan(Vk vk)
@@ -14,27 +14,27 @@ public class CubismBufferVulkan(Vk vk)
     //VkDeviceSize ulong
 
     /// <summary>
-    /// バッファ
+    /// buffer
     /// </summary>
     public Buffer Buffer => _buffer;
 
     private Buffer _buffer;
 
     /// <summary>
-    /// メモリ
+    /// 内存
     /// </summary>
     private DeviceMemory _memory;
     /// <summary>
-    /// マップ領域へのアドレス
+    /// 映射区域的地址
     /// </summary>
     private unsafe void* _mapped;
 
     /// <summary>
-    /// 物理デバイスのメモリタイプのインデックスを探す
+    /// 查找物理设备内存类型的索引
     /// </summary>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="typeFilter">メモリタイプが存在していたら設定されるビットマスク</param>
-    /// <param name="properties">メモリがデバイスにアクセスするときのタイプ</param>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="typeFilter">存在内存类型时被设置的位掩码</param>
+    /// <param name="properties">内存访问设备时的类型</param>
     /// <returns></returns>
     public unsafe int FindMemoryType(PhysicalDevice physicalDevice, uint typeFilter, MemoryPropertyFlags properties)
     {
@@ -53,13 +53,13 @@ public class CubismBufferVulkan(Vk vk)
     }
 
     /// <summary>
-    /// バッファを作成する
+    /// 创建 buffer
     /// </summary>
-    /// <param name="device">デバイス</param>
-    /// <param name="physicalDevice">物理デバイス</param>
-    /// <param name="size">バッファサイズ</param>
-    /// <param name="usage">バッファの使用法を指定するビットマスク</param>
-    /// <param name="properties">メモリがデバイスにアクセスする際のタイプ</param>
+    /// <param name="device">设备</param>
+    /// <param name="physicalDevice">物理设备</param>
+    /// <param name="size">buffer 大小</param>
+    /// <param name="usage">指定 buffer 用途的位掩码</param>
+    /// <param name="properties">内存访问设备时的类型</param>
     public unsafe void CreateBuffer(Device device, PhysicalDevice physicalDevice, ulong size, BufferUsageFlags usage,
                       MemoryPropertyFlags properties)
     {
@@ -92,29 +92,29 @@ public class CubismBufferVulkan(Vk vk)
     }
 
     /// <summary>
-    /// メモリをアドレス空間にマップし、そのアドレスポインタを取得する
+    /// 把内存映射到地址空间, 并取得该地址指针
     /// </summary>
-    /// <param name="device">デバイス</param>
-    /// <param name="size">マップするサイズ</param>
+    /// <param name="device">设备</param>
+    /// <param name="size">映射的大小</param>
     public unsafe void Map(Device device, ulong size)
     {
         vk.MapMemory(device, _memory, 0, size, 0, ref _mapped);
     }
 
     /// <summary>
-    /// メモリブロックをコピーする
+    /// 复制内存块
     /// </summary>
-    /// <param name="src">コピーするデータ</param>
-    /// <param name="size">コピーするサイズ</param>
+    /// <param name="src">要复制的数据</param>
+    /// <param name="size">复制的大小</param>
     public unsafe void MemCpy(void* src, ulong size)
     {
         System.Buffer.MemoryCopy(src, _mapped, size, size);
     }
 
     /// <summary>
-    /// リソースを破棄する
+    /// 销毁资源
     /// </summary>
-    /// <param name="device">デバイス</param>
+    /// <param name="device">设备</param>
     public void UnMap(Device device)
     {
         vk.UnmapMemory(device, _memory);

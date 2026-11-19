@@ -6,7 +6,7 @@ namespace Live2DCSharpSDK.OpenGL;
 /// <summary>
 /// OpenGL 用シェーダ名（官方 CubismShader_OpenGLES2.cpp:48-117 の enum ShaderNames を展開したもの）。
 /// 官方はマクロで 494 項（Copy + SetupMask + Normal/Add/Mult 各6 + 5.3以降のブレンド組合せ）を生成するが、
-/// C# にはマクロが無いため「定数 + 計算」で同じ並びを表現する（B10）。
+/// C# 没有宏, 因此用常量加计算的方式表达相同排列.
 /// 配列の添字・offset 加算（マスク/乗算済アルファ変種）で使うため、並び順は官方と完全一致させる。
 /// </summary>
 internal static class ShaderNames
