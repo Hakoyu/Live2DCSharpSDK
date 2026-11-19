@@ -35,11 +35,25 @@ public class CubismPose
     private CubismModel? _lastModel;
 
     /// <summary>
+    /// 所属的上下文实例, 用于解析部件 ID.
+    /// </summary>
+    private readonly CubismContext _context;
+
+    /// <summary>
     /// 创建实例.
     /// </summary>
     /// <param name="pose3json">pose3.json 的数据</param>
-    public CubismPose(string pose3json)
+    /// <param name="context">上下文实例</param>
+    /// <exception cref="ArgumentNullException">context 为 null 时抛出</exception>
+    public CubismPose(string pose3json, CubismContext context)
     {
+        if (context is null)
+        {
+            throw new ArgumentNullException(nameof(context), "CubismPose requires a context instance.");
+        }
+
+        _context = context;
+
         using var stream = File.Open(pose3json, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var json = JsonNode.Parse(stream)?.AsObject()
             ?? throw new Exception("Pose json is error");
@@ -70,7 +84,7 @@ public class CubismPose
                 var partInfo = item[groupIndex]!;
                 PartData partData = new()
                 {
-                    PartId = CubismFramework.CubismIdManager.GetId(partInfo[Id]!.ToString())
+                    PartId = _context.IdManager.GetId(partInfo[Id]!.ToString())
                 };
 
                 // 设置链接的部件
@@ -83,7 +97,7 @@ public class CubismPose
                     {
                         partData.Link.Add(new()
                         {
-                            PartId = CubismFramework.CubismIdManager.GetId(linkListInfo[linkIndex]!.ToString())
+                            PartId = _context.IdManager.GetId(linkListInfo[linkIndex]!.ToString())
                         });
                     }
                 }
@@ -95,6 +109,15 @@ public class CubismPose
 
             _partGroupCounts.Add(groupCount);
         }
+    }
+
+    /// <summary>
+    /// 创建实例 (兼容旧签名, 使用默认上下文).
+    /// </summary>
+    /// <param name="pose3json">pose3.json 的数据</param>
+    [Obsolete("请改用带 CubismContext 的构造")]
+    public CubismPose(string pose3json) : this(pose3json, CubismContext.Default)
+    {
     }
 
     /// <summary>

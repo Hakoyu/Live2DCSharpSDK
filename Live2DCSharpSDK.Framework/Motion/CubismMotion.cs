@@ -68,6 +68,11 @@ public class CubismMotion : ACubismMotion
     private float _lastWeight;
 
     /// <summary>
+    /// 所属的上下文实例, 用于解析动作中的参数 ID.
+    /// </summary>
+    private readonly CubismContext _context;
+
+    /// <summary>
     /// 实际的动作数据本体
     /// </summary>
     private readonly CubismMotionData _motionData;
@@ -339,15 +344,23 @@ public class CubismMotion : ACubismMotion
     /// 创建实例.
     /// </summary>
     /// <param name="buffer">已读取 motion3.json 的缓冲区</param>
+    /// <param name="context">上下文实例</param>
     /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>
     /// <param name="shouldCheckMotionConsistency">是否校验 motion3.json 的一致性</param>
     /// <remarks>
     /// 官方的 Create() 在一致性不成立时返回 NULL, 但 C# 的构造函数无法返回 null, 因此抛出异常.
     /// </remarks>
-    public CubismMotion(string buffer, FinishedMotionCallback? onFinishedMotionHandler = null,
+    /// <exception cref="ArgumentNullException">context 为 null 时抛出</exception>
+    public CubismMotion(string buffer, CubismContext context, FinishedMotionCallback? onFinishedMotionHandler = null,
         BeganMotionCallback? onBeganMotionHandler = null, bool shouldCheckMotionConsistency = false)
     {
+        if (context is null)
+        {
+            throw new ArgumentNullException(nameof(context), "CubismMotion requires a context instance.");
+        }
+
+        _context = context;
         _sourceFrameRate = 30.0f;
         _loopDurationSeconds = -1.0f;
         _motionBehavior = MotionBehavior.V2;   // 官方 5-r.5 的默认值
@@ -408,7 +421,7 @@ public class CubismMotion : ACubismMotion
             string key = item.Target;
             _motionData.Curves[curveCount] = new()
             {
-                Id = CubismFramework.CubismIdManager.GetId(item.Id),
+                Id = _context.IdManager.GetId(item.Id),
                 BaseSegmentIndex = totalSegmentCount,
                 FadeInTime = item.FadeInTime != null ? (float)item.FadeInTime : -1.0f,
                 FadeOutTime = item.FadeOutTime != null ? (float)item.FadeOutTime : -1.0f,
@@ -559,6 +572,20 @@ public class CubismMotion : ACubismMotion
     }
 
     /// <summary>
+    /// 创建实例 (兼容旧签名, 使用默认上下文).
+    /// </summary>
+    /// <param name="buffer">已读取 motion3.json 的缓冲区</param>
+    /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
+    /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>
+    /// <param name="shouldCheckMotionConsistency">是否校验 motion3.json 的一致性</param>
+    [Obsolete("请改用带 CubismContext 的构造")]
+    public CubismMotion(string buffer, FinishedMotionCallback? onFinishedMotionHandler = null,
+        BeganMotionCallback? onBeganMotionHandler = null, bool shouldCheckMotionConsistency = false)
+        : this(buffer, CubismContext.Default, onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency)
+    {
+    }
+
+    /// <summary>
     /// 执行模型的参数更新.
     /// </summary>
     /// <param name="model">目标模型</param>
@@ -567,11 +594,11 @@ public class CubismMotion : ACubismMotion
     /// <param name="motionQueueEntry">CubismMotionQueueManager 中管理的动作</param>
     public override void DoUpdateParameters(CubismModel model, float userTimeSeconds, float fadeWeight, CubismMotionQueueEntry motionQueueEntry)
     {
-        _modelCurveIdEyeBlink ??= CubismFramework.CubismIdManager.GetId(EffectNameEyeBlink);
+        _modelCurveIdEyeBlink ??= _context.IdManager.GetId(EffectNameEyeBlink);
 
-        _modelCurveIdLipSync ??= CubismFramework.CubismIdManager.GetId(EffectNameLipSync);
+        _modelCurveIdLipSync ??= _context.IdManager.GetId(EffectNameLipSync);
 
-        _modelCurveIdOpacity ??= CubismFramework.CubismIdManager.GetId(IdNameOpacity);
+        _modelCurveIdOpacity ??= _context.IdManager.GetId(IdNameOpacity);
 
         if (_motionBehavior == MotionBehavior.V2)
         {
@@ -1079,7 +1106,7 @@ public class CubismMotion : ACubismMotion
             {
                 if (curve.Id == IdNameOpacity)
                 {
-                    return CubismFramework.CubismIdManager.GetId(curve.Id);
+                    return _context.IdManager.GetId(curve.Id);
                 }
             }
         }

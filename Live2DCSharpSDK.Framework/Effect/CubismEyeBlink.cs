@@ -50,11 +50,24 @@ public class CubismEyeBlink
     private readonly Random _random = new();
 
     /// <summary>
+    /// 所属的上下文实例, 用于解析眨眼参数 ID.
+    /// </summary>
+    private readonly CubismContext _context;
+
+    /// <summary>
     /// 创建实例.
     /// </summary>
     /// <param name="modelSetting">模型设置信息</param>
-    public CubismEyeBlink(ModelSettingObj modelSetting)
+    /// <param name="context">上下文实例</param>
+    /// <exception cref="ArgumentNullException">context 为 null 时抛出</exception>
+    public CubismEyeBlink(ModelSettingObj modelSetting, CubismContext context)
     {
+        if (context is null)
+        {
+            throw new ArgumentNullException(nameof(context), "CubismEyeBlink requires a context instance.");
+        }
+
+        _context = context;
         _blinkingState = EyeState.First;
         _blinkingIntervalSeconds = 4.0f;
         _closingSeconds = 0.1f;
@@ -69,12 +82,21 @@ public class CubismEyeBlink
                 {
                     if (item1 == null)
                         continue;
-                    var item2 = CubismFramework.CubismIdManager.GetId(item1);
+                    var item2 = _context.IdManager.GetId(item1);
                     ParameterIds.Add(item2);
                 }
                 break;
             }
         }
+    }
+
+    /// <summary>
+    /// 创建实例 (兼容旧签名, 使用默认上下文).
+    /// </summary>
+    /// <param name="modelSetting">模型设置信息</param>
+    [Obsolete("请改用带 CubismContext 的构造")]
+    public CubismEyeBlink(ModelSettingObj modelSetting) : this(modelSetting, CubismContext.Default)
+    {
     }
 
     /// <summary>

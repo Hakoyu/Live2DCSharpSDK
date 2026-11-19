@@ -34,11 +34,25 @@ public class CubismExpressionMotion : ACubismMotion
     public List<ExpressionParameter> Parameters { get; init; } = [];
 
     /// <summary>
+    /// 所属的上下文实例, 用于解析表情中的参数 ID.
+    /// </summary>
+    private readonly CubismContext _context;
+
+    /// <summary>
     /// 创建实例.
     /// </summary>
     /// <param name="buffer">已读取 exp 文件的缓冲区</param>
-    public CubismExpressionMotion(string buf)
+    /// <param name="context">上下文实例</param>
+    /// <exception cref="ArgumentNullException">context 为 null 时抛出</exception>
+    public CubismExpressionMotion(string buf, CubismContext context)
     {
+        if (context is null)
+        {
+            throw new ArgumentNullException(nameof(context), "CubismExpressionMotion requires a context instance.");
+        }
+
+        _context = context;
+
         using var stream = File.Open(buf, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var obj = JsonNode.Parse(stream) ?? throw new Exception("Load ExpressionMotion error");
         var json = obj.AsObject();
@@ -65,7 +79,7 @@ public class CubismExpressionMotion : ACubismMotion
         for (int i = 0; i < parameterCount; ++i)
         {
             var param = list[i]!;
-            var parameterId = CubismFramework.CubismIdManager.GetId(param[ExpressionKeyId]!.ToString()); // 参数 ID
+            var parameterId = _context.IdManager.GetId(param[ExpressionKeyId]!.ToString()); // 参数 ID
             var value = (float)param[ExpressionKeyValue]!; // 值
 
             // 计算方法的设置
@@ -97,6 +111,15 @@ public class CubismExpressionMotion : ACubismMotion
                 Value = value
             });
         }
+    }
+
+    /// <summary>
+    /// 创建实例 (兼容旧签名, 使用默认上下文).
+    /// </summary>
+    /// <param name="buffer">已读取 exp 文件的缓冲区</param>
+    [Obsolete("请改用带 CubismContext 的构造")]
+    public CubismExpressionMotion(string buf) : this(buf, CubismContext.Default)
+    {
     }
 
     public override void DoUpdateParameters(CubismModel model, float userTimeSeconds, float weight, CubismMotionQueueEntry motionQueueEntry)
