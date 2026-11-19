@@ -25,23 +25,57 @@ public class AvaloniaApi(OpenGlControlBase con, GlInterface gl) : OpenGLApi
     public delegate void Func11(int a, int b, float c);
     public delegate void Func12(int a, float b, float c, float d, float e);
 
-    public Func1 GLBlendFunc = Marshal.GetDelegateForFunctionPointer<Func1>(gl.GetProcAddress("glBlendFunc"));
-    public Func2 GLBlendFuncSeparate = Marshal.GetDelegateForFunctionPointer<Func2>(gl.GetProcAddress("glBlendFuncSeparate"));
-    public Func3 GLClearDepthf = Marshal.GetDelegateForFunctionPointer<Func3>(gl.GetProcAddress("glClearDepthf"));
-    public Func4 GLColorMask = Marshal.GetDelegateForFunctionPointer<Func4>(gl.GetProcAddress("glColorMask"));
-    public Func1 GLDetachShader = Marshal.GetDelegateForFunctionPointer<Func1>(gl.GetProcAddress("glDetachShader"));
-    public Func5 GLDisable = Marshal.GetDelegateForFunctionPointer<Func5>(gl.GetProcAddress("glDisable"));
-    public Func5 GLDisableVertexAttribArray = Marshal.GetDelegateForFunctionPointer<Func5>(gl.GetProcAddress("glDisableVertexAttribArray"));
-    public Func5 GLFrontFace = Marshal.GetDelegateForFunctionPointer<Func5>(gl.GetProcAddress("glFrontFace"));
-    public Func5 GLGenerateMipmap = Marshal.GetDelegateForFunctionPointer<Func5>(gl.GetProcAddress("glGenerateMipmap"));
-    public Func7 GLGetBooleanv = Marshal.GetDelegateForFunctionPointer<Func7>(gl.GetProcAddress("glGetBooleanv"));
-    public Func8 GLGetIntegerv = Marshal.GetDelegateForFunctionPointer<Func8>(gl.GetProcAddress("glGetIntegerv"));
-    public Func9 GLGetVertexAttribiv = Marshal.GetDelegateForFunctionPointer<Func9>(gl.GetProcAddress("glGetVertexAttribiv"));
-    public Func10 GLIsEnabled = Marshal.GetDelegateForFunctionPointer<Func10>(gl.GetProcAddress("glIsEnabled"));
-    public Func11 GLTexParameterf = Marshal.GetDelegateForFunctionPointer<Func11>(gl.GetProcAddress("glTexParameterf"));
-    public Func1 GLUniform1i = Marshal.GetDelegateForFunctionPointer<Func1>(gl.GetProcAddress("glUniform1i"));
-    public Func12 GLUniform4f = Marshal.GetDelegateForFunctionPointer<Func12>(gl.GetProcAddress("glUniform4f"));
-    public Func5 GLValidateProgram = Marshal.GetDelegateForFunctionPointer<Func5>(gl.GetProcAddress("glValidateProgram"));
+    public Func1 GLBlendFunc = Marshal.GetDelegateForFunctionPointer<Func1>(
+        gl.GetProcAddress("glBlendFunc")
+    );
+    public Func2 GLBlendFuncSeparate = Marshal.GetDelegateForFunctionPointer<Func2>(
+        gl.GetProcAddress("glBlendFuncSeparate")
+    );
+    public Func3 GLClearDepthf = Marshal.GetDelegateForFunctionPointer<Func3>(
+        gl.GetProcAddress("glClearDepthf")
+    );
+    public Func4 GLColorMask = Marshal.GetDelegateForFunctionPointer<Func4>(
+        gl.GetProcAddress("glColorMask")
+    );
+    public Func1 GLDetachShader = Marshal.GetDelegateForFunctionPointer<Func1>(
+        gl.GetProcAddress("glDetachShader")
+    );
+    public Func5 GLDisable = Marshal.GetDelegateForFunctionPointer<Func5>(
+        gl.GetProcAddress("glDisable")
+    );
+    public Func5 GLDisableVertexAttribArray = Marshal.GetDelegateForFunctionPointer<Func5>(
+        gl.GetProcAddress("glDisableVertexAttribArray")
+    );
+    public Func5 GLFrontFace = Marshal.GetDelegateForFunctionPointer<Func5>(
+        gl.GetProcAddress("glFrontFace")
+    );
+    public Func5 GLGenerateMipmap = Marshal.GetDelegateForFunctionPointer<Func5>(
+        gl.GetProcAddress("glGenerateMipmap")
+    );
+    public Func7 GLGetBooleanv = Marshal.GetDelegateForFunctionPointer<Func7>(
+        gl.GetProcAddress("glGetBooleanv")
+    );
+    public Func8 GLGetIntegerv = Marshal.GetDelegateForFunctionPointer<Func8>(
+        gl.GetProcAddress("glGetIntegerv")
+    );
+    public Func9 GLGetVertexAttribiv = Marshal.GetDelegateForFunctionPointer<Func9>(
+        gl.GetProcAddress("glGetVertexAttribiv")
+    );
+    public Func10 GLIsEnabled = Marshal.GetDelegateForFunctionPointer<Func10>(
+        gl.GetProcAddress("glIsEnabled")
+    );
+    public Func11 GLTexParameterf = Marshal.GetDelegateForFunctionPointer<Func11>(
+        gl.GetProcAddress("glTexParameterf")
+    );
+    public Func1 GLUniform1i = Marshal.GetDelegateForFunctionPointer<Func1>(
+        gl.GetProcAddress("glUniform1i")
+    );
+    public Func12 GLUniform4f = Marshal.GetDelegateForFunctionPointer<Func12>(
+        gl.GetProcAddress("glUniform4f")
+    );
+    public Func5 GLValidateProgram = Marshal.GetDelegateForFunctionPointer<Func5>(
+        gl.GetProcAddress("glValidateProgram")
+    );
 
     public override void GetWindowSize(out int w, out int h)
     {
@@ -129,7 +163,18 @@ public class AvaloniaApi(OpenGlControlBase con, GlInterface gl) : OpenGLApi
         gl.DeleteFramebuffer(fb);
     }
 
-    public override void BlitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, int mask, int filter)
+    public override void BlitFramebuffer(
+        int srcX0,
+        int srcY0,
+        int srcX1,
+        int srcY1,
+        int dstX0,
+        int dstY0,
+        int dstX1,
+        int dstY1,
+        int mask,
+        int filter
+    )
     {
         gl.BlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
     }
@@ -300,7 +345,17 @@ public class AvaloniaApi(OpenGlControlBase con, GlInterface gl) : OpenGLApi
         gl.ShaderSourceString(a, source);
     }
 
-    public override void TexImage2D(int type, int a, int type1, int w, int h, int size, int type2, int type3, nint data)
+    public override void TexImage2D(
+        int type,
+        int a,
+        int type1,
+        int w,
+        int h,
+        int size,
+        int type2,
+        int type3,
+        nint data
+    )
     {
         gl.TexImage2D(type, a, type1, w, h, size, type2, type3, data);
     }
@@ -336,7 +391,14 @@ public class AvaloniaApi(OpenGlControlBase con, GlInterface gl) : OpenGLApi
         gl.UseProgram(index);
     }
 
-    public override unsafe void VertexAttribPointer(int index, int length, int type, bool b, int size, nint arr)
+    public override unsafe void VertexAttribPointer(
+        int index,
+        int length,
+        int type,
+        bool b,
+        int size,
+        nint arr
+    )
     {
         gl.VertexAttribPointer(index, length, type, b ? 1 : 0, size, arr);
     }
