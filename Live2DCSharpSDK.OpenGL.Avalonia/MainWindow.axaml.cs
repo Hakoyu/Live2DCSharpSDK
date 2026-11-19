@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -167,29 +165,6 @@ public class OpenGlPageControl : OpenGlControlBase
             Console.WriteLine(err);
     }
 
-    /// <summary>
-    /// 验收用モデルのパスを解決する。
-    /// 優先順: 環境変数 LIVE2D_MODEL_DIR + LIVE2D_MODEL_NAME → 既知の候補ディレクトリ → 実行ファイル隣の Resources。
-    /// </summary>
-    private static (string Dir, string Name) ResolveModelPath()
-    {
-        string name = Environment.GetEnvironmentVariable("LIVE2D_MODEL_NAME") ?? "Haru";
-        string? dir = Environment.GetEnvironmentVariable("LIVE2D_MODEL_DIR");
-
-        if (string.IsNullOrWhiteSpace(dir))
-        {
-            string[] candidates =
-            [
-                @"F:\live2d\Resources",
-                @"D:\AgentGameWorkSpace\CubismSdkForNative-5-r.5\Samples\Resources",
-                Path.Combine(AppContext.BaseDirectory, "Resources"),
-            ];
-            dir = candidates.FirstOrDefault(Directory.Exists) ?? candidates[^1];
-        }
-
-        return (dir!, name);
-    }
-
     protected override unsafe void OnOpenGlInit(GlInterface gl)
     {
         CheckError(gl);
@@ -210,16 +185,25 @@ public class OpenGlPageControl : OpenGlControlBase
             return;
         }
 
-        var (dir, name) = ResolveModelPath();
-        try
+        // モデルのパスはハードコードせず、App 層の ModelResourceLocator で解決する
+        // （上流 sample は "F:\\live2d\\Resources" 直書きだった。本仓库はパラメータ化）。
+        // 見つからない場合も例外にせず、空のシーンで起動を続ける。
+        if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
         {
-            _model = lapp.Live2dManager.LoadModel(dir, name);
-            Status = $"モデル: {name}";
+            try
+            {
+                _model = lapp.Live2dManager.LoadModel(modelDir, modelName);
+                Status = $"モデル: {modelName}";
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Status = $"モデル読込失敗: {e.Message}";
+            }
         }
-        catch (Exception e)
+        else
         {
-            Console.WriteLine(e);
-            Status = $"モデル読込失敗: {e.Message}";
+            Status = $"モデル未検出（空のシーン）: {modelName}";
         }
 
         CheckError(gl);

@@ -34,64 +34,26 @@ public class Window : GameWindow
             BGColor = new(0, 1, 0, 1)
         };
 
-        //var model = lapp.Live2dManager.LoadModel("F:\\live2d\\Resources\\Mao", "Mao");
-        //model.ModelMatrix.TranslateX(0.9f);
-
-        var model = lapp.Live2dManager.LoadModel("F:\\live2d\\Resources\\Haru\\", "Haru");
-        //model.ModelMatrix.TranslateX(0.8f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Haru\\", "Haru");
-        //model.ModelMatrix.TranslateX(0.7f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Haru\\", "Haru");
-        //model.ModelMatrix.TranslateX(0.6f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Haru\\", "Haru");
-        //model.ModelMatrix.TranslateX(0.5f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Haru\\", "Haru");
-        //model.ModelMatrix.TranslateX(0.4f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Haru\\", "Haru");
-        //model.ModelMatrix.TranslateX(0.3f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Haru\\", "Haru");
-        //model.ModelMatrix.TranslateX(0.1f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Haru\\", "Haru");
-        //model.ModelMatrix.TranslateX(0.0f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.0f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.1f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.2f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.3f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.4f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.5f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.6f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.7f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.8f);
-
-        //model = lapp.Live2dManager.LoadModel("E:\\code\\Live2DCSharpSDK\\Resources\\Hiyori\\", "Hiyori");
-        //model.ModelMatrix.TranslateX(-0.9f);
-
-        //WindowT.SetFather(GLFW.GetWin32Window(WindowPtr));
+        // モデルのパスはハードコードせず、App 層の ModelResourceLocator で解決する
+        // （上流 sample は "F:\\live2d\\Resources" 直書きだった。本仓库はパラメータ化）。
+        // 見つからない場合も例外にせず、空のシーンで起動を続ける。
+        if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
+        {
+            try
+            {
+                var model = lapp.Live2dManager.LoadModel(modelDir, modelName);
+                model.ModelMatrix.TranslateX(0.0f);
+                Console.WriteLine($"[Live2D App]model loaded: {Path.Combine(modelDir, modelName)}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"[Live2D App]model load failed: {e.GetType().Name}: {e.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"[Live2D App]モデル未検出のため空のシーンで起動します: {modelName}");
+        }
     }
 
     protected override void OnRenderFrame(FrameEventArgs e)
