@@ -172,6 +172,14 @@ public class OpenTKApi : OpenGLApi
             (TextureTarget)c, buff, offset);
     }
 
+    /// <summary>
+    /// 現在バインドされているフレームバッファの完全性を検査する（S6）。
+    /// </summary>
+    public override int CheckFramebufferStatus(int target)
+    {
+        return (int)GL.CheckFramebufferStatus((FramebufferTarget)target);
+    }
+
     public override void FrontFace(int data)
     {
         GL.FrontFace((FrontFaceDirection)data);

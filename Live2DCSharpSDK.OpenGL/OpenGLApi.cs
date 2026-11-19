@@ -82,6 +82,34 @@ public abstract class OpenGLApi
     public readonly int GL_DRAW_FRAMEBUFFER = 0x8CA9;
     public readonly int GL_COLOR_ATTACHMENT0 = 0x8CE0;
     public readonly int GL_FRAMEBUFFER = 0x8D40;
+    /// <summary>
+    /// フレームバッファが完全（描画可能）であることを示す値（S6、官方 glCheckFramebufferStatus）
+    /// </summary>
+    public readonly int GL_FRAMEBUFFER_COMPLETE = 0x8CD5;
+    /// <summary>
+    /// 添付（attachment）が不完全（S6 診断用。ES2 / デスクトップ GL 共通）
+    /// </summary>
+    public readonly int GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT = 0x8CD6;
+    /// <summary>
+    /// 添付が 1 つも無い（S6 診断用）
+    /// </summary>
+    public readonly int GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT = 0x8CD7;
+    /// <summary>
+    /// 添付のサイズが不一致（S6 診断用。ES2 のみ）
+    /// </summary>
+    public readonly int GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS = 0x8CD9;
+    /// <summary>
+    /// 実装がこの組み合わせをサポートしない（S6 診断用）
+    /// </summary>
+    public readonly int GL_FRAMEBUFFER_UNSUPPORTED = 0x8CDD;
+    /// <summary>
+    /// 既定のフレームバッファが定義されていない（S6 診断用。デスクトップ GL）
+    /// </summary>
+    public readonly int GL_FRAMEBUFFER_UNDEFINED = 0x8219;
+    /// <summary>
+    /// テクスチャの最大サイズ（S6 診断用。サイズ超過の切り分けに使う）
+    /// </summary>
+    public readonly int GL_MAX_TEXTURE_SIZE = 0x0D33;
 
     public abstract void Viewport(int x, int y, int w, int h);
     public abstract void ClearColor(float r, float g, float b, float a);
@@ -131,6 +159,14 @@ public abstract class OpenGLApi
     public abstract void TexParameteri(int a, int b, int c);
     public abstract int GenFramebuffer();
     public abstract void FramebufferTexture2D(int a, int b, int c, int buff, int data);
+    /// <summary>
+    /// 現在バインドされているフレームバッファの完全性を検査する（公式 glCheckFramebufferStatus、S6）。
+    /// 戻り値が <see cref="GL_FRAMEBUFFER_COMPLETE"/> 以外なら描画先として使用できない。
+    /// 検査対象は <paramref name="target"/> にバインド中のフレームバッファなので、
+    /// 呼び出し側は対象の FBO をバインドした状態で呼ぶこと。
+    /// </summary>
+    /// <param name="target">GL_FRAMEBUFFER / GL_READ_FRAMEBUFFER / GL_DRAW_FRAMEBUFFER</param>
+    public abstract int CheckFramebufferStatus(int target);
     public abstract void DeleteTexture(int data);
     public abstract void DeleteFramebuffer(int fb);
     /// <summary>

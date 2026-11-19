@@ -88,6 +88,14 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// <summary>Dispose 済みか（二重解放防止。GL 名の再利用事故を避ける）</summary>
     private bool _disposed;
 
+    // ---- S6: FBO 作成失敗の診断ログを 1 回だけ出すためのフラグ（毎フレームのログ溢れ防止）----
+    /// <summary>モデル合成用レンダーターゲットが使えないことを警告済みか（S6）</summary>
+    private bool _warnedModelRenderTargetUnavailable;
+    /// <summary>オフスクリーン用レンダーターゲットが使えないことを警告済みか（S6）</summary>
+    private bool _warnedOffscreenRenderTargetUnavailable;
+    /// <summary>コピー先レンダーターゲットが使えないことを警告済みか（S6）</summary>
+    private bool _warnedCopyRenderTargetUnavailable;
+
     internal int VertexArray { get; private set; }
     internal int VertexBuffer { get; private set; }
     internal int IndexBuffer { get; private set; }
@@ -451,15 +459,47 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             return srcBuffer;
         }
 
+        // S6: コピー元が作成に失敗している場合はコピーしない（呼び出し側は null を ?? 0 で扱う）
+        if (!srcBuffer.IsValid())
+        {
+            return null;
+        }
+
         CubismRenderTarget_OpenGLES2 dst = _modelRenderTargets[1];
         if (dst.BufferWidth != srcBuffer.BufferWidth || dst.BufferHeight != srcBuffer.BufferHeight)
         {
-            dst.CreateRenderTarget(srcBuffer.BufferWidth, srcBuffer.BufferHeight);
+            if (!dst.CreateRenderTarget(srcBuffer.BufferWidth, srcBuffer.BufferHeight))
+            {
+                WarnCopyRenderTargetUnavailable(srcBuffer.BufferWidth, srcBuffer.BufferHeight);
+                return null;
+            }
+        }
+        else if (!dst.IsValid())
+        {
+            WarnCopyRenderTargetUnavailable(srcBuffer.BufferWidth, srcBuffer.BufferHeight);
+            return null;
         }
 
         CubismRenderTarget_OpenGLES2.CopyBuffer(srcBuffer, dst);
 
         return dst;
+    }
+
+    /// <summary>
+    /// S6: コピー先レンダーターゲットを作成できなかったことを 1 回だけ警告する。
+    /// </summary>
+    private void WarnCopyRenderTargetUnavailable(int width, int height)
+    {
+        if (_warnedCopyRenderTargetUnavailable)
+        {
+            return;
+        }
+
+        _warnedCopyRenderTargetUnavailable = true;
+        CubismLog.Warning(
+            "[Live2D OpenGL]CopyRenderTarget: destination render target is not available ({0}x{1}). " +
+            "Blend-mode texture copy is skipped.",
+            width, height);
     }
 
     /// <summary>
@@ -653,6 +693,22 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             {
                 _modelRenderTargets[i].CreateRenderTarget((int)_modelRenderTargetWidth, (int)_modelRenderTargetHeight, 0);
             }
+        }
+
+        // S6: FBO を作成できなかった場合はオフスクリーン描画を諦め、現在のフレームバッファへ直接描画する
+        //     （RenderTexture == 0 のまま描くと直前の FBO へ描いてしまい、描画結果が不定になる）
+        if (!_modelRenderTargets[0].IsValid())
+        {
+            if (!_warnedModelRenderTargetUnavailable)
+            {
+                _warnedModelRenderTargetUnavailable = true;
+                CubismLog.Warning(
+                    "[Live2D OpenGL]BeforeDrawModelRenderTarget: render target is not available ({0}x{1}). " +
+                    "Fall back to drawing the model into the current framebuffer.",
+                    _modelRenderTargetWidth, _modelRenderTargetHeight);
+            }
+
+            return;
         }
 
         // 別バッファに描画を開始
@@ -999,6 +1055,24 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         CubismOffscreenRenderTarget_OpenGLES2 offscreen = _offscreenList[offscreenIndex];
         offscreen.SetOffscreenRenderTarget(_modelRenderTargetWidth, _modelRenderTargetHeight);
 
+        // S6: FBO を作成できなかった場合はこのオフスクリーンへの描画をスキップする。
+        // RenderTexture == 0 のまま BeginDraw / Clear / Draw を続けると、直前の FBO（画面を含む）に
+        // 対して描いてしまい、描画結果が不定になる。
+        CubismRenderTarget_OpenGLES2? offscreenTarget = offscreen.GetRenderTarget();
+        if (offscreenTarget == null || !offscreenTarget.IsValid())
+        {
+            if (!_warnedOffscreenRenderTargetUnavailable)
+            {
+                _warnedOffscreenRenderTargetUnavailable = true;
+                CubismLog.Warning(
+                    "[Live2D OpenGL]AddOffscreen: render target for offscreen {0} is not available ({1}x{2}). " +
+                    "Skip drawing into this offscreen.",
+                    offscreenIndex, _modelRenderTargetWidth, _modelRenderTargetHeight);
+            }
+
+            return;
+        }
+
         // 以前のオフスクリーンレンダリングターゲットを取得
         CubismOffscreenRenderTarget_OpenGLES2? oldOffscreen = offscreen.GetParentPartOffscreen();
 
@@ -1016,7 +1090,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         }
 
         // 別バッファに描画を開始
-        var renderTarget = offscreen.GetRenderTarget()!;
+        CubismRenderTarget_OpenGLES2 renderTarget = offscreenTarget;
         renderTarget.BeginDraw(oldFBO);
         GL.Viewport(0, 0, (int)_modelRenderTargetWidth, (int)_modelRenderTargetHeight);
         renderTarget.Clear(0.0f, 0.0f, 0.0f, 0.0f);

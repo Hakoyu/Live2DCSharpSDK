@@ -1,3 +1,4 @@
+using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Rendering;
 
 namespace Live2DCSharpSDK.OpenGL;
@@ -86,6 +87,13 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// <param name="dst">コピー先</param>
     public static void CopyBuffer(CubismRenderTarget_OpenGLES2 src, CubismRenderTarget_OpenGLES2 dst)
     {
+        // S6: どちらかが作成に失敗している場合はコピーしない。
+        // RenderTexture == 0 を書き込み先にすると既定のフレームバッファ（画面）へ転送してしまう。
+        if (!src.IsValid() || !dst.IsValid())
+        {
+            return;
+        }
+
         OpenGLApi gl = src.GL;
         gl.GetIntegerv(gl.GL_FRAMEBUFFER_BINDING, out int framebuffer);
 
@@ -152,6 +160,12 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// <param name="a">α(0.0~1.0)</param>
     public void Clear(float r, float g, float b, float a)
     {
+        // S6: 作成に失敗した（RenderTexture == 0）場合は描画先が不定（直前の FBO）になるため何もしない。
+        if (RenderTexture == 0)
+        {
+            return;
+        }
+
         // マスクをクリアする
         GL.ClearColor(r, g, b, a);
         GL.Clear(GL.GL_COLOR_BUFFER_BIT);
@@ -163,10 +177,28 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// <param name="displayBufferWidth">作成するバッファ幅</param>
     /// <param name="displayBufferHeight">作成するバッファ高さ</param>
     /// <param name="colorBuffer">0以外の場合、ピクセル格納領域としてcolorBufferを使用する</param>
+    /// <returns>作成できて、かつフレームバッファが完全（GL_FRAMEBUFFER_COMPLETE）なら true</returns>
+    /// <remarks>
+    /// S6: 作成直後に glCheckFramebufferStatus で完全性を検査する。
+    /// 不完全だった場合は GL リソースを破棄して false を返す（false のとき
+    /// <see cref="IsValid"/> は false、<see cref="RenderTexture"/> / <see cref="ColorBuffer"/> は 0）。
+    /// 幅・高さは要求値のまま残すので、同じサイズで呼び直しても再作成は走らない
+    /// （作成に失敗し続ける環境で毎フレーム作り直してログが溢れるのを避ける）。
+    /// </remarks>
     public unsafe bool CreateRenderTarget(int displayBufferWidth, int displayBufferHeight, int colorBuffer = 0)
     {
         // 一旦削除
         DestroyRenderTarget();
+
+        // S6: 0 以下のサイズは glTexImage2D が GL_INVALID_VALUE になり、
+        // ストレージを持たないテクスチャを添付した「不完全な FBO」が成功扱いになる。GL を呼ぶ前に弾く。
+        if (displayBufferWidth <= 0 || displayBufferHeight <= 0)
+        {
+            CubismLog.Warning(
+                "[Live2D OpenGL]CreateRenderTarget failed: invalid size {0}x{1}. No framebuffer was created.",
+                displayBufferWidth, displayBufferHeight);
+            return false;
+        }
 
         // 新しく生成する
         if (colorBuffer == 0)
@@ -197,6 +229,11 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         int ret = GL.GenFramebuffer();
         GL.BindFramebuffer(GL.GL_FRAMEBUFFER, ret);
         GL.FramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0, GL.GL_TEXTURE_2D, ColorBuffer, 0);
+
+        // S6: 添付直後（FBO をバインド中）にフレームバッファの完全性を検査する。
+        // 不完全な FBO に描くと描画結果は未定義になるため、ここで失敗として扱う。
+        int status = GL.CheckFramebufferStatus(GL.GL_FRAMEBUFFER);
+
         GL.BindFramebuffer(GL.GL_FRAMEBUFFER, tmpFramebufferObject);
 
         RenderTexture = ret;
@@ -204,8 +241,57 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         _bufferWidth = displayBufferWidth;
         _bufferHeight = displayBufferHeight;
 
+        if (status != GL.GL_FRAMEBUFFER_COMPLETE)
+        {
+            // S6: 状態コード・サイズ・添付情報を出力し、GL リソースを破棄して失敗を返す
+            ReportIncompleteFramebuffer(status, displayBufferWidth, displayBufferHeight);
+
+            // 失敗したので削除（継承テクスチャは DestroyRenderTarget が消さないので、参照だけ落とす）
+            DestroyRenderTarget();
+            ColorBuffer = 0;
+            _isColorBufferInherited = false;
+
+            return false;
+        }
+
         // 成功
         return true;
+    }
+
+    /// <summary>
+    /// S6: フレームバッファが不完全だったときの診断ログ。
+    /// 状態コード・要求サイズ・添付（COLOR_ATTACHMENT0 に付けたテクスチャ）・GL_MAX_TEXTURE_SIZE を出す。
+    /// </summary>
+    /// <remarks>
+    /// 既存の <see cref="CubismLog.Error"/> は出力後に例外を投げるため、失敗を bool で返すこの API では
+    /// 呼び出し元（描画ループ）を巻き込まないよう Warning へ降格して出力する
+    /// （PLAN-03 §2「CubismLog.Error 本体は変えず、呼び出し点でのみ降格」）。
+    /// </remarks>
+    private void ReportIncompleteFramebuffer(int status, int width, int height)
+    {
+        GL.GetIntegerv(GL.GL_MAX_TEXTURE_SIZE, out int maxTextureSize);
+
+        CubismLog.Warning(
+            "[Live2D OpenGL]CreateRenderTarget failed: framebuffer is not complete. " +
+            "status=0x{0:X4} ({1}), size={2}x{3}, GL_MAX_TEXTURE_SIZE={4}, " +
+            "attachment=GL_COLOR_ATTACHMENT0<-GL_TEXTURE_2D(id={5}, inherited={6})",
+            status, GetFramebufferStatusName(status), width, height, maxTextureSize,
+            ColorBuffer, _isColorBufferInherited);
+    }
+
+    /// <summary>
+    /// S6: glCheckFramebufferStatus の戻り値を読みやすい名前にする。
+    /// </summary>
+    private string GetFramebufferStatusName(int status)
+    {
+        if (status == GL.GL_FRAMEBUFFER_COMPLETE) return "GL_FRAMEBUFFER_COMPLETE";
+        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT) return "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) return "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS) return "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
+        if (status == GL.GL_FRAMEBUFFER_UNSUPPORTED) return "GL_FRAMEBUFFER_UNSUPPORTED";
+        if (status == GL.GL_FRAMEBUFFER_UNDEFINED) return "GL_FRAMEBUFFER_UNDEFINED";
+
+        return "UNKNOWN";
     }
 
     /// <summary>

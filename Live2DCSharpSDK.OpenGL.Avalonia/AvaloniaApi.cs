@@ -241,6 +241,14 @@ public class AvaloniaApi(OpenGlControlBase con, GlInterface gl) : OpenGLApi
         gl.FramebufferTexture2D(a, b, c, buff, data);
     }
 
+    /// <summary>
+    /// 現在バインドされているフレームバッファの完全性を検査する（S6）。
+    /// </summary>
+    public override int CheckFramebufferStatus(int target)
+    {
+        return gl.CheckFramebufferStatus(target);
+    }
+
     public override void FrontFace(int data)
     {
         GLFrontFace(data);

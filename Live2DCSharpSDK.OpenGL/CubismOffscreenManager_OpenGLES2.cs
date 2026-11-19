@@ -1,3 +1,4 @@
+using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Rendering;
 
 namespace Live2DCSharpSDK.OpenGL;
@@ -63,7 +64,12 @@ public sealed class CubismOffscreenManager_OpenGLES2 : ICubismOffscreenManager<C
             // サイズが違う場合は再作成する
             if (offscreenRenderTarget.GetBufferWidth() != width || offscreenRenderTarget.GetBufferHeight() != height)
             {
-                offscreenRenderTarget.CreateRenderTarget((int)width, (int)height);
+                // S6: 作成に失敗しても戻り値の契約は非 null なので返すが、失敗を記録する。
+                //     呼び出し側（CubismRenderer_OpenGLES2.AddOffscreen）は IsValid() で判定して描画をスキップする。
+                if (!offscreenRenderTarget.CreateRenderTarget((int)width, (int)height))
+                {
+                    WarnInvalidRenderTarget(width, height);
+                }
             }
             // 既存の未使用レンダーターゲットを返す
             return offscreenRenderTarget;
@@ -71,7 +77,22 @@ public sealed class CubismOffscreenManager_OpenGLES2 : ICubismOffscreenManager<C
 
         // 新規にレンダーターゲットを作成して登録する
         offscreenRenderTarget = CreateOffscreenRenderTarget();
-        offscreenRenderTarget.CreateRenderTarget((int)width, (int)height);
+        if (!offscreenRenderTarget.CreateRenderTarget((int)width, (int)height))
+        {
+            WarnInvalidRenderTarget(width, height);
+        }
         return offscreenRenderTarget;
+    }
+
+    /// <summary>
+    /// S6: オフスクリーン用 FBO を作成できなかったことを警告する。
+    /// 状態コード・サイズなどの詳細は <see cref="CubismRenderTarget_OpenGLES2.CreateRenderTarget"/> 側で出力済み。
+    /// </summary>
+    private static void WarnInvalidRenderTarget(uint width, uint height)
+    {
+        CubismLog.Warning(
+            "[Live2D OpenGL]GetOffscreenRenderTarget: failed to create a render target {0}x{1}. " +
+            "The renderer skips drawing into this offscreen.",
+            width, height);
     }
 }
