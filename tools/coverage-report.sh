@@ -106,8 +106,10 @@ ALLOWLIST = [
     ("CubismContext", "Live2DCSharpSDK.Framework.CubismContext", None, None),
     ("ModelResourceLocator", "Live2DCSharpSDK.App.ModelResourceLocator", None, None),
     ("LAppAllocator", "Live2DCSharpSDK.App.LAppAllocator", None, None),
-    ("ModelSettingObj", "Live2DCSharpSDK.Framework.ModelSettingObj",
-     "Live2DCSharpSDK.Framework.ModelSettingObj/", "Live2DCSharpSDK.Framework.ModelSettingObjContext"),
+    # 只统计动作条目的 DTO (File/FadeInTime/FadeOutTime 的构造与反序列化契约).
+    # 外层 ModelSettingObj 与其它嵌套 record 都是自动属性, 覆盖率里是 setter 噪声, 不计入.
+    ("ModelSettingObj.Motion", "Live2DCSharpSDK.Framework.ModelSettingObj/FileReference/Motion",
+     "Live2DCSharpSDK.Framework.ModelSettingObj/FileReference/Motion/", None),
 ]
 
 WARN_THRESHOLD = 0.80

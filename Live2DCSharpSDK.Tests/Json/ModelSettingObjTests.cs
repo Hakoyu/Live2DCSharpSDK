@@ -157,6 +157,52 @@ public sealed class ModelSettingObjTests
     }
 
     /// <summary>
+    /// 完整的动作条目: File / Sound / FadeInTime / FadeOutTime 四个字段都能反序列化并读回.
+    /// 这是 <see cref="ModelSettingObj.FileReference.Motion"/> 的完整契约, 覆盖 setter 与 getter 两条路径.
+    /// </summary>
+    [TestMethod]
+    public void CompleteMotion_ExposesEveryField()
+    {
+        ModelSettingObj setting = Load(JsonWithCompleteMotion);
+
+        ModelSettingObj.FileReference.Motion motion = setting.FileReferences.Motions["Idle"][0];
+
+        Assert.AreEqual("motions/idle.motion3.json", motion.File,
+            "The motion file name must round-trip through the source generated context.");
+        Assert.AreEqual("sounds/idle.wav", motion.Sound,
+            "The motion sound name must round-trip through the source generated context.");
+        Assert.AreEqual(1.5f, motion.FadeInTime, 1e-6f,
+            "An explicit FadeInTime must be parsed verbatim.");
+        Assert.AreEqual(0.75f, motion.FadeOutTime, 1e-6f,
+            "An explicit FadeOutTime must be parsed verbatim.");
+        Assert.AreEqual(1.5f, setting.GetMotionFadeInTimeValue("Idle", 0), 1e-6f,
+            "The accessor must expose the parsed FadeInTime.");
+        Assert.AreEqual(0.75f, setting.GetMotionFadeOutTimeValue("Idle", 0), 1e-6f,
+            "The accessor must expose the parsed FadeOutTime.");
+    }
+
+    /// <summary>
+    /// 完整的动作条目样例 (四个字段齐全).
+    /// </summary>
+    private const string JsonWithCompleteMotion = """
+        {
+          "Version": 3,
+          "FileReferences": {
+            "Motions": {
+              "Idle": [
+                {
+                  "File": "motions/idle.motion3.json",
+                  "Sound": "sounds/idle.wav",
+                  "FadeInTime": 1.5,
+                  "FadeOutTime": 0.75
+                }
+              ]
+            }
+          }
+        }
+        """;
+
+    /// <summary>
     /// 用与产品代码相同的 source-gen 上下文反序列化 (见 LAppModel).
     /// </summary>
     /// <param name="json">model3.json 的内容</param>
