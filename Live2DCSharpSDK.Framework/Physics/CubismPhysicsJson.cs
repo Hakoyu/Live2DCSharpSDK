@@ -1,7 +1,7 @@
 ﻿namespace Live2DCSharpSDK.Framework.Physics;
 
 /// <summary>
-/// physics3.jsonのコンテナ。
+/// physics3.json 的容器.
 /// </summary>
 public record CubismPhysicsJson
 {
@@ -12,7 +12,7 @@ public record CubismPhysicsJson
     public const string Type = "Type";
     public const string Id = "Id";
 
-    // Meta
+    // 元信息(Meta)
     public const string Meta = "Meta";
     public const string EffectiveForces = "EffectiveForces";
     public const string TotalInputCount = "TotalInputCount";
@@ -23,7 +23,7 @@ public record CubismPhysicsJson
     public const string VertexCount = "VertexCount";
     public const string Fps = "Fps";
 
-    // PhysicsSettings
+    // 物理设置(PhysicsSettings)
     public const string PhysicsSettings = "PhysicsSettings";
     public const string Normalization = "Normalization";
     public const string Minimum = "Minimum";
@@ -32,17 +32,17 @@ public record CubismPhysicsJson
     public const string Reflect = "Reflect";
     public const string Weight = "Weight";
 
-    // Input
+    // 输入(Input)
     public const string Input = "Input";
     public const string Source = "Source";
 
-    // Output
+    // 输出(Output)
     public const string Output = "Output";
     public const string Scale = "Scale";
     public const string VertexIndex = "VertexIndex";
     public const string Destination = "Destination";
 
-    // Particle
+    // 质点(Particle)
     public const string Vertices = "Vertices";
     public const string Mobility = "Mobility";
     public const string Delay = "Delay";

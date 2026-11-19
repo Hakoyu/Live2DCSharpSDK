@@ -11,21 +11,21 @@ namespace Live2DCSharpSDK.Framework.Physics;
 /// </summary>
 public class CubismPhysics
 {
-    /// physics types tags.
+    /// 物理类型标签.
     public const string PhysicsTypeTagX = "X";
     public const string PhysicsTypeTagY = "Y";
     public const string PhysicsTypeTagAngle = "Angle";
 
-    /// Constant of air resistance.
+    /// 空气阻力常数.
     public const float AirResistance = 5.0f;
 
-    /// Constant of maximum weight of input and output ratio.
+    /// 输入输出比的最大权重常数.
     public const float MaximumWeight = 100.0f;
 
-    /// Constant of threshold of movement.
+    /// 运动阈值常数.
     public const float MovementThreshold = 0.001f;
 
-    /// Constant of maximum allowed delta time
+    /// 允许的最大增量时间常数.
     public const float MaxDeltaTime = 5.0f;
 
     /// <summary>
@@ -71,7 +71,7 @@ public class CubismPhysics
     /// <param name="buffer">已读入 physics3.json 的缓冲区</param>
     public CubismPhysics(string buffer)
     {
-        // set default options.
+        // 设置默认选项.
         Gravity.Y = -1.0f;
         Gravity.X = 0;
         Wind.X = 0;
@@ -115,7 +115,7 @@ public class CubismPhysics
                     Maximum = set.Normalization.Angle.Maximum,
                     Default = set.Normalization.Angle.Default
                 },
-                // Input
+                // 输入
                 InputCount = set.Input.Count,
                 BaseInputIndex = inputIndex
             };
@@ -156,7 +156,7 @@ public class CubismPhysics
             }
             inputIndex += _physicsRig.Settings[i].InputCount;
 
-            // Output
+            // 输出
             _physicsRig.Settings[i].OutputCount = set.Output.Count;
             _physicsRig.Settings[i].BaseOutputIndex = outputIndex;
 
@@ -201,7 +201,7 @@ public class CubismPhysics
             }
             outputIndex += _physicsRig.Settings[i].OutputCount;
 
-            // Particle
+            // 质点
             _physicsRig.Settings[i].ParticleCount = set.Vertices.Count;
             _physicsRig.Settings[i].BaseParticleIndex = particleIndex;
             for (int j = 0; j < _physicsRig.Settings[i].ParticleCount; ++j)
@@ -230,7 +230,7 @@ public class CubismPhysics
     /// </summary>
     public void Reset()
     {
-        // set default options.
+        // 设置默认选项.
         Gravity.Y = -1.0f;
         Gravity.X = 0.0f;
         Wind.X = 0.0f;
@@ -293,7 +293,7 @@ public class CubismPhysics
             var currentOutputIndex = currentSetting.BaseOutputIndex;
             var currentParticleIndex = currentSetting.BaseParticleIndex;
 
-            // Load input parameters
+            // 载入输入参数.
             for (i = 0; i < currentSetting.InputCount; ++i)
             {
                 weight = _physicsRig.Inputs[i + currentInputIndex].Weight / MaximumWeight;
@@ -325,7 +325,7 @@ public class CubismPhysics
             totalTranslation.X = totalTranslation.X * MathF.Cos(radAngle) - totalTranslation.Y * MathF.Sin(radAngle);
             totalTranslation.Y = totalTranslation.X * MathF.Sin(radAngle) + totalTranslation.Y * MathF.Cos(radAngle);
 
-            // Calculate particles position.
+            // 计算质点位置.
             UpdateParticlesForStabilization(
                 _physicsRig.Particles,
                 currentSetting.BaseParticleIndex,
@@ -336,7 +336,7 @@ public class CubismPhysics
                 MovementThreshold * currentSetting.NormalizationPosition.Maximum
             );
 
-            // Update output parameters.
+            // 更新输出参数.
             for (i = 0; i < currentSetting.OutputCount; ++i)
             {
                 particleIndex = _physicsRig.Outputs[i + currentOutputIndex].VertexIndex;
@@ -384,44 +384,44 @@ public class CubismPhysics
 
     /// <summary>
     /// 求值物理演算.
-    /// Pendulum interpolation weights
+    /// 摆插值权重
     ///
     /// 摆的计算结果会被保存, 输出到参数时用保存的上一次结果进行插值.
-    /// The result of the pendulum calculation is saved and
-    /// the output to the parameters is interpolated with the saved previous result of the pendulum calculation.
+    /// 摆的计算结果会被保存,
+    /// 输出到参数时使用保存的上一次计算结果进行插值.
     ///
     /// 如下所示, 即在 [1] 与 [2] 之间插值.
-    /// The figure shows the interpolation between [1] and [2].
+    /// 下图为 [1] 与 [2] 之间的插值.
     ///
     /// 插值权重由当前时间在最近一次摆计算时刻与下次时刻之间的位置决定.
-    /// The weight of the interpolation are determined by the current time seen between
-    /// the latest pendulum calculation timing and the next timing.
+    /// 插值权重由当前时间在最近一次摆计算时刻
+    /// 与下次时刻之间的位置决定.
     ///
     /// 如下所示, 即为 (3) 在 [2] 与 [4] 之间位置的权重.
-    /// Figure shows the weight of position (3) as seen between [2] and [4].
+    /// 下图为 (3) 在 [2] 与 [4] 之间位置的权重.
     ///
     /// 也就是说, 摆计算时刻与权重计算时刻存在偏移.
-    /// As an interpretation, the pendulum calculation and weights are misaligned.
+    /// 也就是说, 摆计算与权重计算的时刻存在偏移.
     ///
     /// physics3.json 中没有 FPS 信息时, 始终沿用上一次的摆状态.
-    /// If there is no FPS information in physics3.json, it is always set in the previous pendulum state.
+    /// physics3.json 中没有 FPS 信息时, 始终沿用上一次的摆状态.
     ///
     /// 该规格用于避免因超出插值范围而产生抖动外观.
-    /// The purpose of this specification is to avoid the quivering appearance caused by deviations from the interpolation range.
+    /// 该规格用于避免因超出插值范围而出现抖动外观.
     ///
-    /// ------------ time -------------->
+    /// ------------ 时间 -------------->
     ///
-    ///    　　　　　　　　|+++++|------| <- weight
+    ///    　　　　　　　　|+++++|------| <- 权重
     /// ==[1]====#=====[2]---(3)----(4)
-    ///          ^ output contents
+    ///          ^ 输出内容
     ///
     /// 1:_previousRigOutputs
     /// 2:_currentRigOutputs
-    /// 3:_currentRemainTime (now rendering)
-    /// 4:next particles timing
+    /// 3:_currentRemainTime(当前渲染)
+    /// 4:下次质点计算时刻
     ///
     /// @param model
-    /// @param deltaTimeSeconds  rendering delta time.
+    /// @param deltaTimeSeconds  渲染增量时间.
     /// </summary>
     /// <param name="model">应用物理演算结果的模型</param>
     /// <param name="deltaTimeSeconds">增量时间(秒)</param>
@@ -478,7 +478,7 @@ public class CubismPhysics
 
         while (_currentRemainTime >= physicsDeltaTime)
         {
-            // copyRigOutputs _currentRigOutputs to _previousRigOutputs
+            // 将 _currentRigOutputs 复制到 _previousRigOutputs
             for (settingIndex = 0; settingIndex < _physicsRig.SubRigCount; ++settingIndex)
             {
                 currentSetting = _physicsRig.Settings[settingIndex];
@@ -494,9 +494,9 @@ public class CubismPhysics
             }
 
             // 用输入缓存与参数做线性插值, 计算 UpdateParticles 时刻的输入.
-            // Calculate the input at the timing to UpdateParticles by linear interpolation with the _parameterInputCaches and parameterValues.
+            // 用 _parameterInputCaches 与 parameterValues 做线性插值, 计算 UpdateParticles 时刻的输入.
             // _parameterCaches 负责组间数值传播, 因此需要与 _parameterInputCaches 分离.
-            // _parameterCaches needs to be separated from _parameterInputCaches because of its role in propagating values between groups.
+            // _parameterCaches 负责组间数值传播, 因此需要与 _parameterInputCaches 分离.
             float inputWeight = physicsDeltaTime / _currentRemainTime;
             for (int j = 0; j < model.GetParameterCount(); ++j)
             {
@@ -514,7 +514,7 @@ public class CubismPhysics
                 var currentOutputIndex = currentSetting.BaseOutputIndex;
                 var currentParticleIndex = currentSetting.BaseParticleIndex;
 
-                // Load input parameters.
+                // 载入输入参数.
                 for (i = 0; i < currentSetting.InputCount; ++i)
                 {
                     weight = _physicsRig.Inputs[i + currentInputIndex].Weight / MaximumWeight;
@@ -543,7 +543,7 @@ public class CubismPhysics
                 totalTranslation.X = totalTranslation.X * MathF.Cos(radAngle) - totalTranslation.Y * MathF.Sin(radAngle);
                 totalTranslation.Y = totalTranslation.X * MathF.Sin(radAngle) + totalTranslation.Y * MathF.Cos(radAngle);
 
-                // Calculate particles position.
+                // 计算质点位置.
                 UpdateParticles(
                     _physicsRig.Particles,
                     currentParticleIndex,
@@ -556,7 +556,7 @@ public class CubismPhysics
                     AirResistance
                 );
 
-                // Update output parameters.
+                // 更新输出参数.
                 for (i = 0; i < currentSetting.OutputCount; ++i)
                 {
                     particleIndex = _physicsRig.Outputs[i + currentOutputIndex].VertexIndex;
@@ -635,7 +635,7 @@ public class CubismPhysics
             currentSetting = _physicsRig.Settings[settingIndex];
             var index = currentSetting.BaseParticleIndex;
 
-            // Initialize the top of particle.
+            // 初始化质点起点.
             _physicsRig.Particles[index].InitialPosition = new Vector2(0.0f, 0.0f);
             _physicsRig.Particles[index].LastPosition = _physicsRig.Particles[index].InitialPosition;
             _physicsRig.Particles[index].LastGravity = new Vector2(0.0f, -1.0f);
@@ -643,7 +643,7 @@ public class CubismPhysics
             _physicsRig.Particles[index].Velocity = new Vector2(0.0f, 0.0f);
             _physicsRig.Particles[index].Force = new Vector2(0.0f, 0.0f);
 
-            // Initialize particles.
+            // 初始化质点.
             for (i = 1; i < currentSetting.ParticleCount; ++i)
             {
                 radius = new Vector2(0.0f, _physicsRig.Particles[i + index].Radius);
@@ -682,7 +682,7 @@ public class CubismPhysics
             currentSetting = _physicsRig.Settings[settingIndex];
             currentOutputIndex = currentSetting.BaseOutputIndex;
 
-            // Load input parameters.
+            // 载入输入参数.
             for (i = 0; i < currentSetting.OutputCount; ++i)
             {
                 if (_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex == -1)
@@ -711,11 +711,11 @@ public class CubismPhysics
         return MathF.Abs(maxValue - minValue);
     }
 
-    /// Gets sign.
+    /// 获取符号.
     ///
-    /// @param  value  Evaluation target value.
+    /// @param  value  求值目标值.
     ///
-    /// @return  Sign of value.
+    /// @return  值的符号.
     private static int Sign(float value)
     {
         int ret = 0;
@@ -934,16 +934,16 @@ public class CubismPhysics
         return angleScale;
     }
 
-    /// Updates particles.
+    /// 更新质点.
     ///
-    /// @param  strand            Target array of particle.
-    /// @param  strandCount       Count of particle.
-    /// @param  totalTranslation  Total translation value.
-    /// @param  totalAngle        Total angle.
-    /// @param  windDirection              Direction of wind.
-    /// @param  thresholdValue    Threshold of movement.
-    /// @param  deltaTimeSeconds  Delta time.
-    /// @param  airResistance     Air resistance.
+    /// @param  strand            目标质点数组.
+    /// @param  strandCount       质点数量.
+    /// @param  totalTranslation  总移动值.
+    /// @param  totalAngle        总角度.
+    /// @param  windDirection     风向.
+    /// @param  thresholdValue    运动阈值.
+    /// @param  deltaTimeSeconds  增量时间.
+    /// @param  airResistance     空气阻力.
     private static void UpdateParticles(CubismPhysicsParticle[] strand, int start, int strandCount, Vector2 totalTranslation, float totalAngle,
         Vector2 windDirection, float thresholdValue, float deltaTimeSeconds, float airResistance)
     {
@@ -1012,14 +1012,14 @@ public class CubismPhysics
     }
 
     /**
-     * Updates particles for stabilization.
+     * 更新质点以实现稳定化.
      *
-     * @param strand                Target array of particle.
-     * @param strandCount           Count of particle.
-     * @param totalTranslation      Total translation value.
-     * @param totalAngle            Total angle.
-     * @param windDirection         Direction of Wind.
-     * @param thresholdValue        Threshold of movement.
+     * @param strand                目标质点数组.
+     * @param strandCount           质点数量.
+     * @param totalTranslation      总移动值.
+     * @param totalAngle            总角度.
+     * @param windDirection         风向.
+     * @param thresholdValue        运动阈值.
      */
     private static void UpdateParticlesForStabilization(CubismPhysicsParticle[] strand, int start, int strandCount, Vector2 totalTranslation, float totalAngle,
         Vector2 windDirection, float thresholdValue)
@@ -1059,12 +1059,12 @@ public class CubismPhysics
         }
     }
 
-    /// Updates output parameter value.
+    /// 更新输出参数值.
     ///
-    /// @param  parameterValue         Target parameter value.
-    /// @param  parameterValueMinimum  Minimum of parameter value.
-    /// @param  parameterValueMaximum  Maximum of parameter value.
-    /// @param  translation            Translation value.
+    /// @param  parameterValue         目标参数值.
+    /// @param  parameterValueMinimum  参数值下限.
+    /// @param  parameterValueMaximum  参数值上限.
+    /// @param  translation            移动值.
     private static void UpdateOutputParameterValue(ref float parameterValue, float parameterValueMinimum, float parameterValueMaximum,
         float translation, CubismPhysicsOutput output)
     {

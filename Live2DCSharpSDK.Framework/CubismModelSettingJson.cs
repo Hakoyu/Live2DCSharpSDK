@@ -2,7 +2,7 @@ namespace Live2DCSharpSDK.Framework;
 
 public static class CubismModelSettingJson
 {
-    // JSON keys
+    // JSON 键名
     public const string Version = "Version";
     public const string FileReferences = "FileReferences";
     public const string Groups = "Groups";
@@ -24,7 +24,7 @@ public static class CubismModelSettingJson
     public const string Ids = "Ids";
     public const string Target = "Target";
 
-    // Motions
+    // 动作名
     public const string Idle = "Idle";
     public const string TapBody = "TapBody";
     public const string PinchIn = "PinchIn";
@@ -37,7 +37,7 @@ public static class CubismModelSettingJson
     public const string FadeInTime = "FadeInTime";
     public const string FadeOutTime = "FadeOutTime";
 
-    // Layout
+    // 布局
     public const string CenterX = "CenterX";
     public const string CenterY = "CenterY";
     public const string X = "X";
