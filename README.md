@@ -43,11 +43,6 @@
 
 冒烟与验收使用四个模型: `Haru`、`Mao`、`Ren`(取自官方 [Live2D Cubism SDK](https://www.live2d.com/zh-CHS/sdk/download/native/) `Samples/Resources`)。
 
-## 已知差异
-
-与官方原生实现的差异(K1–K9)、各轮验收证据与修复记录见
-`teams/TEAM-live2d-r5/STATUS.md` 与 `teams/TEAM-live2d-r5/verify/`。
-
 ## 许可与反馈
 
 许可见 [LICENSE](LICENSE)。
