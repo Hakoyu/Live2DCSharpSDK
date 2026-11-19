@@ -3,7 +3,7 @@ namespace Live2DCSharpSDK.OpenGL;
 internal record CubismShaderSet
 {
     /// <summary>
-    /// シェーダプログラムのアドレス
+    /// Shader 程序地址
     /// </summary>
     internal int ShaderProgram;
     /// <summary>

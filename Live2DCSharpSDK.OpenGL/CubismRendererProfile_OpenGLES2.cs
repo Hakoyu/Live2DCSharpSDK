@@ -1,8 +1,8 @@
 namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
-/// モデル描画直前のOpenGLES2のステートを保持・復帰させるクラス
-/// （官方 OpenGL/CubismRenderer_OpenGLES2.hpp:116-173）。
+/// 在模型绘制前保存并恢复 OpenGLES2 状态的类
+/// (官方 OpenGL/CubismRenderer_OpenGLES2.hpp:116-173). 
 /// FBO / viewport 不由 Profile 保存(官方 R5 已移到 DoDrawModel 的局部变量).
 /// blend 模式下额外保存并恢复纹理单元 2(官方只处理 0/1,
 /// 本地为防止 blend 纹理泄漏而补强).
@@ -10,27 +10,27 @@ namespace Live2DCSharpSDK.OpenGL;
 internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
 {
     /// <summary>
-    /// モデル描画直前の頂点バッファ
+    /// 模型绘制前的顶点缓冲
     /// </summary>
     internal int LastArrayBufferBinding;
     /// <summary>
-    /// モデル描画直前のElementバッファ
+    /// 模型绘制前的 Element 缓冲
     /// </summary>
     internal int LastElementArrayBufferBinding;
     /// <summary>
-    /// モデル描画直前のシェーダプログラムバッファ
+    /// 模型绘制前的 Shader 程序缓冲
     /// </summary>
     internal int LastProgram;
     /// <summary>
-    /// モデル描画直前のアクティブなテクスチャ
+    /// 模型绘制前的活动纹理
     /// </summary>
     internal int LastActiveTexture;
     /// <summary>
-    /// モデル描画直前のテクスチャユニット0
+    /// 模型绘制前的纹理单元 0
     /// </summary>
     internal int LastTexture0Binding2D;
     /// <summary>
-    /// モデル描画直前のテクスチャユニット1
+    /// 模型绘制前的纹理单元 1
     /// </summary>
     internal int LastTexture1Binding2D;
     /// <summary>
@@ -38,44 +38,44 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     /// </summary>
     internal int LastTexture2Binding2D;
     /// <summary>
-    /// モデル描画直前のGL_VERTEX_ATTRIB_ARRAY_ENABLEDパラメータ
+    /// 模型绘制前的 GL_VERTEX_ATTRIB_ARRAY_ENABLED 参数
     /// </summary>
     internal int[] LastVertexAttribArrayEnabled = new int[4];
     /// <summary>
-    /// モデル描画直前のGL_SCISSOR_TESTパラメータ
+    /// 模型绘制前的 GL_SCISSOR_TEST 参数
     /// </summary>
     internal bool LastScissorTest;
     /// <summary>
-    /// モデル描画直前のGL_BLENDパラメータ
+    /// 模型绘制前的 GL_BLEND 参数
     /// </summary>
     internal bool LastBlend;
     /// <summary>
-    /// モデル描画直前のGL_STENCIL_TESTパラメータ
+    /// 模型绘制前的 GL_STENCIL_TEST 参数
     /// </summary>
     internal bool LastStencilTest;
     /// <summary>
-    /// モデル描画直前のGL_DEPTH_TESTパラメータ
+    /// 模型绘制前的 GL_DEPTH_TEST 参数
     /// </summary>
     internal bool LastDepthTest;
     /// <summary>
-    /// モデル描画直前のGL_CULL_FACEパラメータ
+    /// 模型绘制前的 GL_CULL_FACE 参数
     /// </summary>
     internal bool LastCullFace;
     /// <summary>
-    /// モデル描画直前のGL_FRONT_FACEパラメータ
+    /// 模型绘制前的 GL_FRONT_FACE 参数
     /// </summary>
     internal int LastFrontFace;
     /// <summary>
-    /// モデル描画直前のGL_COLOR_WRITEMASKパラメータ
+    /// 模型绘制前的 GL_COLOR_WRITEMASK 参数
     /// </summary>
     internal bool[] LastColorMask = new bool[4];
     /// <summary>
-    /// モデル描画直前のカラーブレンディングパラメータ
+    /// 模型绘制前的颜色混合参数
     /// </summary>
     internal int[] LastBlending = new int[4];
 
     /// <summary>
-    /// OpenGLES2のステートを保持する
+    /// 保存 OpenGLES2 的状态
     /// </summary>
     internal void Save()
     {
@@ -85,13 +85,13 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
         gl.GetIntegerv(gl.GL_CURRENT_PROGRAM, out LastProgram);
 
         gl.GetIntegerv(gl.GL_ACTIVE_TEXTURE, out LastActiveTexture);
-        gl.ActiveTexture(gl.GL_TEXTURE2); //テクスチャユニット2をアクティブに（B15）
+        gl.ActiveTexture(gl.GL_TEXTURE2); // 激活纹理单元 2 (B15)
         gl.GetIntegerv(gl.GL_TEXTURE_BINDING_2D, out LastTexture2Binding2D);
 
-        gl.ActiveTexture(gl.GL_TEXTURE1); //テクスチャユニット1をアクティブに（以後の設定対象とする）
+        gl.ActiveTexture(gl.GL_TEXTURE1); // 激活纹理单元 1 (作为后续设置的对象)
         gl.GetIntegerv(gl.GL_TEXTURE_BINDING_2D, out LastTexture1Binding2D);
 
-        gl.ActiveTexture(gl.GL_TEXTURE0); //テクスチャユニット0をアクティブに（以後の設定対象とする）
+        gl.ActiveTexture(gl.GL_TEXTURE0); // 激活纹理单元 0 (作为后续设置的对象)
         gl.GetIntegerv(gl.GL_TEXTURE_BINDING_2D, out LastTexture0Binding2D);
 
         gl.GetVertexAttribiv(0, gl.GL_VERTEX_ATTRIB_ARRAY_ENABLED, out LastVertexAttribArrayEnabled[0]);
@@ -117,7 +117,7 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     }
 
     /// <summary>
-    /// 保持したOpenGLES2のステートを復帰させる
+    /// 恢复已保存的 OpenGLES2 状态
     /// </summary>
     internal void Restore()
     {
@@ -138,16 +138,16 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
 
         gl.ColorMask(LastColorMask[0], LastColorMask[1], LastColorMask[2], LastColorMask[3]);
 
-        gl.BindBuffer(gl.GL_ARRAY_BUFFER, LastArrayBufferBinding); //前にバッファがバインドされていたら破棄する必要がある
+        gl.BindBuffer(gl.GL_ARRAY_BUFFER, LastArrayBufferBinding); // 之前若有缓冲被绑定, 则需要丢弃
         gl.BindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, LastElementArrayBufferBinding);
 
-        gl.ActiveTexture(gl.GL_TEXTURE2); //テクスチャユニット2を復元（B15）
+        gl.ActiveTexture(gl.GL_TEXTURE2); // 恢复纹理单元 2 (B15)
         gl.BindTexture(gl.GL_TEXTURE_2D, LastTexture2Binding2D);
 
-        gl.ActiveTexture(gl.GL_TEXTURE1); //テクスチャユニット1を復元
+        gl.ActiveTexture(gl.GL_TEXTURE1); // 恢复纹理单元 1
         gl.BindTexture(gl.GL_TEXTURE_2D, LastTexture1Binding2D);
 
-        gl.ActiveTexture(gl.GL_TEXTURE0); //テクスチャユニット0を復元
+        gl.ActiveTexture(gl.GL_TEXTURE0); // 恢复纹理单元 0
         gl.BindTexture(gl.GL_TEXTURE_2D, LastTexture0Binding2D);
 
         gl.ActiveTexture(LastActiveTexture);
@@ -157,10 +157,10 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     }
 
     /// <summary>
-    /// OpenGLES2の機能の有効・無効をセットする
+    /// 设置 OpenGLES2 功能的启用/禁用
     /// </summary>
-    /// <param name="index">有効・無効にする機能</param>
-    /// <param name="enabled">trueなら有効にする</param>
+    /// <param name="index">要启用/禁用的功能</param>
+    /// <param name="enabled">为 true 时启用</param>
     internal void SetGlEnable(int index, bool enabled)
     {
         if (enabled == true) gl.Enable(index);
@@ -168,10 +168,10 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     }
 
     /// <summary>
-    /// OpenGLES2のVertex Attribute Array機能の有効・無効をセットする
+    /// 设置 OpenGLES2 的 Vertex Attribute Array 功能的启用/禁用
     /// </summary>
-    /// <param name="index">有効・無効にする機能</param>
-    /// <param name="enabled">trueなら有効にする</param>
+    /// <param name="index">要启用/禁用的功能</param>
+    /// <param name="enabled">为 true 时启用</param>
     internal void SetGlEnableVertexAttribArray(int index, bool enabled)
     {
         if (enabled) gl.EnableVertexAttribArray(index);

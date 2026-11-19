@@ -8,8 +8,8 @@ using Live2DCSharpSDK.Framework.Type;
 namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
-/// クリッピングマスクの処理を実行するクラス
-/// （官方 OpenGL/CubismRenderer_OpenGLES2.hpp:62-76 / .cpp:35-194）。
+/// 执行 Clipping Mask 处理的类
+/// (官方 OpenGL/CubismRenderer_OpenGLES2.hpp:62-76 / .cpp:35-194). 
 /// Drawable / Offscreen 的区分由 manager 的 Type 属性完成.
 /// </summary>
 public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManager
@@ -24,28 +24,28 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
     }
 
     /// <summary>
-    /// クリッピングコンテキストを作成する。モデル描画時に実行する。
+    /// 创建 Clipping 上下文. 在模型绘制时执行. 
     /// </summary>
-    /// <param name="model">モデルのインスタンス</param>
-    /// <param name="renderer">レンダラのインスタンス</param>
-    /// <param name="lastFBO">フレームバッファ</param>
-    /// <param name="lastViewport">ビューポート</param>
+    /// <param name="model">模型实例</param>
+    /// <param name="renderer">渲染器实例</param>
+    /// <param name="lastFBO">帧缓冲</param>
+    /// <param name="lastViewport">视口</param>
     internal unsafe void SetupClippingContext(CubismModel model, CubismRenderer_OpenGLES2 renderer, int lastFBO, int[] lastViewport)
     {
-        // 全てのクリッピングを用意する
-        // 同じクリップ（複数の場合はまとめて１つのクリップ）を使う場合は１度だけ設定する
+        // 准备所有的 Clipping
+        // 使用相同 Clip (多个时合并为一个 Clip) 时只设置一次
         int usingClipCount = 0;
         for (int clipIndex = 0; clipIndex < ClippingContextListForMask.Count; clipIndex++)
         {
-            // １つのクリッピングマスクに関して
+            // 针对一个 Clipping Mask
             var cc = ClippingContextListForMask[clipIndex];
 
-            // このクリップを利用する描画オブジェクト群全体を囲む矩形を計算
+            // 计算包围使用该 Clip 的全部绘制对象的矩形
             CalcClippedTotalBounds(model, cc, Type);
 
             if (cc.IsUsing)
             {
-                usingClipCount++; //使用中としてカウント
+                usingClipCount++; // 计数为使用中
             }
         }
 
@@ -55,9 +55,9 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
         }
 
         // 遮罩用渲染目标创建失败时, 不再向该缓冲区绘制任何内容.
-        //      RenderTexture == 0 のまま BeginDraw / PreDraw / Clear を実行すると BeginDraw が無視され、
-        //      直前にバインドされている FBO（画面や親 FBO）に対して Clear とマスク描画が行われてしまう。
-        //      まず RT が有効な最初のバッファを初期バッファとして選ぶ（元実装のバッファ 0 固定の代替）。
+        //      RenderTexture == 0 时若执行 BeginDraw / PreDraw / Clear, BeginDraw 会被忽略, 
+        //      从而对当前绑定的 FBO (画面或父 FBO) 执行 Clear 与 Mask 绘制. 
+        //      因此先选择 RT 有效的第一个缓冲作为初始缓冲 (替代原实现中固定使用缓冲 0 的做法). 
         int initialBufferIndex = -1;
         for (int clipIndex = 0; clipIndex < ClippingContextListForMask.Count; clipIndex++)
         {
@@ -72,29 +72,29 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
 
         if (initialBufferIndex < 0)
         {
-            // 使用できるマスク用 RT が 1 枚も無い（作成失敗）: マスク生成自体をスキップする
+            // 没有任何可用的 Mask 用 RT (创建失败): 直接跳过 Mask 生成本身
             return;
         }
 
-        // マスク作成処理
-        // 生成したRenderTargetと同じサイズでビューポートを設定
+        // Mask 创建处理
+        // 按与生成的 RenderTarget 相同的尺寸设置视口
         gl.Viewport(0, 0, (int)ClippingMaskBufferSize.X, (int)ClippingMaskBufferSize.Y);
 
-        // 後の計算のためにインデックスの最初をセット
+        // 为后续计算设置索引的开头
         CubismRenderTarget_OpenGLES2 currentMaskBuffer = Type == CsmEnum.DrawableObjectType.Offscreen
             ? renderer.GetOffscreenMaskBuffer(initialBufferIndex)
             : renderer.GetDrawableMaskBuffer(initialBufferIndex);
         CurrentMaskBuffer = currentMaskBuffer;
 
-        // ----- マスク描画処理 -----
+        // ----- Mask 绘制处理 -----
         currentMaskBuffer.BeginDraw(lastFBO);
 
-        renderer.PreDraw(); // バッファをクリアする
+        renderer.PreDraw(); // 清除缓冲
 
-        // 各マスクのレイアウトを決定していく
+        // 逐个决定各 Mask 的布局
         SetupLayoutBounds(usingClipCount);
 
-        // サイズがレンダーテクスチャの枚数と合わない場合は合わせる
+        // 尺寸与渲染纹理张数不一致时使其一致
         if (ClearedMaskBufferFlags.Count != RenderTextureCount)
         {
             ClearedMaskBufferFlags.Clear();
@@ -106,18 +106,18 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
         }
         else
         {
-            // マスクのクリアフラグを毎フレーム開始時に初期化
+            // 每帧开始时初始化 Mask 的清除标志
             for (int i = 0; i < RenderTextureCount; ++i)
             {
                 ClearedMaskBufferFlags[i] = false;
             }
         }
 
-        // 実際にマスクを生成する
-        // 全てのマスクをどの様にレイアウトして描くかを決定し、ClipContext , ClippedDrawContext に記憶する
+        // 实际生成 Mask
+        // 决定如何布局并绘制所有 Mask, 并记录到 ClipContext, ClippedDrawContext 中
         for (int clipIndex = 0; clipIndex < ClippingContextListForMask.Count; clipIndex++)
         {
-            // --- 実際に１つのマスクを描く ---
+            // --- 实际绘制一个 Mask ---
             var clipContext = ClippingContextListForMask[clipIndex];
 
             // 该遮罩用渲染目标未创建成功时, 不执行 Clear / Viewport / 遮罩绘制.
@@ -126,39 +126,39 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
                 continue;
             }
 
-            RectF allClippedDrawRect = clipContext.AllClippedDrawRect; //このマスクを使う、全ての描画オブジェクトの論理座標上の囲み矩形
-            RectF layoutBoundsOnTex01 = clipContext.LayoutBounds; //この中にマスクを収める
+            RectF allClippedDrawRect = clipContext.AllClippedDrawRect; // 使用该 Mask 的全部绘制对象在逻辑坐标上的包围矩形
+            RectF layoutBoundsOnTex01 = clipContext.LayoutBounds; // 将 Mask 收于其中
             float MARGIN = 0.05f;
 
-            // clipContextに設定したレンダーターゲットをインデックスで取得
+            // 按索引取得 clipContext 中设置的渲染目标
             CubismRenderTarget_OpenGLES2 maskBuffer = Type == CsmEnum.DrawableObjectType.Offscreen
                 ? renderer.GetOffscreenMaskBuffer(clipContext.BufferIndex)
                 : renderer.GetDrawableMaskBuffer(clipContext.BufferIndex);
 
-            // 現在のレンダーターゲットがclipContextのものと異なる場合
+            // 当前渲染目标与 clipContext 的不一致时
             if (!ReferenceEquals(currentMaskBuffer, maskBuffer))
             {
                 currentMaskBuffer.EndDraw();
                 currentMaskBuffer = maskBuffer;
                 CurrentMaskBuffer = currentMaskBuffer;
 
-                // マスク用RenderTextureをactiveにセット
+                // 将用于 Mask 的 RenderTexture 设为 active
                 currentMaskBuffer.BeginDraw(lastFBO);
 
-                // バッファをクリアする。
+                // 清除缓冲. 
                 renderer.PreDraw();
             }
 
-            // モデル座標上の矩形を、適宜マージンを付けて使う
+            // 在模型坐标上的矩形上适当添加边距后使用
             TmpBoundsOnModel.SetRect(allClippedDrawRect);
             TmpBoundsOnModel.Expand(allClippedDrawRect.Width * MARGIN, allClippedDrawRect.Height * MARGIN);
-            //########## 本来は割り当てられた領域の全体を使わず必要最低限のサイズがよい
-            // シェーダ用の計算式を求める。回転を考慮しない場合は以下のとおり
+            //########## 本来应使用必要的最小尺寸, 而不是分配区域的全部
+            // 求 Shader 用的计算公式. 不考虑旋转时如下
             // movePeriod' = movePeriod * scaleX + offX     [[ movePeriod' = (movePeriod - tmpBoundsOnModel.movePeriod)*scale + layoutBoundsOnTex01.movePeriod ]]
             float scaleX = layoutBoundsOnTex01.Width / TmpBoundsOnModel.Width;
             float scaleY = layoutBoundsOnTex01.Height / TmpBoundsOnModel.Height;
 
-            // マスク生成時に使う行列を求める
+            // 求生成 Mask 时使用的矩阵
             CreateMatrixForMask(false, layoutBoundsOnTex01, scaleX, scaleY);
 
             clipContext.MatrixForMask.SetMatrix(TmpMatrixForMask.Tr);
@@ -166,18 +166,18 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
 
             if (Type == CsmEnum.DrawableObjectType.Offscreen)
             {
-                // clipContext * mvp^-1（公式 .cpp:151-156）
+                // clipContext * mvp^-1 (官方 .cpp:151-156)
                 CubismMatrix44 invertMvp = CloneInvertMvp(renderer.GetMvpMatrix());
                 clipContext.MatrixForDraw.MultiplyByMatrix(invertMvp);
             }
 
-            // 実際の描画を行う
+            // 执行实际绘制
             int clipDrawCount = clipContext.ClippingIdCount;
             for (int i = 0; i < clipDrawCount; i++)
             {
                 int clipDrawIndex = clipContext.ClippingIdList[i];
 
-                // 頂点情報が更新されておらず、信頼性がない場合は描画をパスする
+                // 顶点信息未更新, 不可靠时跳过绘制
                 if (!model.GetDrawableDynamicFlagVertexPositionsDidChange(clipDrawIndex))
                 {
                     continue;
@@ -185,33 +185,33 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
 
                 renderer.IsCulling = model.GetDrawableCulling(clipDrawIndex) != 0;
 
-                // マスクがクリアされていないなら処理する
+                // Mask 尚未清除时进行处理
                 if (!ClearedMaskBufferFlags[clipContext.BufferIndex])
                 {
-                    // マスクをクリアする
-                    // 1が無効（描かれない）領域、0が有効（描かれる）領域。（シェーダーCd*Csで0に近い値をかけてマスクを作る。1をかけると何も起こらない）
+                    // 清除 Mask
+                    // 1 为无效 (不被绘制) 区域, 0 为有效 (被绘制) 区域. (用 Shader 的 Cd*Cs 乘以接近 0 的值生成 Mask, 乘以 1 则什么都不会发生)
                     gl.ClearColor(1.0f, 1.0f, 1.0f, 1.0f);
                     gl.Clear(gl.GL_COLOR_BUFFER_BIT);
                     ClearedMaskBufferFlags[clipContext.BufferIndex] = true;
                 }
 
-                // 今回専用の変換を適用して描く
-                // チャンネルも切り替える必要がある(A,R,G,B)
+                // 应用本次专用的变换后绘制
+                // 还需要切换通道(A,R,G,B)
                 renderer.ClippingContextBufferForMask = clipContext;
 
                 renderer.DrawMeshOpenGL(model, clipDrawIndex);
             }
         }
 
-        // --- 後処理 ---
+        // --- 后处理 ---
         currentMaskBuffer.EndDraw();
         renderer.ClippingContextBufferForMask = null;
         gl.Viewport(lastViewport[0], lastViewport[1], lastViewport[2], lastViewport[3]);
     }
 
     /// <summary>
-    /// MVP 行列の逆行列を取得する（Framework の InvertMatrix44 と同じ実装。
-    /// SetupMatrixForHighPrecision と異なり、ここではレンダラ行列を直接反転する必要があるため複製）。
+    /// 获取 MVP 矩阵的逆矩阵 (与 Framework 的 InvertMatrix44 实现相同. 
+    /// 与 SetupMatrixForHighPrecision 不同, 此处需要直接反转渲染器矩阵, 因此复制一份). 
     /// </summary>
     private static CubismMatrix44 CloneInvertMvp(CubismMatrix44 src)
     {

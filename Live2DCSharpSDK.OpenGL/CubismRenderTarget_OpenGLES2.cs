@@ -135,7 +135,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     }
 
     /// <summary>
-    /// 描画終了
+    /// 结束绘制
     /// </summary>
     public void EndDraw()
     {
@@ -187,7 +187,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// </remarks>
     public unsafe bool CreateRenderTarget(int displayBufferWidth, int displayBufferHeight, int colorBuffer = 0)
     {
-        // 一旦削除
+        // 先删除
         DestroyRenderTarget();
 
         // 尺寸小于等于 0 时 glTexImage2D 会返回 GL_INVALID_VALUE,

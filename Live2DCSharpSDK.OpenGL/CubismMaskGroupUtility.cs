@@ -4,7 +4,7 @@ namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
 /// Clipping 掩码组的计数工具. 
-/// 官方 CubismClippingManager::FindSameClip（Framework/Rendering CubismClippingManager.tpp:144-173）
+/// 官方 CubismClippingManager::FindSameClip(Framework/Rendering CubismClippingManager.tpp:144-173)
 /// 采用与之相同的判定, 对 Core 的 drawable mask 数组去重. 
 /// 供 LAppDelegateOpenGL.CreateRenderer 决定 maskBufferCount 使用
 /// (为避免判定逻辑在两处重复的公共工具). 
