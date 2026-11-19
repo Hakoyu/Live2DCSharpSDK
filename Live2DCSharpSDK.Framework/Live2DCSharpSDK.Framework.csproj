@@ -13,4 +13,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>embedded</DebugType>
   </PropertyGroup>
+
+  <!--
+    Cubism Core 原生库（06.00.0001，对应 Cubism 5 SDK for Native R5）。
+    源文件保存在 runtimes/win-x64/native/ 以便将来支持其它平台；
+    同时 Link 到输出根目录，让 LibraryImport("Live2DCubismCore") 在任意宿主
+    （App / OpenGL / OpenGL.Avalonia / OpenGL.OpenTK / OpenGL.WPF / Vulkan / Vulkan.Silk）
+    的输出目录下都能直接解析。
+  -->
+  <ItemGroup>
+    <None Include="runtimes\win-x64\native\Live2DCubismCore.dll" Link="Live2DCubismCore.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

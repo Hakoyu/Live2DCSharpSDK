@@ -3,3 +3,6 @@ obj/
 bin/
 /.vs
 Live2DCubismCore.dll
+
+# 例外：Framework 原生依赖入库（P0 / D-01）；上面的通配规则仍拦截 bin/obj 下的拷贝
+!Live2DCSharpSDK.Framework/runtimes/win-x64/native/Live2DCubismCore.dll
