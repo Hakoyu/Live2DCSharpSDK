@@ -16,6 +16,11 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
 {
     public override RenderType RenderType => RenderType.OpenGL;
 
+    /// <summary>
+    /// 复用的 MVP 逆矩阵缓冲 (渲染器为单线程使用, 避免每次裁剪分配).
+    /// </summary>
+    private readonly CubismMatrix44 _invertMvpBuffer = new();
+
     public override unsafe CubismClippingContext CreateClippingContext(CubismClippingManager manager, CubismModel model,
         int* clippingDrawableIndices, int clipCount)
     {
@@ -167,7 +172,7 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
             if (Type == CsmEnum.DrawableObjectType.Offscreen)
             {
                 // clipContext * mvp^-1 (官方 .cpp:151-156)
-                CubismMatrix44 invertMvp = CloneInvertMvp(renderer.GetMvpMatrix());
+                CubismMatrix44 invertMvp = CalcInvertMvp(renderer.GetMvpMatrix());
                 clipContext.MatrixForDraw.MultiplyByMatrix(invertMvp);
             }
 
@@ -210,10 +215,12 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
     }
 
     /// <summary>
-    /// 获取 MVP 矩阵的逆矩阵 (与 Framework 的 InvertMatrix44 实现相同. 
-    /// 与 SetupMatrixForHighPrecision 不同, 此处需要直接反转渲染器矩阵, 因此复制一份). 
+    /// 求 MVP 矩阵的逆矩阵并写入复用的成员缓冲 (与 Framework 的 InvertMatrix44 实现相同).
+    /// 与 SetupMatrixForHighPrecision 不同, 此处需要直接反转渲染器矩阵, 因此复制一份.
     /// </summary>
-    private static CubismMatrix44 CloneInvertMvp(CubismMatrix44 src)
+    /// <param name="src">要反转的矩阵</param>
+    /// <returns>复用的逆矩阵缓冲 (调用方只读取, 不得持有)</returns>
+    private CubismMatrix44 CalcInvertMvp(CubismMatrix44 src)
     {
         float[] tr = src.Tr;
         float r00 = tr[0], r10 = tr[1], r20 = tr[2];
@@ -225,7 +232,7 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
                     r01 * (r10 * r22 - r12 * r20) +
                     r02 * (r10 * r21 - r11 * r20);
 
-        CubismMatrix44 dst = new();
+        CubismMatrix44 dst = _invertMvpBuffer;
         if (MathF.Abs(det) < CubismMath.Epsilon)
         {
             dst.LoadIdentity();

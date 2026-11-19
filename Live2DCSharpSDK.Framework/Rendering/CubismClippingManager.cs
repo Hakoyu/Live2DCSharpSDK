@@ -83,6 +83,10 @@ public abstract class CubismClippingManager
     /// 遮罩配置计算用的矩形
     /// </summary>
     protected RectF TmpBoundsOnModel = new();
+    /// <summary>
+    /// 复用的 MVP 逆矩阵缓冲 (渲染为单线程路径, 避免每帧分配)
+    /// </summary>
+    private readonly CubismMatrix44 _invertMvpBuffer = new();
 
     public CubismClippingManager()
     {
@@ -343,17 +347,37 @@ public abstract class CubismClippingManager
             if (drawableObjectType == CsmEnum.DrawableObjectType.Offscreen)
             {
                 // clipContext * mvp^-1 (官方 .tpp:265-270)
-                CubismMatrix44 invertMvp = mvp != null ? InvertMatrix44(mvp) : new CubismMatrix44();
+                CubismMatrix44 invertMvp = CalcInvertMvp(mvp);
                 clipContext.MatrixForDraw.MultiplyByMatrix(invertMvp);
             }
         }
     }
 
     /// <summary>
+    /// 求 MVP 矩阵的逆矩阵并写入复用的成员缓冲.
+    /// mvp 为 null 时返回单位矩阵.
+    /// </summary>
+    /// <param name="mvp">要反转的 MVP 矩阵 (可为 null)</param>
+    /// <returns>复用的逆矩阵缓冲 (调用方只读取, 不得持有)</returns>
+    private CubismMatrix44 CalcInvertMvp(CubismMatrix44? mvp)
+    {
+        if (mvp is null)
+        {
+            _invertMvpBuffer.LoadIdentity();
+            return _invertMvpBuffer;
+        }
+
+        InvertMatrix44(mvp, _invertMvpBuffer);
+        return _invertMvpBuffer;
+    }
+
+    /// <summary>
     /// 求 4x4 矩阵的逆矩阵 (官方 CubismMatrix44::GetInvert 的 1:1 移植.
     /// 由于本地 CubismMatrix44 没有 GetInvert, 因此放在这里).
     /// </summary>
-    private static CubismMatrix44 InvertMatrix44(CubismMatrix44 src)
+    /// <param name="src">要反转的矩阵</param>
+    /// <param name="dst">反转结果的写入目标</param>
+    private static void InvertMatrix44(CubismMatrix44 src, CubismMatrix44 dst)
     {
         float[] tr = src.Tr;
         float r00 = tr[0];
@@ -374,12 +398,10 @@ public abstract class CubismClippingManager
                     r01 * (r10 * r22 - r12 * r20) +
                     r02 * (r10 * r21 - r11 * r20);
 
-        CubismMatrix44 dst = new();
-
         if (MathF.Abs(det) < CubismMath.Epsilon)
         {
             dst.LoadIdentity();
-            return dst;
+            return;
         }
 
         float invDet = 1.0f / det;
@@ -412,8 +434,6 @@ public abstract class CubismClippingManager
         dstTr[13] = -(inv10 * tx + inv11 * ty + inv12 * tz);
         dstTr[14] = -(inv20 * tx + inv21 * ty + inv22 * tz);
         dstTr[15] = 1.0f;
-
-        return dst;
     }
 
     /// <summary>

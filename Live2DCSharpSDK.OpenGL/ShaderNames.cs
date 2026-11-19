@@ -4,33 +4,49 @@ using Live2DCSharpSDK.Framework.Rendering;
 namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
-/// OpenGL 用シェーダ名（官方 CubismShader_OpenGLES2.cpp:48-117 の enum ShaderNames を展開したもの）。
-/// 官方はマクロで 494 項（Copy + SetupMask + Normal/Add/Mult 各6 + 5.3以降のブレンド組合せ）を生成するが、
+/// OpenGL 用的 Shader 名称 (官方 CubismShader_OpenGLES2.cpp:48-117 的 enum ShaderNames 展开). 
+/// 官方用宏生成 494 项 (Copy + SetupMask + Normal/Add/Mult 各 6 项 + 5.3 以后的混合组合), 
 /// C# 没有宏, 因此用常量加计算的方式表达相同排列.
-/// 配列の添字・offset 加算（マスク/乗算済アルファ変種）で使うため、並び順は官方と完全一致させる。
+/// 由于要用数组下标与 offset 加法 (掩码/预乘 Alpha 变种) 访问, 排列顺序与官方完全一致. 
 /// </summary>
 internal static class ShaderNames
 {
-    /// <summary>コピー用シェーダ</summary>
+    /// <summary>
+    /// 复制用 Shader
+    /// </summary>
     public const int Copy = 0;
-    /// <summary>マスク生成用シェーダ</summary>
+    /// <summary>
+    /// 掩码生成用 Shader
+    /// </summary>
     public const int SetupMask = 1;
 
-    // ----- Normal（5.2以前の描画方法）-----
-    /// <summary>通常（マスク無）</summary>
+    // ----- Normal (5.2 以前的绘制方式) -----
+    /// <summary>
+    /// 普通 (无 Mask)
+    /// </summary>
     public const int Normal = 2;
-    /// <summary>通常（クリッピング）</summary>
+    /// <summary>
+    /// 普通 (Clipping)
+    /// </summary>
     public const int NormalMasked = 3;
-    /// <summary>通常（クリッピング・反転）</summary>
+    /// <summary>
+    /// 普通 (Clipping, 反相)
+    /// </summary>
     public const int NormalMaskedInverted = 4;
-    /// <summary>通常（乗算済アルファ対応）</summary>
+    /// <summary>
+    /// 普通 (预乘 Alpha 对应)
+    /// </summary>
     public const int NormalPremultipliedAlpha = 5;
-    /// <summary>通常（クリッピング、乗算済アルファ対応）</summary>
+    /// <summary>
+    /// 普通 (Clipping, 预乘 Alpha 对应)
+    /// </summary>
     public const int NormalMaskedPremultipliedAlpha = 6;
-    /// <summary>通常（クリッピング・反転、乗算済アルファ対応）</summary>
+    /// <summary>
+    /// 普通 (Clipping, 反相, 预乘 Alpha 对应)
+    /// </summary>
     public const int NormalMaskedInvertedPremultipliedAlpha = 7;
 
-    // ----- Add（シェーダは Normal と共用）-----
+    // ----- Add (Shader 与 Normal 共用) -----
     public const int Add = 8;
     public const int AddMasked = 9;
     public const int AddMaskedInverted = 10;
@@ -38,7 +54,7 @@ internal static class ShaderNames
     public const int AddMaskedPremultipliedAlpha = 12;
     public const int AddMaskedInvertedPremultipliedAlpha = 13;
 
-    // ----- Mult（シェーダは Normal と共用）-----
+    // ----- Mult (Shader 与 Normal 共用) -----
     public const int Mult = 14;
     public const int MultMasked = 15;
     public const int MultMaskedInverted = 16;
@@ -46,7 +62,7 @@ internal static class ShaderNames
     public const int MultMaskedPremultipliedAlpha = 18;
     public const int MultMaskedInvertedPremultipliedAlpha = 19;
 
-    // ----- Normal + Over 以外のアルファブレンド（5.3以降）-----
+    // ----- Normal + Over 以外的 Alpha 混合 (5.3 以后) -----
     public const int NormalAtop = 20;
     public const int NormalAtopMasked = 21;
     public const int NormalAtopMaskedInverted = 22;
@@ -76,25 +92,31 @@ internal static class ShaderNames
     public const int NormalDisjointOverMaskedInvertedPremultipliedAlpha = 43;
 
     /// <summary>
-    /// ブレンドモード組合せ（Add/AddGlow/.../Color × Over/Atop/Out/ConjointOver/DisjointOver）の先頭。
-    /// 各色は 5 アルファ × 6 変種 = 30 項。
+    /// 混合模式组合 (Add/AddGlow/.../Color × Over/Atop/Out/ConjointOver/DisjointOver) 的开头. 
+    /// 每种颜色为 5 种 Alpha × 6 变种 = 30 项. 
     /// </summary>
     public const int BlendOverlapBegin = 44;
 
-    /// <summary>マスク/乗算済アルファ変種の数（官方 CSM_CREATE_SHADER_NAMES の 6 項）</summary>
+    /// <summary>
+    /// 掩码/预乘 Alpha 变种的数量 (官方 CSM_CREATE_SHADER_NAMES 的 6 项)
+    /// </summary>
     public const int VariantCount = 6;
-    /// <summary>アルファブレンド種別の数（公式 AlphaBlendMode_Count）</summary>
+    /// <summary>
+    /// Alpha 混合种类的数量 (官方 AlphaBlendMode_Count)
+    /// </summary>
     public const int AlphaBlendModeCount = 5;
 
-    /// <summary>シェーダ総数（官方 ShaderNames_ShaderCount = 494）</summary>
+    /// <summary>
+    /// Shader 总数 (官方 ShaderNames_ShaderCount = 494)
+    /// </summary>
     public const int ShaderCount = BlendOverlapBegin + 15 * AlphaBlendModeCount * VariantCount;
 
     /// <summary>
-    /// どのシェーダーを利用するかを取得する（官方 GetShaderNamesBegin）。
-    /// 返り値はそのブレンド組合せの「マスク無」変種の添字。マスク/PA 変種は +offset で引く。
+    /// 获取使用哪个 Shader (官方 GetShaderNamesBegin). 
+    /// 返回值为该混合组合的 "无 Mask" 变种下标. 掩码/PA 变种用 +offset 取得. 
     /// </summary>
-    /// <param name="blendMode">ブレンドモード</param>
-    /// <returns>使用するシェーダの値</returns>
+    /// <param name="blendMode">混合模式</param>
+    /// <returns>使用的 Shader 值</returns>
     public static int GetShaderNamesBegin(CsmBlendMode blendMode)
     {
         int colorBlendType = blendMode.GetColorBlendType();
@@ -102,7 +124,7 @@ internal static class ShaderNames
 
         if (colorBlendType == CsmEnum.CsmColorBlendType_Normal)
         {
-            // Normal Over のときは 5.2 以前の描画方法を利用する
+            // Normal Over 时使用 5.2 以前的绘制方式
             return alphaBlendType switch
             {
                 CsmEnum.CsmAlphaBlendType_Atop => NormalAtop,
@@ -115,17 +137,17 @@ internal static class ShaderNames
 
         if (colorBlendType == CsmEnum.CsmColorBlendType_AddCompatible)
         {
-            // AddCompatible は 5.2 以前の描画方法を利用する
+            // AddCompatible 使用 5.2 以前的绘制方式
             return Add;
         }
 
         if (colorBlendType == CsmEnum.CsmColorBlendType_MultiplyCompatible)
         {
-            // MultiplyCompatible は 5.2 以前の描画方法を利用する
+            // MultiplyCompatible 使用 5.2 以前的绘制方式
             return Mult;
         }
 
-        // 5.3 以降: Core の color 3..17 は shader 内部の ColorBlendMode 1..15 に対応する
+        // 5.3 以后: Core 的 color 3..17 对应 Shader 内部的 ColorBlendMode 1..15
         int colorIndex = colorBlendType - 2;
         return BlendOverlapBegin + (colorIndex - 1) * AlphaBlendModeCount * VariantCount + alphaBlendType * VariantCount;
     }

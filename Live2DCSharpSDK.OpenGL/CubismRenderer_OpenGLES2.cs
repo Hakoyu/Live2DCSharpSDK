@@ -131,6 +131,16 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     private int _quadIndexBuffer;
 
     /// <summary>
+    /// 复用的视口缓冲 (渲染器为单线程使用, 避免每帧分配).
+    /// </summary>
+    private readonly int[] _viewportBuffer = new int[4];
+
+    /// <summary>
+    /// 复用的高精度遮罩视口缓冲 (渲染器为单线程使用, 避免每次绘制分配).
+    /// </summary>
+    private readonly int[] _highPrecisionMaskViewportBuffer = new int[4];
+
+    /// <summary>
     /// 用于绘制目标合成的四边形 (位置 + UV 交错)
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -783,14 +793,13 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         // 初始化的回退方案(与官方的差异; 接入 SetRenderTargetSize 之后仍然无害).
         if (_modelRenderTargetWidth == 0 || _modelRenderTargetHeight == 0)
         {
-            int[] viewport = new int[4];
-            GL.GetIntegerv(GL.GL_VIEWPORT, viewport);
-            if (viewport[2] <= 0 || viewport[3] <= 0)
+            GL.GetIntegerv(GL.GL_VIEWPORT, _viewportBuffer);
+            if (_viewportBuffer[2] <= 0 || _viewportBuffer[3] <= 0)
             {
                 return;
             }
 
-            SetRenderTargetSize((uint)viewport[2], (uint)viewport[3]);
+            SetRenderTargetSize((uint)_viewportBuffer[2], (uint)_viewportBuffer[3]);
         }
 
         // Offscreen 缓冲尺寸不同时重建
@@ -851,9 +860,9 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     {
         BeforeDrawModelRenderTarget();
 
-        // 模型绘制前保存 FBO 与视口(使用局部变量而非 Profile).
+        // 模型绘制前保存 FBO 与视口(复用成员缓冲, 不经过 Profile).
         GL.GetIntegerv(GL.GL_FRAMEBUFFER_BINDING, out int lastFBO);
-        int[] lastViewport = new int[4];
+        int[] lastViewport = _viewportBuffer;
         GL.GetIntegerv(GL.GL_VIEWPORT, lastViewport);
 
         //------------ Drawable 用 Clipping Mask 缓冲预处理方式的情况 ------------
@@ -1021,7 +1030,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         if (clipContext != null && UseHighPrecisionMask
             && IsMaskBufferUsable(CsmEnum.DrawableObjectType.Drawable, clipContext.BufferIndex)) // 需要写入 Mask
         {
-            int[] preHighPrecisionMaskViewport = new int[4];
+            int[] preHighPrecisionMaskViewport = _highPrecisionMaskViewportBuffer;
             GL.GetIntegerv(GL.GL_VIEWPORT, preHighPrecisionMaskViewport);
 
             if (clipContext.IsUsing) // 本应写入
@@ -1256,7 +1265,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         if (clipContext != null && UseHighPrecisionMask
             && IsMaskBufferUsable(CsmEnum.DrawableObjectType.Offscreen, clipContext.BufferIndex)) // 需要写入 Mask
         {
-            int[] preHighPrecisionMaskViewport = new int[4];
+            int[] preHighPrecisionMaskViewport = _highPrecisionMaskViewportBuffer;
             GL.GetIntegerv(GL.GL_VIEWPORT, preHighPrecisionMaskViewport);
 
             if (clipContext.IsUsing) // 本应写入

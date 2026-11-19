@@ -1,21 +1,20 @@
-using Live2DCSharpSDK.Framework.Model;
+﻿using Live2DCSharpSDK.Framework.Model;
 
-namespace Live2DCSharpSDK.Vulkan;
+namespace Live2DCSharpSDK.Framework.Rendering;
 
 /// <summary>
-/// 裁剪遮罩组的计数工具. 
+/// Clipping 掩码组的计数工具.
 /// 采用与官方 CubismClippingManager::FindSameClip(Framework/Rendering CubismClippingManager.tpp:144-173)
 /// 相同的判定, 对 Core 的 drawable mask 数组去重.
-/// 由 LAppDelegateVulkan.CreateRenderer 用于决定 maskBufferCount
-/// (与 OpenGL 侧 CubismMaskGroupUtility 逻辑一致).
+/// 由各后端 (OpenGL / Vulkan) 的 LAppDelegate 共用, 用于决定 maskBufferCount.
 /// </summary>
-internal static class CubismMaskGroupUtility
+public static class CubismMaskGroupUtility
 {
     /// <summary>
-    /// 返回 drawable 的遮罩组数量(maskCount 小于等于 0 的 drawable 不计入).
+    /// 返回 drawable 的掩码组数 (maskCount 小于等于 0 的 drawable 不计入).
     /// </summary>
     /// <param name="model">模型实例</param>
-    /// <returns>唯一的遮罩组数量</returns>
+    /// <returns>唯一的掩码组数</returns>
     public static unsafe int CountDrawableMaskGroups(CubismModel model)
     {
         int drawableCount = model.GetDrawableCount();
@@ -43,7 +42,7 @@ internal static class CubismMaskGroupUtility
                     continue;
                 }
 
-                // 与 FindSameClip 相同的判定: 元素数量相同且全部 ID 一致即视为同一组
+                // 与 FindSameClip 相同的判定: 元素个数相同, 且全部 ID 都一致即视为同一
                 int sameCount = 0;
                 for (int j = 0; j < count; j++)
                 {

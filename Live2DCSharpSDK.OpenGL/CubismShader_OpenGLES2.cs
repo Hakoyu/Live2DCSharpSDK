@@ -7,12 +7,12 @@ using Live2DCSharpSDK.Framework.Type;
 namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
-/// OpenGLES2用のシェーダプログラムを生成・破棄するクラス
-/// （官方 OpenGL/CubismShader_OpenGLES2.hpp:54-340 / .cpp:48-1121）。
+/// 生成与销毁 OpenGLES2 用 Shader 程序的类
+/// (官方 OpenGL/CubismShader_OpenGLES2.hpp:54-340 / .cpp:48-1121). 
 ///
 /// GLSL 不像官方 R5 那样外置为文件, 而是作为 C# 字符串常量内置
 /// (不引入 csmLoadFileFunction 机制).
-/// 【与官方的差异】官方 R5 在 Initialize 时无条件生成 494 个 GL program
+/// [与官方的差异] 官方 R5 在 Initialize 时无条件生成 494 个 GL program
 /// (首帧耗时 3~10 秒), 本地改为首次使用时逐个生成的延迟生成
 /// (Lazy 与双检锁), 这一点与官方行为不同.
 /// </summary>
@@ -71,7 +71,7 @@ gl_FragColor = u_channelFlag * texture2D(s_texture0 , v_texCoord).a * isInside;
     public const string FragShaderSrcSetupMaskTegra =
         Tegra + FragShaderSrcSetupMask_Base;
 
-    // ===== バーテックスシェーダ =====
+    // ===== 顶点 Shader =====
     public const string VertShaderSrc_ES2 = GLES2 + VertShaderSrc_Base;
     public const string VertShaderSrc_Normal = Normal + VertShaderSrc_Base;
     private const string VertShaderSrc_Base =
@@ -103,7 +103,7 @@ v_texCoord = a_texCoord;
 v_texCoord.y = 1.0 - v_texCoord.y;
 }";
 
-    // ===== フラグメントシェーダ（通常/加算/乗算）=====
+    // ===== 片元 Shader (普通/相加/相乘) =====
     public const string FragShaderSrc_ES2 = GLES2C + FragShaderSrc_Base;
     public const string FragShaderSrc_Normal = Normal + FragShaderSrc_Base;
     private const string FragShaderSrc_Base =
@@ -460,9 +460,9 @@ vec4 colorDestination = ConvertPremultipliedToStraight(texture2D(s_blendTexture,
 gl_FragColor = AlphaBlend(ColorBlend(colorSource.rgb, colorDestination.rgb), colorSource, colorDestination);
 }";
 
-    // ===== R5 追加: カラーブレンド / アルファブレンドの共通スニペット =====
-    // 官方 .cpp:961-1004 は「#define CSM_COLOR_BLEND_MODE n」+ ColorBlendShaderPath の内容、
-    // 「#define CSM_ALPHA_BLEND_MODE n」+ AlphaBlendShaderPath の内容をフラグメントソース末尾に連結する。
+    // ===== R5 追加: 颜色混合 / Alpha 混合的公共片段 =====
+    // 官方 .cpp:961-1004 会将 "#define CSM_COLOR_BLEND_MODE n" + ColorBlendShaderPath 的内容, 
+    // 以及 "#define CSM_ALPHA_BLEND_MODE n" + AlphaBlendShaderPath 的内容连接到片元源码末尾. 
     // 本地也采用相同的拼接方式.
     private const string FragShaderSrcColorBlendSnippet =
         @"vec4 ConvertPremultipliedToStraight(vec4 source)
@@ -816,27 +816,39 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
     /// <summary>
     /// 遮罩种类(官方 CubismShader_OpenGLES2.hpp:128-136).
-    /// この enum の値がそのままシェーダ変種の offset（0..5）になる。
+    /// 该 enum 的值直接作为 Shader 变种的 offset (0..5). 
     /// </summary>
     private enum MaskType
     {
-        /// <summary>マスク無</summary>
+        /// <summary>
+        /// 无 Mask
+        /// </summary>
         None,
-        /// <summary>クリッピング</summary>
+        /// <summary>
+        /// Clipping
+        /// </summary>
         Masked,
-        /// <summary>クリッピング・反転</summary>
+        /// <summary>
+        /// Clipping, 反相
+        /// </summary>
         MaskedInverted,
-        /// <summary>乗算済アルファ対応</summary>
+        /// <summary>
+        /// 预乘 Alpha 对应
+        /// </summary>
         PremultipliedAlpha,
-        /// <summary>クリッピング、乗算済アルファ対応</summary>
+        /// <summary>
+        /// Clipping, 预乘 Alpha 对应
+        /// </summary>
         MaskedPremultipliedAlpha,
-        /// <summary>クリッピング・反転、乗算済アルファ対応</summary>
+        /// <summary>
+        /// Clipping, 反相, 预乘 Alpha 对应
+        /// </summary>
         MaskedInvertedPremultipliedAlpha,
     }
 
     /// <summary>
-    /// 公式の ColorBlendMode（官方 .hpp:138-158）。None=-1、0..15、Count=16。
-    /// ※ Core の csmColorBlendType_* とは番号が異なる（AddCompatible/MultiplyCompatible を持たない）。
+    /// 官方的 ColorBlendMode (官方 .hpp:138-158). None=-1, 0..15, Count=16. 
+    /// * 与 Core 的 csmColorBlendType_* 编号不同 (没有 AddCompatible/MultiplyCompatible). 
     /// </summary>
     private enum ColorBlendMode
     {
@@ -861,7 +873,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 公式の AlphaBlendMode（官方 .hpp:160-169）。None=-1、0..4、Count=5。
+    /// 官方的 AlphaBlendMode (官方 .hpp:160-169). None=-1, 0..4, Count=5. 
     /// </summary>
     private enum AlphaBlendMode
     {
@@ -875,19 +887,24 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// Tegra対応.拡張方式で描画
+    /// Tegra 对应. 以扩展方式绘制
     /// </summary>
     internal bool s_extMode;
 
     /// <summary>
-    /// 拡張方式のPA設定用の変数
+    /// 扩展方式的 PA 设置用变量
     /// </summary>
     internal bool s_extPAMode;
 
     /// <summary>
-    /// ロードしたシェーダプログラムを保持する変数
+    /// 保存已加载 Shader 程序的变量
     /// </summary>
     private readonly List<CubismShaderSet> _shaderSets = [];
+
+    /// <summary>
+    /// 单位矩阵 (坐标变换用. 初始化后只读, 避免每次离屏绘制都分配).
+    /// </summary>
+    private static readonly CubismMatrix44 s_identityMatrix = CreateIdentityMatrix();
 
     /// <summary>
     /// 各着色器的已生成标志(用于延迟生成).
@@ -900,9 +917,20 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     private readonly object _generationLock = new();
 
     /// <summary>
-    /// シェーダセット配列を確保する（官方 GenerateShaders の配列確保部分）。
-    /// 【与官方的差异】实际的 GL program 生成延迟到 GetShaderSet() 首次引用时.
-    /// 官方 R5 は Initialize 時に 494 個すべてを無条件生成する（CubismShader_OpenGLES2.cpp:324-542）。
+    /// 创建单位矩阵 (供 s_identityMatrix 初始化使用).
+    /// </summary>
+    /// <returns>已加载单位矩阵的实例</returns>
+    private static CubismMatrix44 CreateIdentityMatrix()
+    {
+        CubismMatrix44 matrix = new();
+        matrix.LoadIdentity();
+        return matrix;
+    }
+
+    /// <summary>
+    /// 确保 Shader 集合数组 (官方 GenerateShaders 的数组确保部分). 
+    /// [与官方的差异] 实际的 GL program 生成延迟到 GetShaderSet() 首次引用时. 
+    /// 官方 R5 在 Initialize 时无条件下生成全部 494 个 (CubismShader_OpenGLES2.cpp:324-542). 
     /// </summary>
     internal void EnsureGenerated()
     {
@@ -928,7 +956,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     /// <summary>
     /// 获取指定的着色器, 首次引用时才编译(双检锁).
     /// </summary>
-    /// <param name="index">ShaderNames の添字</param>
+    /// <param name="index">ShaderNames 的下标</param>
     internal CubismShaderSet GetShaderSet(int index)
     {
         EnsureGenerated();
@@ -950,8 +978,8 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 1 つのシェーダセットをコンパイルする。
-    /// 添字から「シェーダ種別・マスク変種・ブレンド組合せ」を逆算する（官方の生成ループと等価）。
+    /// 编译一个 Shader 集合. 
+    /// 由下标反算 "Shader 种类, 掩码变种, 混合组合" (与官方的生成循环等价). 
     /// </summary>
     private void CompileShaderSet(int index)
     {
@@ -978,7 +1006,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
             int variant = (index - 2) % ShaderNames.VariantCount;
             maskType = (MaskType)variant;
 
-            // 加算・乗算は通常と同じシェーダを利用する（官方 .cpp:400-414）
+            // 相加, 相乘与普通使用相同的 Shader (官方 .cpp:400-414)
             if (group is 1 or 2)
             {
                 int normalIndex = ShaderNames.Normal + variant;
@@ -990,7 +1018,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
             if (group <= 6)
             {
-                // 5.2 以前のシェーダ（Normal と Normal の Over 以外）
+                // 5.2 以前的 Shader (Normal 以及 Normal 的 Over 以外)
                 isBlendMode = group >= 3;
                 if (!isBlendMode)
                 {
@@ -1005,7 +1033,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
             }
             else
             {
-                // 5.3 以降のブレンド組合せ
+                // 5.3 以后的混合组合
                 isBlendMode = true;
                 int colorBlendMode = (group - 7) / ShaderNames.AlphaBlendModeCount + 1;
                 int alphaBlendMode = (group - 7) % ShaderNames.AlphaBlendModeCount;
@@ -1032,12 +1060,12 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
             }
         }
 
-        // 失敗しても再試行しない（官方も一度だけ生成する）
+        // 即使失败也不重试 (官方也只生成一次)
         _compiled[index] = true;
     }
 
     /// <summary>
-    /// シェーダセットをコピーする（加算・乗算が通常シェーダを共用するため）。
+    /// 复制 Shader 集合 (相加, 相乘共用普通 Shader 时使用). 
     /// </summary>
     private static void CopyShaderSet(CubismShaderSet dst, CubismShaderSet src)
     {
@@ -1056,7 +1084,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 変種番号からバーテックスシェーダソースを選ぶ（マスク有無のみで決まる）。
+    /// 由变种编号选择顶点 Shader 源码 (仅由是否有 Mask 决定). 
     /// </summary>
     private string VariantVertexSource(int variant)
     {
@@ -1070,7 +1098,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 変種番号からフラグメントシェーダソースを選ぶ（マスク/乗算済アルファ）。
+    /// 由变种编号选择片元 Shader 源码 (Mask/预乘 Alpha). 
     /// </summary>
     private string VariantFragmentSource(int variant)
     {
@@ -1112,7 +1140,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 変種番号からブレンド用バーテックスシェーダ本体を選ぶ（マスク有無）。
+    /// 由变种编号选择混合用顶点 Shader 主体 (是否有 Mask). 
     /// </summary>
     private static string VariantBlendVertexBase(int variant)
     {
@@ -1120,7 +1148,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 変種番号からブレンド用フラグメントシェーダ本体を選ぶ（マスク/乗算済アルファ）。
+    /// 由变种编号选择混合用片元 Shader 主体 (Mask/预乘 Alpha). 
     /// </summary>
     private static string VariantBlendFragmentBase(int variant)
     {
@@ -1136,8 +1164,8 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// ブレンド用フラグメントシェーダを組み立てる。
-    /// 官方 .cpp:961-1004 と同じく「#define 2 行 + ColorBlend/AlphaBlend スニペット連結」を行う。
+    /// 组装混合用片元 Shader. 
+    /// 与官方 .cpp:961-1004 相同, 执行 "#define 2 行 + ColorBlend/AlphaBlend 片段拼接". 
     /// </summary>
     private string ComposeBlendFragment(string baseBody, int colorBlendMode, int alphaBlendMode)
     {
@@ -1150,7 +1178,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// Copy シェーダのロケーションを設定する（官方 .cpp:466-469）。
+    /// 设置 Copy Shader 的 location (官方 .cpp:466-469). 
     /// </summary>
     private void SetShaderSetForCopy(CubismShaderSet shaderSet)
     {
@@ -1161,8 +1189,8 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// SetupMask シェーダのロケーションを設定する（官方 .cpp:471-477）。
-    /// SetupMask は SetShaderSet の 6 変種では扱わない（u_clipMatrix / u_channelFlag を必ず引く）。
+    /// 设置 SetupMask Shader 的 location (官方 .cpp:471-477). 
+    /// SetupMask 在 SetShaderSet 的 6 个变种中不处理 (必定取得 u_clipMatrix / u_channelFlag). 
     /// </summary>
     private void SetShaderSetForSetupMask(CubismShaderSet shaderSet)
     {
@@ -1175,7 +1203,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// CubismShaderSet にロケーションを設定する（官方 SetShaderSet .cpp:142-185）。
+    /// 为 CubismShaderSet 设置 location (官方 SetShaderSet .cpp:142-185). 
     /// 统一由 MaskType 在一处集中处理(消除内联 if 链的错配).
     /// </summary>
     private void SetShaderSet(CubismShaderSet shaderSets, MaskType maskType, bool isBlendMode)
@@ -1196,28 +1224,28 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         {
             case MaskType.None:
                 break;
-            case MaskType.Masked: // クリッピング
-            case MaskType.MaskedInverted: // クリッピング・反転
-            case MaskType.MaskedPremultipliedAlpha: // クリッピング、乘算済アルファ
-            case MaskType.MaskedInvertedPremultipliedAlpha: // クリッピング・反転、乘算済アルファ
+            case MaskType.Masked: // Clipping
+            case MaskType.MaskedInverted: // Clipping, 反相
+            case MaskType.MaskedPremultipliedAlpha: // Clipping, 预乘 Alpha
+            case MaskType.MaskedInvertedPremultipliedAlpha: // Clipping, 反相, 预乘 Alpha
                 shaderSets.SamplerTexture1Location = gl.GetUniformLocation(shaderSets.ShaderProgram, "s_texture1");
                 shaderSets.UniformClipMatrixLocation = gl.GetUniformLocation(shaderSets.ShaderProgram, "u_clipMatrix");
                 shaderSets.UnifromChannelFlagLocation = gl.GetUniformLocation(shaderSets.ShaderProgram, "u_channelFlag");
                 break;
-            case MaskType.PremultipliedAlpha: // 乘算済アルファ
+            case MaskType.PremultipliedAlpha: // 预乘 Alpha
             default:
                 break;
         }
     }
 
     /// <summary>
-    /// 描画用のシェーダプログラムの一連のセットアップを実行する
-    /// （官方 SetupShaderProgramForDrawable .cpp:544-664）。
+    /// 执行绘制用 Shader 程序的一系列设置
+    /// (官方 SetupShaderProgramForDrawable .cpp:544-664). 
     /// </summary>
     internal void SetupShaderProgramForDrawable(CubismRenderer_OpenGLES2 renderer, CubismModel model, int index)
     {
-        // _shaderSets用のオフセット計算
-        bool masked = renderer.ClippingContextBufferForDrawable != null; // この描画オブジェクトはマスク対象か
+        // _shaderSets 用的 offset 计算
+        bool masked = renderer.ClippingContextBufferForDrawable != null; // 该绘制对象是否为 Mask 对象
         bool invertedMask = model.GetDrawableInvertedMask(index);
         bool isPremultipliedAlpha = renderer.IsPremultipliedAlpha;
         int offset = (masked ? (invertedMask ? 2 : 1) : 0) + (isPremultipliedAlpha ? 3 : 0);
@@ -1234,13 +1262,13 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
         if (isBlendMode)
         {
-            // 5.3 以降
+            // 5.3 以后
             SRC_COLOR = gl.GL_ONE;
             DST_COLOR = gl.GL_ZERO;
             SRC_ALPHA = gl.GL_ONE;
             DST_ALPHA = gl.GL_ZERO;
 
-            // 以前のオフスクリーンのテクスチャを取得
+            // 获取之前的 Offscreen 纹理
             var currentOffscreen = renderer.GetCurrentOffscreen();
             blendTexture = currentOffscreen != null
                 ? renderer.CopyRenderTarget(currentOffscreen.GetRenderTarget()!)?.GetColorBuffer() ?? 0
@@ -1277,27 +1305,27 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
         gl.UseProgram(shaderSet.ShaderProgram);
 
-        // テクスチャ設定
+        // 纹理设置
         SetupTexture(renderer, model, index, shaderSet);
 
-        // 頂点属性設定
+        // 顶点属性设置
         SetVertexAttributes(shaderSet);
 
         if (masked)
         {
             gl.ActiveTexture(gl.GL_TEXTURE1);
 
-            // frameBufferに書かれたテクスチャ
+            // 写入 frameBuffer 的纹理
             var draw = renderer.ClippingContextBufferForDrawable!;
             int tex = renderer.GetDrawableMaskBuffer(draw.BufferIndex).ColorBuffer;
 
             gl.BindTexture(gl.GL_TEXTURE_2D, tex);
             gl.Uniform1i(shaderSet.SamplerTexture1Location, 1);
 
-            // View座標をClippingContextの座標に変換するための行列を設定
+            // 设置用于将 View 坐标转换为 ClippingContext 坐标的矩阵
             gl.UniformMatrix4fv(shaderSet.UniformClipMatrixLocation, 1, false, draw.MatrixForDraw.Tr);
 
-            // 使用するカラーチャンネルを設定
+            // 设置使用的颜色通道
             SetColorChannelUniformVariables(shaderSet, draw);
         }
 
@@ -1309,14 +1337,14 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
             gl.Uniform1i(shaderSet.SamplerBlendTextureLocation, 2);
         }
 
-        // 座標変換
+        // 坐标变换
         gl.UniformMatrix4fv(shaderSet.UniformMatrixLocation, 1, false, renderer.GetMvpMatrix().Tr);
 
-        // ユニフォーム変数設定
+        // Uniform 变量设置
         CubismTextureColor baseColor = new();
         if (model.IsBlendModeEnabled())
         {
-            // ブレンドモードではモデルカラーは最後に処理するため不透明度のみ対応させる
+            // 混合模式下模型颜色最后处理, 因此此处只处理不透明度
             float drawableOpacity = model.GetDrawableOpacity(index);
             baseColor.A = drawableOpacity;
             if (isPremultipliedAlpha)
@@ -1328,7 +1356,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         }
         else
         {
-            // ブレンドモード使用しない場合はDrawable単位でモデルカラーを処理する
+            // 不使用混合模式时按 Drawable 单位处理模型颜色
             baseColor = renderer.GetModelColorWithOpacity(model.GetDrawableOpacity(index));
         }
 
@@ -1341,9 +1369,9 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// マスク用のシェーダプログラムの一連のセットアップを実行する
-    /// （官方 SetupShaderProgramForMask .cpp:666-694）。
-    /// 与官方 R5 相同, 遮罩绘制时不设置乘算色和屏幕色.
+    /// 执行 Mask 用 Shader 程序的一系列设置
+    /// (官方 SetupShaderProgramForMask .cpp:666-694). 
+    /// 与官方 R5 相同, 遮罩绘制时不设置相乘色和屏幕色. 
     /// </summary>
     internal void SetupShaderProgramForMask(CubismRenderer_OpenGLES2 renderer, CubismModel model, int index)
     {
@@ -1357,13 +1385,13 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
         var draw = renderer.ClippingContextBufferForMask!;
 
-        // テクスチャ設定
+        // 纹理设置
         SetupTexture(renderer, model, index, shaderSet);
 
-        // 頂点属性設定
+        // 顶点属性设置
         SetVertexAttributes(shaderSet);
 
-        // 使用するカラーチャンネルを設定
+        // 设置使用的颜色通道
         SetColorChannelUniformVariables(shaderSet, draw);
 
         gl.UniformMatrix4fv(shaderSet.UniformClipMatrixLocation, 1, false, draw.MatrixForMask.Tr);
@@ -1377,15 +1405,15 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// オフスクリーンからのシェーダプログラムの一連のセットアップを実行する
-    /// （官方 SetupShaderProgramForOffscreenRenderTarget .cpp:696-705）。
+    /// 执行来自 Offscreen 的 Shader 程序的一系列设置
+    /// (官方 SetupShaderProgramForOffscreenRenderTarget .cpp:696-705). 
     /// </summary>
     internal void SetupShaderProgramForOffscreenRenderTarget(CubismRenderer_OpenGLES2 renderer)
     {
         var source = renderer.CopyOffscreenRenderTarget();
         int texture = source?.GetColorBuffer() ?? 0;
 
-        // この時点のテクスチャはPMAになっているはずなので計算を行う
+        // 此时纹理应该已是 PMA, 因此进行计算
         CubismTextureColor baseColor = renderer.ModelColor;
         baseColor.R *= baseColor.A;
         baseColor.G *= baseColor.A;
@@ -1394,8 +1422,8 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// オフスクリーン描画用のシェーダプログラムの一連のセットアップを実行する
-    /// （官方 SetupShaderProgramForOffscreen .cpp:731-844）。
+    /// 执行 Offscreen 绘制用 Shader 程序的一系列设置
+    /// (官方 SetupShaderProgramForOffscreen .cpp:731-844). 
     /// </summary>
     internal void SetupShaderProgramForOffscreen(CubismRenderer_OpenGLES2 renderer, CubismModel model,
         CubismOffscreenRenderTarget_OpenGLES2 offscreen)
@@ -1406,10 +1434,10 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         int DST_ALPHA;
 
         int offscreenIndex = offscreen.GetOffscreenIndex();
-        // _shaderSets用のオフセット計算
-        bool masked = renderer.ClippingContextBufferForOffscreen != null; // この描画オブジェクトはマスク対象か
+        // _shaderSets 用的 offset 计算
+        bool masked = renderer.ClippingContextBufferForOffscreen != null; // 该绘制对象是否为 Mask 对象
         bool invertedMask = model.GetOffscreenInvertedMask(offscreenIndex);
-        // オフスクリーンは乗算済アルファを利用する
+        // Offscreen 使用预乘 Alpha
         const int usePremultipliedAlphaOffset = 3;
         int offset = (masked ? (invertedMask ? 2 : 1) : 0) + usePremultipliedAlphaOffset;
 
@@ -1420,13 +1448,13 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
         if (isBlendMode)
         {
-            // 5.3 以降
+            // 5.3 以后
             SRC_COLOR = gl.GL_ONE;
             DST_COLOR = gl.GL_ZERO;
             SRC_ALPHA = gl.GL_ONE;
             DST_ALPHA = gl.GL_ZERO;
 
-            // 以前のオフスクリーンのテクスチャを取得
+            // 获取之前的 Offscreen 纹理
             var oldOffscreen = offscreen.GetOldOffscreen();
             blendTexture = oldOffscreen != null
                 ? renderer.CopyRenderTarget(oldOffscreen.GetRenderTarget()!)?.GetColorBuffer() ?? 0
@@ -1460,13 +1488,13 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
         gl.UseProgram(shaderSet.ShaderProgram);
 
-        // オフスクリーンのテクスチャ設定
+        // Offscreen 的纹理设置
         gl.ActiveTexture(gl.GL_TEXTURE0);
         int tex = offscreen.GetRenderTarget()?.GetColorBuffer() ?? 0;
         gl.BindTexture(gl.GL_TEXTURE_2D, tex);
         gl.Uniform1i(shaderSet.SamplerTexture0Location, 0);
 
-        // 頂点属性設定（オフスクリーンは上下反転）
+        // 顶点属性设置 (Offscreen 需上下翻转)
         renderer.SetRenderTargetVertexAttributes(shaderSet, true);
 
         if (masked)
@@ -1490,14 +1518,12 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
             gl.Uniform1i(shaderSet.SamplerBlendTextureLocation, 2);
         }
 
-        // 座標変換（恒等行列）
-        var mvpMatrix = new CubismMatrix44();
-        mvpMatrix.LoadIdentity();
-        gl.UniformMatrix4fv(shaderSet.UniformMatrixLocation, 1, false, mvpMatrix.Tr);
+        // 坐标变换 (单位矩阵, 只读取复用的静态实例)
+        gl.UniformMatrix4fv(shaderSet.UniformMatrixLocation, 1, false, s_identityMatrix.Tr);
 
-        // ユニフォーム変数設定
+        // Uniform 变量设置
         float offscreenOpacity = model.GetOffscreenOpacity(offscreenIndex);
-        // PMAなのと不透明度だけを変更したいためすべてOpacityで初期化
+        // 已是 PMA, 且只想修改不透明度, 因此全部用 Opacity 初始化
         CubismTextureColor baseColor = new(offscreenOpacity, offscreenOpacity, offscreenOpacity, offscreenOpacity);
         var overrideMultiplyAndScreenColor = model.GetOverrideMultiplyAndScreenColor();
         CubismTextureColor multiplyColor = overrideMultiplyAndScreenColor.GetOffscreenMultiplyColor(offscreenIndex);
@@ -1508,7 +1534,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// シェーダを使って描画対象をコピーする（官方 CopyTexture .cpp:707-729）。
+    /// 使用 Shader 复制绘制对象 (官方 CopyTexture .cpp:707-729). 
     /// </summary>
     internal void CopyTexture(CubismRenderer_OpenGLES2 renderer, int texture, int srcColor, int dstColor,
         int srcAlpha, int dstAlpha, CubismTextureColor baseColor)
@@ -1516,22 +1542,22 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         CubismShaderSet shaderSet = GetShaderSet(ShaderNames.Copy);
         gl.UseProgram(shaderSet.ShaderProgram);
 
-        // オフスクリーンの内容を設定
+        // 设置 Offscreen 的内容
         gl.ActiveTexture(gl.GL_TEXTURE0);
         gl.BindTexture(gl.GL_TEXTURE_2D, texture);
         gl.Uniform1i(shaderSet.SamplerTexture0Location, 0);
 
-        // 頂点属性（画面全体のクワッド）
+        // 顶点属性 (画面整体的四边形)
         renderer.SetRenderTargetVertexAttributes(shaderSet, false);
 
-        // ベースカラーの設定
+        // 基色设置
         gl.Uniform4f(shaderSet.UniformBaseColorLocation, baseColor.R, baseColor.G, baseColor.B, baseColor.A);
 
         gl.BlendFuncSeparate(srcColor, dstColor, srcAlpha, dstAlpha);
     }
 
     /// <summary>
-    /// シェーダプログラムを解放する（共有プログラムの二重解放を避ける）
+    /// 释放 Shader 程序 (避免共享程序的重复释放)
     /// </summary>
     internal void ReleaseShaderProgram()
     {
@@ -1557,11 +1583,11 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// シェーダプログラムをロードしてアドレス返す。
+    /// 加载 Shader 程序并返回地址. 
     /// </summary>
-    /// <param name="vertShaderSrc">頂点シェーダのソース</param>
-    /// <param name="fragShaderSrc">フラグメントシェーダのソース</param>
-    /// <returns>シェーダプログラムのアドレス</returns>
+    /// <param name="vertShaderSrc">顶点 Shader 的源码</param>
+    /// <param name="fragShaderSrc">片元 Shader 的源码</param>
+    /// <returns>Shader 程序的地址</returns>
     internal unsafe int LoadShaderProgram(string vertShaderSrc, string fragShaderSrc)
     {
         // Create shader program.
@@ -1624,7 +1650,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// シェーダの info-log を取得する（GL_INFO_LOG_LENGTH が 0 なら空文字）。
+    /// 获取 Shader 的 info-log (GL_INFO_LOG_LENGTH 为 0 时返回空字符串). 
     /// info-log 是驱动输出的消息, 并不代表编译是否成功,
     /// 编译成功时也可能包含警告(例如 ANGLE 的 "unexpected end of file found in directive").
     /// </summary>
@@ -1642,7 +1668,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// プログラムの info-log を取得する（GL_INFO_LOG_LENGTH が 0 なら空文字）。
+    /// 获取程序 (program) 的 info-log (GL_INFO_LOG_LENGTH 为 0 时返回空字符串). 
     /// </summary>
     private unsafe string ReadProgramInfoLog(int shaderProgram)
     {
@@ -1658,11 +1684,11 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// シェーダをコンパイルする。
+    /// 编译 Shader. 
     /// 成功与否只按 GL_COMPILE_STATUS 判定.
-    /// glGetShaderiv(GL_COMPILE_STATUS) は「直近のコンパイルが成功なら GL_TRUE」を返し、
-    /// GL_INFO_LOG_LENGTH は「情報ログの文字数」を返すだけで成否を表さない（Khronos glGetShaderiv 仕様）。
-    /// よってコンパイル成功時に info-log が非空でも警告に降格して出力し、例外にしない。
+    /// glGetShaderiv(GL_COMPILE_STATUS) 返回 "最近一次编译成功则为 GL_TRUE", 
+    /// 而 GL_INFO_LOG_LENGTH 只返回 "信息日志的字符数", 并不表示成败 (Khronos glGetShaderiv 规格). 
+    /// 因此在编译成功时即使 info-log 非空也降级为警告输出, 而不抛出异常. 
     /// </summary>
     internal unsafe bool CompileShaderSource(out int outShader, int shaderType, string shaderSource)
     {
@@ -1692,9 +1718,9 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// シェーダプログラムをリンクする。
+    /// 链接 Shader 程序. 
     /// 成功与否只按 GL_LINK_STATUS 判定(glGetProgramiv 规格).
-    /// GL_INFO_LOG が非空でもリンク成功なら警告に降格する。
+    /// 即使 GL_INFO_LOG 非空, 只要链接成功就降级为警告. 
     /// </summary>
     internal unsafe bool LinkProgram(int shaderProgram)
     {
@@ -1719,7 +1745,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// シェーダプログラムを検証する。
+    /// 校验 Shader 程序. 
     /// 成功与否只按 GL_VALIDATE_STATUS 判定(与链接相同的误判修正).
     /// </summary>
     internal unsafe bool ValidateProgram(int shaderProgram)
@@ -1746,7 +1772,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// Tegraプロセッサ対応。拡張方式による描画の有効・無効
+    /// Tegra 处理器对应. 按扩展方式绘制启用/禁用的开关
     /// </summary>
     internal void SetExtShaderMode(bool extMode, bool extPAMode)
     {
@@ -1755,21 +1781,21 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 必要な頂点属性を設定する
+    /// 设置所需的顶点属性
     /// </summary>
     internal void SetVertexAttributes(CubismShaderSet shaderSet)
     {
-        // 頂点位置属性の設定
+        // 顶点位置属性的设置
         gl.EnableVertexAttribArray(shaderSet.AttributePositionLocation);
         gl.VertexAttribPointer(shaderSet.AttributePositionLocation, 2, gl.GL_FLOAT, false, 4 * sizeof(float), 0);
 
-        // テクスチャ座標属性の設定
+        // 纹理坐标属性的设置
         gl.EnableVertexAttribArray(shaderSet.AttributeTexCoordLocation);
         gl.VertexAttribPointer(shaderSet.AttributeTexCoordLocation, 2, gl.GL_FLOAT, false, 4 * sizeof(float), 2 * sizeof(float));
     }
 
     /// <summary>
-    /// テクスチャの設定を行う
+    /// 进行纹理的设置
     /// </summary>
     internal void SetupTexture(CubismRenderer_OpenGLES2 renderer, CubismModel model, int index, CubismShaderSet shaderSet)
     {
@@ -1781,7 +1807,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 色関連のユニフォーム変数の設定を行う
+    /// 进行颜色相关 Uniform 变量的设置
     /// </summary>
     internal void SetColorUniformVariables(CubismShaderSet shaderSet,
         CubismTextureColor baseColor, CubismTextureColor multiplyColor, CubismTextureColor screenColor)
@@ -1792,7 +1818,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// カラーチャンネル関連のユニフォーム変数の設定を行う
+    /// 进行颜色通道相关 Uniform 变量的设置
     /// </summary>
     internal void SetColorChannelUniformVariables(CubismShaderSet shaderSet, CubismClippingContext contextBuffer)
     {

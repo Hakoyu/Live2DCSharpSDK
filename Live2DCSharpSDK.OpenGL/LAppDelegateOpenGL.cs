@@ -22,7 +22,7 @@ public class LAppDelegateOpenGL : LAppDelegate
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
         GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR);
 
-        //透過設定
+        // 透明设置
         // R5: 模型的 Shader 输出为预乘 Alpha (FragShaderSrc.frag 的 gl_FragColor = vec4(rgb*a, a)), 因此, 
         //    全局混合也调整为 ONE / ONE_MINUS_SRC_ALPHA (官方 Samples/OpenGL LAppDelegate.cpp:94). 
         //    旧实现用 SRC_ALPHA / ONE_MINUS_SRC_ALPHA, 半透明边缘会被重复压暗.
