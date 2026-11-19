@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Model;
 
@@ -569,20 +569,6 @@ public class CubismMotion : ACubismMotion
         _loopDurationSeconds = _motionData.Duration;
         OnFinishedMotion = onFinishedMotionHandler;
         OnBeganMotion = onBeganMotionHandler;
-    }
-
-    /// <summary>
-    /// 创建实例 (兼容旧签名, 使用默认上下文).
-    /// </summary>
-    /// <param name="buffer">已读取 motion3.json 的缓冲区</param>
-    /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
-    /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>
-    /// <param name="shouldCheckMotionConsistency">是否校验 motion3.json 的一致性</param>
-    [Obsolete("请改用带 CubismContext 的构造")]
-    public CubismMotion(string buffer, FinishedMotionCallback? onFinishedMotionHandler = null,
-        BeganMotionCallback? onBeganMotionHandler = null, bool shouldCheckMotionConsistency = false)
-        : this(buffer, CubismContext.Default, onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency)
-    {
     }
 
     /// <summary>

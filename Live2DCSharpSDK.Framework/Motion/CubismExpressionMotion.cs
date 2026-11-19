@@ -1,4 +1,4 @@
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using Live2DCSharpSDK.Framework.Model;
 
 namespace Live2DCSharpSDK.Framework.Motion;
@@ -111,15 +111,6 @@ public class CubismExpressionMotion : ACubismMotion
                 Value = value
             });
         }
-    }
-
-    /// <summary>
-    /// 创建实例 (兼容旧签名, 使用默认上下文).
-    /// </summary>
-    /// <param name="buffer">已读取 exp 文件的缓冲区</param>
-    [Obsolete("请改用带 CubismContext 的构造")]
-    public CubismExpressionMotion(string buf) : this(buf, CubismContext.Default)
-    {
     }
 
     public override void DoUpdateParameters(CubismModel model, float userTimeSeconds, float weight, CubismMotionQueueEntry motionQueueEntry)

@@ -112,15 +112,6 @@ public class CubismPose
     }
 
     /// <summary>
-    /// 创建实例 (兼容旧签名, 使用默认上下文).
-    /// </summary>
-    /// <param name="pose3json">pose3.json 的数据</param>
-    [Obsolete("请改用带 CubismContext 的构造")]
-    public CubismPose(string pose3json) : this(pose3json, CubismContext.Default)
-    {
-    }
-
-    /// <summary>
     /// 更新模型参数.
     /// </summary>
     /// <param name="model">目标模型</param>

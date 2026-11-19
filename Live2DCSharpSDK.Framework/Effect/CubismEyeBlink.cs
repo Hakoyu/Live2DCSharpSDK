@@ -1,4 +1,4 @@
-//由 ID 指定的眼部参数, 取值为 0 时闭眼则为 true, 取值为 1 时闭眼则为 false.
+﻿//由 ID 指定的眼部参数, 取值为 0 时闭眼则为 true, 取值为 1 时闭眼则为 false.
 //#define CloseIfZero
 
 using Live2DCSharpSDK.Framework.Model;
@@ -88,15 +88,6 @@ public class CubismEyeBlink
                 break;
             }
         }
-    }
-
-    /// <summary>
-    /// 创建实例 (兼容旧签名, 使用默认上下文).
-    /// </summary>
-    /// <param name="modelSetting">模型设置信息</param>
-    [Obsolete("请改用带 CubismContext 的构造")]
-    public CubismEyeBlink(ModelSettingObj modelSetting) : this(modelSetting, CubismContext.Default)
-    {
     }
 
     /// <summary>

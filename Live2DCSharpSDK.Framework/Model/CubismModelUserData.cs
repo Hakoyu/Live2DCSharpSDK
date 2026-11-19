@@ -26,19 +26,6 @@ public class CubismModelUserData
     public readonly List<CubismModelUserDataNode> ArtMeshUserDataNodes = [];
 
     /// <summary>
-    /// 使用默认上下文解析 userdata3.json (过渡期兼容重载).
-    /// </summary>
-    /// <param name="data">已读入 userdata3.json 的缓冲区</param>
-    /// <remarks>
-    /// 仅为兼容既有调用点保留, 内部回落到 <see cref="CubismContext.Default"/>.
-    /// 新代码请使用带 context 的重载.
-    /// </remarks>
-    public CubismModelUserData(string data)
-        : this(CubismContext.Default, data)
-    {
-    }
-
-    /// <summary>
     /// 使用指定上下文解析 userdata3.json.
     /// </summary>
     /// <param name="context">所属上下文 (提供 ID 管理器)</param>

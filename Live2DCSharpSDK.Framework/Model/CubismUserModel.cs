@@ -1,4 +1,4 @@
-using Live2DCSharpSDK.Framework.Effect;
+﻿using Live2DCSharpSDK.Framework.Effect;
 using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Motion;
 using Live2DCSharpSDK.Framework.Physics;
@@ -126,18 +126,6 @@ public abstract class CubismUserModel : IDisposable
     /// 所属上下文 (提供 ID 管理器与内存分配器).
     /// </summary>
     public CubismContext Context { get; }
-
-    /// <summary>
-    /// 使用默认上下文构造 (过渡期兼容重载).
-    /// </summary>
-    /// <remarks>
-    /// 仅为兼容既有派生类保留, 内部回落到 <see cref="CubismContext.Default"/>.
-    /// 新代码请使用带 context 的构造函数.
-    /// </remarks>
-    public CubismUserModel()
-        : this(CubismContext.Default)
-    {
-    }
 
     /// <summary>
     /// 使用指定上下文构造.
@@ -383,14 +371,6 @@ public abstract class CubismUserModel : IDisposable
     {
         _modelUserData = new CubismModelUserData(Context, buffer);
     }
-
-    /// <summary>
-    /// 从未还原的 Moc 缓冲区获取 .moc3 的版本 (官方 CubismUserModel::GetMocVersionFromBuffer).
-    /// </summary>
-    /// <param name="buffer">已读入 moc3 文件的缓冲区</param>
-    /// <returns>.moc3 Version</returns>
-    public static uint GetMocVersionFromBuffer(byte[] buffer)
-        => CubismMoc.GetMocVersionFromBuffer(CubismContext.Default, buffer);
 
     /// <summary>
     /// 使用指定上下文从未还原的 Moc 缓冲区获取 .moc3 的版本 (官方 CubismUserModel::GetMocVersionFromBuffer).

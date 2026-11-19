@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Live2DCSharpSDK.Framework.Core;
 
 namespace Live2DCSharpSDK.Framework.Model;
@@ -28,21 +28,6 @@ public class CubismMoc : IDisposable
     /// 所属上下文 (提供内存分配器).
     /// </summary>
     private readonly CubismContext _context;
-
-    /// <summary>
-    /// 使用默认上下文从缓冲区读取 Moc 文件 (过渡期兼容重载).
-    /// </summary>
-    /// <param name="mocBytes"> Moc 文件的缓冲区</param>
-    /// <param name="shouldCheckMocConsistency">MOC 一致性检查标志(初始值 : false)</param>
-    /// <returns></returns>
-    /// <remarks>
-    /// 仅为兼容既有调用点保留, 内部回落到 <see cref="CubismContext.Default"/>.
-    /// 新代码请使用带 context 的重载.
-    /// </remarks>
-    public CubismMoc(byte[] mocBytes, bool shouldCheckMocConsistency = false)
-        : this(CubismContext.Default, mocBytes, shouldCheckMocConsistency)
-    {
-    }
 
     /// <summary>
     /// 使用指定上下文从缓冲区读取 Moc 文件, 并创建 Moc 数据.
@@ -111,15 +96,6 @@ public class CubismMoc : IDisposable
     }
 
     /// <summary>
-    /// 从未还原的 Moc 缓冲区获取 .moc3 的版本 (官方 5-r.5 的新增 API GetMocVersionFromBuffer).
-    /// 即使是尚未支持的新 MOC3, 也能只取得版本.
-    /// </summary>
-    /// <param name="mocBytes">Moc 文件的缓冲区</param>
-    /// <returns>.moc3 Version. 参数非法时为 0</returns>
-    public static uint GetMocVersionFromBuffer(byte[] mocBytes)
-        => GetMocVersionFromBuffer(CubismContext.Default, mocBytes);
-
-    /// <summary>
     /// 使用指定上下文从未还原的 Moc 缓冲区获取 .moc3 的版本 (官方 5-r.5 的新增 API GetMocVersionFromBuffer).
     /// 即使是尚未支持的新 MOC3, 也能只取得版本.
     /// </summary>
@@ -161,14 +137,6 @@ public class CubismMoc : IDisposable
     {
         return CubismCore.HasMocConsistency(address, size);
     }
-
-    /// <summary>
-    /// Checks consistency of a moc.
-    /// </summary>
-    /// <param name="mocBytes">Moc 文件的缓冲区</param>
-    /// <returns>'true' if Moc is valid; 'false' otherwise.</returns>
-    public static bool HasMocConsistencyFromUnrevivedMoc(byte[] data)
-        => HasMocConsistencyFromUnrevivedMoc(CubismContext.Default, data);
 
     /// <summary>
     /// 使用指定上下文检查 Moc 的一致性.
