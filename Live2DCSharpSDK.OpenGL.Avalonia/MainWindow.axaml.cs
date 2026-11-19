@@ -230,6 +230,13 @@ public class OpenGlPageControl : OpenGlControlBase
         lapp?.Dispose();
         lapp = null;
         _model = null;
+
+        // アプリ終了時にプロセス共有の offscreen manager を解放する
+        // （官方 Samples/OpenGL/Demo/proj.win.cmake/src/LAppLive2DManager.cpp:77
+        //   LAppLive2DManager::ReleaseInstance() の CubismOffscreenManager_OpenGLES2::ReleaseInstance() に相当）。
+        // ここは GL コンテキストが current な唯一の後片付けポイントなので、必ず lapp.Dispose()（= 各 renderer の解放）の後に呼ぶ。
+        CubismOffscreenManager_OpenGLES2.ReleaseInstance();
+        Console.WriteLine("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
     }
 
     /// <summary>
