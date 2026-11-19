@@ -12,6 +12,7 @@ public class CubismTargetPoint
     /// 面部朝向 X(-1.0 - 1.0)
     /// </summary>
     public float FaceX { get; private set; }
+
     /// <summary>
     /// 面部朝向 Y(-1.0 - 1.0)
     /// </summary>
@@ -21,22 +22,27 @@ public class CubismTargetPoint
     /// 面部朝向的 X 目标值(会逐渐靠近该值)
     /// </summary>
     private float _faceTargetX;
+
     /// <summary>
     /// 面部朝向的 Y 目标值(会逐渐靠近该值)
     /// </summary>
     private float _faceTargetY;
+
     /// <summary>
     /// 面部朝向的变化速度 X
     /// </summary>
     private float _faceVX;
+
     /// <summary>
     /// 面部朝向的变化速度 Y
     /// </summary>
     private float _faceVY;
+
     /// <summary>
     /// 上一次的执行时间[秒]
     /// </summary>
     private float _lastTimeSeconds;
+
     /// <summary>
     /// 增量时间的累计值[秒]
     /// </summary>
@@ -53,8 +59,8 @@ public class CubismTargetPoint
 
         // 头部从中央向左右摆动时的平均速度约为数秒, 考虑加速与减速, 取其 2 倍作为最高速度
         // 面部摆动的程度以中央为 (0.0), 左右为 (+-1.0)
-        float FaceParamMaxV = 40.0f / 10.0f;                                      // 7.5 秒内移动 40 分 (5.3/sc)
-        float MaxV = FaceParamMaxV * 1.0f / FrameRate;  // 每 frame 可变化的速度上限
+        float FaceParamMaxV = 40.0f / 10.0f; // 7.5 秒内移动 40 分 (5.3/sc)
+        float MaxV = FaceParamMaxV * 1.0f / FrameRate; // 每 frame 可变化的速度上限
 
         if (_lastTimeSeconds == 0.0f)
         {
@@ -67,8 +73,8 @@ public class CubismTargetPoint
 
         // 达到最高速度所需的时间
         float TimeToMaxSpeed = 0.15f;
-        float FrameToMaxSpeed = TimeToMaxSpeed * FrameRate;     // sec * frame/sec
-        float MaxA = deltaTimeWeight * MaxV / FrameToMaxSpeed;                           // 每 frame 的加速度
+        float FrameToMaxSpeed = TimeToMaxSpeed * FrameRate; // sec * frame/sec
+        float MaxA = deltaTimeWeight * MaxV / FrameToMaxSpeed; // 每 frame 的加速度
 
         // 目标朝向为 (dx, dy) 方向的向量
         float dx = _faceTargetX - FaceX;
@@ -118,7 +124,8 @@ public class CubismTargetPoint
             //  时刻 t 已预先以加速度, 速度的 1/60 (帧率, 无单位) 处理过,
             //  因此可视为 t = 1 并消去 (注: 未验证)
 
-            float maxV = 0.5f * (MathF.Sqrt((MaxA * MaxA) + 16.0f * MaxA * d - 8.0f * MaxA * d) - MaxA);
+            float maxV =
+                0.5f * (MathF.Sqrt((MaxA * MaxA) + 16.0f * MaxA * d - 8.0f * MaxA * d) - MaxA);
             float curV = MathF.Sqrt((_faceVX * _faceVX) + (_faceVY * _faceVY));
 
             if (curV > maxV)

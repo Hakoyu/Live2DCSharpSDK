@@ -39,7 +39,11 @@ public class CubismLipSyncUpdater : ICubismUpdater
     /// <param name="lipSyncIds">应用唇形同步的参数 ID 列表</param>
     /// <param name="wavFileHandler">提供口型值的参数提供者</param>
     /// <param name="executionOrder">执行顺序</param>
-    public CubismLipSyncUpdater(IReadOnlyList<string> lipSyncIds, IParameterProvider wavFileHandler, int executionOrder)
+    public CubismLipSyncUpdater(
+        IReadOnlyList<string> lipSyncIds,
+        IParameterProvider wavFileHandler,
+        int executionOrder
+    )
         : base(executionOrder)
     {
         _lipSyncIds = lipSyncIds;

@@ -52,7 +52,10 @@ public static class CubismModelSettingJson
     public const string InitPartsVisible = "init_parts_visible";
     public const string Val = "val";
 
-    public static bool GetLayoutMap(this ModelSettingObj obj, Dictionary<string, float> outLayoutMap)
+    public static bool GetLayoutMap(
+        this ModelSettingObj obj,
+        Dictionary<string, float> outLayoutMap
+    )
     {
         var node = obj.Layout;
         if (node == null)
@@ -149,7 +152,11 @@ public static class CubismModelSettingJson
     /// <param name="groupName">动作组名</param>
     /// <param name="index">组内索引</param>
     /// <returns>淡入时间, 不存在时为 -1</returns>
-    public static float GetMotionFadeInTimeValue(this ModelSettingObj obj, string groupName, int index)
+    public static float GetMotionFadeInTimeValue(
+        this ModelSettingObj obj,
+        string groupName,
+        int index
+    )
     {
         var motion = FindMotion(obj, groupName, index);
 
@@ -164,7 +171,11 @@ public static class CubismModelSettingJson
     /// <param name="groupName">动作组名</param>
     /// <param name="index">组内索引</param>
     /// <returns>淡出时间, 不存在时为 -1</returns>
-    public static float GetMotionFadeOutTimeValue(this ModelSettingObj obj, string groupName, int index)
+    public static float GetMotionFadeOutTimeValue(
+        this ModelSettingObj obj,
+        string groupName,
+        int index
+    )
     {
         var motion = FindMotion(obj, groupName, index);
 
@@ -174,7 +185,10 @@ public static class CubismModelSettingJson
     /// <summary>
     /// 获取组内的动作列表(内部使用).
     /// </summary>
-    private static List<ModelSettingObj.FileReference.Motion>? FindMotionList(ModelSettingObj obj, string groupName)
+    private static List<ModelSettingObj.FileReference.Motion>? FindMotionList(
+        ModelSettingObj obj,
+        string groupName
+    )
     {
         var motions = obj.FileReferences?.Motions;
         if (motions == null || string.IsNullOrEmpty(groupName))
@@ -188,7 +202,11 @@ public static class CubismModelSettingJson
     /// <summary>
     /// 获取组内的动作(内部使用).
     /// </summary>
-    private static ModelSettingObj.FileReference.Motion? FindMotion(ModelSettingObj obj, string groupName, int index)
+    private static ModelSettingObj.FileReference.Motion? FindMotion(
+        ModelSettingObj obj,
+        string groupName,
+        int index
+    )
     {
         var list = FindMotionList(obj, groupName);
 

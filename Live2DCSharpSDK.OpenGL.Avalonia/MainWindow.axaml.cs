@@ -69,7 +69,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        // 拖动过程中也由 GLTop 持续接收事件 (用于验证 Look 的切换). 
+        // 拖动过程中也由 GLTop 持续接收事件 (用于验证 Look 的切换).
         e.Pointer.Capture(GLTop);
 
         var (x, y) = GetPointerPosition(e);
@@ -96,9 +96,9 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// 获取指针坐标. 
+    /// 获取指针坐标.
     /// 坐标系为 Avalonia 的 DIP. LAppView 的设备坐标→屏幕坐标矩阵也是
-    /// 由 AvaloniaApi.GetWindowSize (Bounds = DIP) 构建, 因此此处不能乘以缩放率. 
+    /// 由 AvaloniaApi.GetWindowSize (Bounds = DIP) 构建, 因此此处不能乘以缩放率.
     /// </summary>
     private (double X, double Y) GetPointerPosition(PointerEventArgs e)
     {
@@ -130,15 +130,20 @@ public class OpenGlPageControl : OpenGlControlBase
     private int _expressionIndex;
 
     public static readonly DirectProperty<OpenGlPageControl, string> InfoProperty =
-        AvaloniaProperty.RegisterDirect<OpenGlPageControl, string>("Info", o => o.Info, (o, v) => o.Info = v);
+        AvaloniaProperty.RegisterDirect<OpenGlPageControl, string>(
+            "Info",
+            o => o.Info,
+            (o, v) => o.Info = v
+        );
 
     public static readonly DirectProperty<OpenGlPageControl, string> StatusProperty =
-        AvaloniaProperty.RegisterDirect<OpenGlPageControl, string>("Status", o => o.Status, (o, v) => o.Status = v);
+        AvaloniaProperty.RegisterDirect<OpenGlPageControl, string>(
+            "Status",
+            o => o.Status,
+            (o, v) => o.Status = v
+        );
 
-    public OpenGlPageControl()
-    {
-
-    }
+    public OpenGlPageControl() { }
 
     public string Info
     {
@@ -166,7 +171,8 @@ public class OpenGlPageControl : OpenGlControlBase
     {
         CheckError(gl);
 
-        Info = $"Renderer: {gl.GetString(GlConsts.GL_RENDERER)} Version: {gl.GetString(GlConsts.GL_VERSION)}";
+        Info =
+            $"Renderer: {gl.GetString(GlConsts.GL_RENDERER)} Version: {gl.GetString(GlConsts.GL_VERSION)}";
 
         try
         {
@@ -176,7 +182,7 @@ public class OpenGlPageControl : OpenGlControlBase
             var cubismOption = new CubismOption()
             {
                 LogFunction = Console.WriteLine,
-                LoggingLevel = LAppDefine.CubismLoggingLevel
+                LoggingLevel = LAppDefine.CubismLoggingLevel,
             };
             _context = CubismContext.Create(cubismAllocator, cubismOption);
             _context.StartUp();
@@ -185,7 +191,7 @@ public class OpenGlPageControl : OpenGlControlBase
             {
                 BGColor = new(0, 0, 0, 0),
                 // 上下文交给 delegate 管理, 反初始化时由 delegate 统一释放.
-                Context = _context
+                Context = _context,
             };
         }
         catch (Exception e)
@@ -199,8 +205,8 @@ public class OpenGlPageControl : OpenGlControlBase
         }
 
         // 模型路径不硬编码, 由 App 层的 ModelResourceLocator 解析
-        // (上游 sample 是 "F:\live2d\Resources" 直写. 本仓库已参数化). 
-        // 即使找不到也不抛出异常, 以空场景继续启动. 
+        // (上游 sample 是 "F:\live2d\Resources" 直写. 本仓库已参数化).
+        // 即使找不到也不抛出异常, 以空场景继续启动.
         if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
         {
             try
@@ -230,8 +236,8 @@ public class OpenGlPageControl : OpenGlControlBase
 
         // 应用退出时释放进程共享的 offscreen manager
         // (官方 Samples/OpenGL/Demo/proj.win.cmake/src/LAppLive2DManager.cpp:77
-        //   相当于 LAppLive2DManager::ReleaseInstance() 中的 CubismOffscreenManager_OpenGLES2::ReleaseInstance()). 
-        // 这里是 GL 上下文为 current 的唯一收尾点, 因此必须在 lapp.Dispose() (= 各 renderer 的释放) 之后调用. 
+        //   相当于 LAppLive2DManager::ReleaseInstance() 中的 CubismOffscreenManager_OpenGLES2::ReleaseInstance()).
+        // 这里是 GL 上下文为 current 的唯一收尾点, 因此必须在 lapp.Dispose() (= 各 renderer 的释放) 之后调用.
         CubismOffscreenManager_OpenGLES2.ReleaseInstance();
         Console.WriteLine("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
 
@@ -381,7 +387,7 @@ public class OpenGlPageControl : OpenGlControlBase
         gl.Viewport(0, 0, x, y);
 
         // 模型的渲染目标按实际像素设置(与 viewport 使用同一坐标系).
-        // LAppDelegate 侧的窗口尺寸为 DIP, 因此在此处覆盖. 
+        // LAppDelegate 侧的窗口尺寸为 DIP, 因此在此处覆盖.
         if (x > 0 && y > 0)
         {
             lapp.Live2dManager.SetRenderTargetSize(x, y);

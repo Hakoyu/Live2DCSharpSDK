@@ -58,7 +58,8 @@ public static class GlobalStateFixture
     /// <summary>
     /// 本次运行是否为需要 Core 的 B 档.
     /// </summary>
-    public static bool IsCoreTier => string.Equals(Tier, CoreTier, StringComparison.OrdinalIgnoreCase);
+    public static bool IsCoreTier =>
+        string.Equals(Tier, CoreTier, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// 记录环境变量快照, 校验夹具环境并输出环境摘要.
@@ -78,16 +79,18 @@ public static class GlobalStateFixture
         // A 档必须完全不触碰原生库: 只有 core / all 档才解析并探测 Core,
         // 否则 A 档会通过 NativeLibrary.TryLoad 加载一次 Live2DCubismCore.dll,
         // 与「A 档不加载 Core」的硬边界矛盾 (见 PLAN-06 §2).
-        bool needsCoreProbe = string.Equals(Tier, "core", StringComparison.OrdinalIgnoreCase)
+        bool needsCoreProbe =
+            string.Equals(Tier, "core", StringComparison.OrdinalIgnoreCase)
             || string.Equals(Tier, "all", StringComparison.OrdinalIgnoreCase);
         CoreLibraryPath = needsCoreProbe ? ResolveCoreLibraryPath() : null;
-        IsCoreLibraryAvailable = needsCoreProbe
-            && CoreLibraryPath is not null
-            && TryProbeCoreLibrary(CoreLibraryPath);
+        IsCoreLibraryAvailable =
+            needsCoreProbe && CoreLibraryPath is not null && TryProbeCoreLibrary(CoreLibraryPath);
 
         context.WriteLine($"[GlobalStateFixture] tier: {Tier}");
         context.WriteLine($"[GlobalStateFixture] {ModelsRootVariable}: {ModelsRoot ?? "<unset>"}");
-        context.WriteLine($"[GlobalStateFixture] {CoreLibraryFileName}: {CoreLibraryPath ?? "<not found>"}");
+        context.WriteLine(
+            $"[GlobalStateFixture] {CoreLibraryFileName}: {CoreLibraryPath ?? "<not found>"}"
+        );
         context.WriteLine($"[GlobalStateFixture] core loadable: {IsCoreLibraryAvailable}");
 
         if (IsCoreTier)
@@ -113,8 +116,10 @@ public static class GlobalStateFixture
     /// <exception cref="InvalidOperationException">环境变量未设置或目录不存在时抛出</exception>
     public static string RequireModelsRoot()
     {
-        return ModelsRoot ?? throw new InvalidOperationException(
-            $"The environment variable {ModelsRootVariable} is not set or does not point to an existing directory.");
+        return ModelsRoot
+            ?? throw new InvalidOperationException(
+                $"The environment variable {ModelsRootVariable} is not set or does not point to an existing directory."
+            );
     }
 
     /// <summary>
@@ -145,7 +150,8 @@ public static class GlobalStateFixture
         if (IsCoreLibraryAvailable is false || CoreLibraryPath is null)
         {
             throw new InvalidOperationException(
-                $"{CoreLibraryFileName} is not loadable on this platform (path: {CoreLibraryPath ?? "<not found>"}).");
+                $"{CoreLibraryFileName} is not loadable on this platform (path: {CoreLibraryPath ?? "<not found>"})."
+            );
         }
 
         return CoreLibraryPath;
@@ -173,7 +179,10 @@ public static class GlobalStateFixture
     /// <returns>原生库路径, 找不到时为 null</returns>
     private static string? ResolveCoreLibraryPath()
     {
-        if (OperatingSystem.IsWindows() is false || RuntimeInformation.ProcessArchitecture != Architecture.X64)
+        if (
+            OperatingSystem.IsWindows() is false
+            || RuntimeInformation.ProcessArchitecture != Architecture.X64
+        )
         {
             return null;
         }
@@ -182,7 +191,7 @@ public static class GlobalStateFixture
         string[] candidates =
         [
             Path.Combine(baseDirectory, CoreLibraryFileName),
-            Path.Combine(baseDirectory, "runtimes", "win-x64", "native", CoreLibraryFileName)
+            Path.Combine(baseDirectory, "runtimes", "win-x64", "native", CoreLibraryFileName),
         ];
 
         foreach (string candidate in candidates)
@@ -231,22 +240,30 @@ public static class GlobalStateFixture
     {
         if (OperatingSystem.IsWindows() is false)
         {
-            Assert.Fail($"The core tier requires Windows x64, but the current OS is {RuntimeInformation.OSDescription}.");
+            Assert.Fail(
+                $"The core tier requires Windows x64, but the current OS is {RuntimeInformation.OSDescription}."
+            );
         }
 
         if (RuntimeInformation.ProcessArchitecture != Architecture.X64)
         {
-            Assert.Fail($"The core tier requires an x64 process, but the current architecture is {RuntimeInformation.ProcessArchitecture}.");
+            Assert.Fail(
+                $"The core tier requires an x64 process, but the current architecture is {RuntimeInformation.ProcessArchitecture}."
+            );
         }
 
         if (ModelsRoot is null)
         {
-            Assert.Fail($"The environment variable {ModelsRootVariable} is not set or does not point to an existing directory.");
+            Assert.Fail(
+                $"The environment variable {ModelsRootVariable} is not set or does not point to an existing directory."
+            );
         }
 
         if (IsCoreLibraryAvailable is false)
         {
-            Assert.Fail($"{CoreLibraryFileName} could not be loaded from '{CoreLibraryPath ?? "<not found>"}'.");
+            Assert.Fail(
+                $"{CoreLibraryFileName} could not be loaded from '{CoreLibraryPath ?? "<not found>"}'."
+            );
         }
 
         RequireModelFile("Haru", "Haru.moc3");

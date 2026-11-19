@@ -16,6 +16,7 @@ public record CubismMotionObj
         public int UserDataCount { get; set; }
         public int TotalUserDataSize { get; set; }
     }
+
     public record Curve
     {
         public float? FadeInTime { get; set; }
@@ -24,11 +25,13 @@ public record CubismMotionObj
         public string Target { get; set; }
         public string Id { get; set; }
     }
+
     public record UserDataObj
     {
         public float Time { get; set; }
         public string Value { get; set; }
     }
+
     public MetaObj Meta { get; set; }
     public List<Curve> Curves { get; set; }
     public List<UserDataObj> UserData { get; set; }

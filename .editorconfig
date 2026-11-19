@@ -2,6 +2,7 @@
 
 # CS8618: 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
 dotnet_diagnostic.CS8618.severity = none
+dotnet_diagnostic.S6640.severity = none
 
 [*.cs]
 #### 命名样式 ####

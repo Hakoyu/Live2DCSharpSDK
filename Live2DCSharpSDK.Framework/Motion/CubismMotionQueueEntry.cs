@@ -14,34 +14,42 @@ public class CubismMotionQueueEntry
     /// 启用标志
     /// </summary>
     public bool Available { get; set; }
+
     /// <summary>
     /// 结束标志
     /// </summary>
     public bool Finished { get; set; }
+
     /// <summary>
     /// 开始标志 (0.9.00 以后)
     /// </summary>
     public bool Started { get; set; }
+
     /// <summary>
     /// 动作播放开始时刻[秒]
     /// </summary>
     public float StartTime { get; set; }
+
     /// <summary>
     /// 淡入开始时刻 (循环时仅首次)[秒]
     /// </summary>
     public float FadeInStartTime { get; set; }
+
     /// <summary>
     /// 预定结束时刻[秒]
     /// </summary>
     public float EndTime { get; set; }
+
     /// <summary>
     /// 时刻状态[秒]
     /// </summary>
     public float StateTime { get; private set; }
+
     /// <summary>
     /// 权重状态
     /// </summary>
     public float StateWeight { get; private set; }
+
     /// <summary>
     /// Motion 侧最后检查的时间
     /// </summary>

@@ -11,34 +11,41 @@ public enum CubismUpdateOrder : int
     /// 自动眨眼
     /// </summary>
     EyeBlink = 200,
+
     /// <summary>
     /// 表情
     /// </summary>
     Expression = 300,
+
     /// <summary>
     /// 拖拽 (面部朝向)
     /// </summary>
     Look = 400,
+
     /// <summary>
     /// 呼吸
     /// </summary>
     Breath = 500,
+
     /// <summary>
     /// 物理运算
     /// </summary>
     Physics = 600,
+
     /// <summary>
     /// 唇形同步
     /// </summary>
     LipSync = 700,
+
     /// <summary>
     /// 姿势
     /// </summary>
     Pose = 800,
+
     /// <summary>
     /// 未指定 (最后执行)
     /// </summary>
-    Max = int.MaxValue
+    Max = int.MaxValue,
 }
 
 /// <summary>
@@ -55,9 +62,7 @@ public abstract class ICubismUpdater
     /// 不指定执行顺序进行创建. 执行顺序为 CubismUpdateOrder.Max.
     /// </summary>
     protected ICubismUpdater()
-        : this((int)CubismUpdateOrder.Max)
-    {
-    }
+        : this((int)CubismUpdateOrder.Max) { }
 
     /// <summary>
     /// 指定执行顺序进行创建.

@@ -14,7 +14,7 @@ public static class Program
             Title = "Live2D",
             // This is needed to run on macos
             Flags = ContextFlags.ForwardCompatible,
-            Vsync = VSyncMode.Adaptive
+            Vsync = VSyncMode.Adaptive,
         };
 
         using var window = new Window(GameWindowSettings.Default, nativeWindowSettings);

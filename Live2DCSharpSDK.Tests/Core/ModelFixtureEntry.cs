@@ -25,7 +25,8 @@ internal sealed class ModelFixtureEntry
         int drawableCount,
         int partCount,
         int parameterCount,
-        int offscreenCount)
+        int offscreenCount
+    )
     {
         RelativePath = relativePath;
         FullPath = fullPath;

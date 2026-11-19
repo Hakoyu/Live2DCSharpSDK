@@ -19,8 +19,10 @@ public static class CubismMath
     /// <returns>限制在最小值与最大值范围内的值</returns>
     public static float RangeF(float value, float min, float max)
     {
-        if (value < min) value = min;
-        else if (value > max) value = max;
+        if (value < min)
+            value = min;
+        else if (value > max)
+            value = max;
         return value;
     }
 
@@ -72,8 +74,10 @@ public static class CubismMath
     /// <returns>经过缓动处理的正弦值</returns>
     public static float GetEasingSine(float value)
     {
-        if (value < 0.0f) return 0.0f;
-        else if (value > 1.0f) return 1.0f;
+        if (value < 0.0f)
+            return 0.0f;
+        else if (value > 1.0f)
+            return 1.0f;
 
         return 0.5f - 0.5f * CosF(value * Pi);
     }
@@ -207,7 +211,7 @@ public static class CubismMath
     /// <summary>
     /// 通过卡尔达诺公式求与贝塞尔 t 值对应的三次方程的解.
     /// 出现重根时, 返回取值在 0.0 到 1.0 之间的解.
-    /// 
+    ///
     /// a * x^3 + b * x^2 + c * x + d = 0
     /// </summary>
     /// <param name="a">三次项的系数值</param>
@@ -342,9 +346,18 @@ public static class CubismMath
     /// <returns>余数</returns>
     public static float ModF(float dividend, float divisor)
     {
-        if (!float.IsFinite(dividend) || divisor == 0 || float.IsNaN(dividend) || float.IsNaN(divisor))
+        if (
+            !float.IsFinite(dividend)
+            || divisor == 0
+            || float.IsNaN(dividend)
+            || float.IsNaN(divisor)
+        )
         {
-            CubismLog.Warning("[Live2D SDK]dividend: %f, divisor: %f ModF() returns 'NaN'.", dividend, divisor);
+            CubismLog.Warning(
+                "[Live2D SDK]dividend: %f, divisor: %f ModF() returns 'NaN'.",
+                dividend,
+                divisor
+            );
             return float.NaN;
         }
 

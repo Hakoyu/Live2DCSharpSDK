@@ -16,10 +16,12 @@ public class CubismIdManager
     /// <param name="list">ID 名称列表</param>
     public void RegisterIds(List<string> list)
     {
-        list.ForEach((item) =>
-        {
-            GetId(item);
-        });
+        list.ForEach(
+            (item) =>
+            {
+                GetId(item);
+            }
+        );
     }
 
     /// <summary>

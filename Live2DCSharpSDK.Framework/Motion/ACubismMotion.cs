@@ -12,14 +12,17 @@ public abstract class ACubismMotion
     /// 淡入所需的时间[秒]
     /// </summary>
     public float FadeInSeconds { get; set; }
+
     /// <summary>
     /// 淡出所需的时间[秒]
     /// </summary>
     public float FadeOutSeconds { get; set; }
+
     /// <summary>
     /// 动作的权重
     /// </summary>
     public float Weight { get; set; }
+
     /// <summary>
     /// 动作播放的开始时刻[秒]
     /// </summary>
@@ -37,10 +40,12 @@ public abstract class ACubismMotion
     /// 是否循环 (官方 5-r.5 中从 CubismMotion 移入. 默认值 false)
     /// </summary>
     protected bool _isLoop;
+
     /// <summary>
     /// 循环时是否启用淡入的标志 (默认值 true)
     /// </summary>
     protected bool _isLoopFadeIn;
+
     /// <summary>
     /// 上一次的循环状态 (官方 5-r.5 的 _previousLoopState)
     /// </summary>
@@ -65,7 +70,11 @@ public abstract class ACubismMotion
     /// <param name="model">目标模型</param>
     /// <param name="motionQueueEntry">CubismMotionQueueManager 中管理的动作</param>
     /// <param name="userTimeSeconds">增量时间的累计值[秒]</param>
-    public void UpdateParameters(CubismModel model, CubismMotionQueueEntry motionQueueEntry, float userTimeSeconds)
+    public void UpdateParameters(
+        CubismModel model,
+        CubismMotionQueueEntry motionQueueEntry,
+        float userTimeSeconds
+    )
     {
         if (!motionQueueEntry.Available || motionQueueEntry.Finished)
         {
@@ -83,7 +92,7 @@ public abstract class ACubismMotion
         //超过结束时刻后置结束标志 (CubismMotionQueueManager)
         if ((motionQueueEntry.EndTime > 0) && (motionQueueEntry.EndTime < userTimeSeconds))
         {
-            motionQueueEntry.Finished = true;      //结束
+            motionQueueEntry.Finished = true; //结束
         }
     }
 
@@ -92,7 +101,10 @@ public abstract class ACubismMotion
     /// </summary>
     /// <param name="motionQueueEntry">由 CubismMotionQueueManager 管理的动作</param>
     /// <param name="userTimeSeconds">总播放时间 (秒)</param>
-    public void SetupMotionQueueEntry(CubismMotionQueueEntry motionQueueEntry, float userTimeSeconds)
+    public void SetupMotionQueueEntry(
+        CubismMotionQueueEntry motionQueueEntry,
+        float userTimeSeconds
+    )
     {
         if (!motionQueueEntry.Available || motionQueueEntry.Finished)
         {
@@ -127,9 +139,7 @@ public abstract class ACubismMotion
         var duration = GetDuration();
 
         // duration == -1 时循环
-        motionQueueEntry.EndTime = (duration <= 0)
-            ? -1
-            : motionQueueEntry.StartTime + duration;
+        motionQueueEntry.EndTime = (duration <= 0) ? -1 : motionQueueEntry.StartTime + duration;
     }
 
     /// <summary>
@@ -189,11 +199,19 @@ public abstract class ACubismMotion
 
         //---- 淡入淡出的处理 ----
         //使用简单的正弦函数进行缓动
-        float fadeIn = FadeInSeconds == 0.0f ? 1.0f
-                           : CubismMath.GetEasingSine((userTimeSeconds - motionQueueEntry.FadeInStartTime) / FadeInSeconds);
+        float fadeIn =
+            FadeInSeconds == 0.0f
+                ? 1.0f
+                : CubismMath.GetEasingSine(
+                    (userTimeSeconds - motionQueueEntry.FadeInStartTime) / FadeInSeconds
+                );
 
-        float fadeOut = (FadeOutSeconds == 0.0f || motionQueueEntry.EndTime < 0.0f) ? 1.0f
-                            : CubismMath.GetEasingSine((motionQueueEntry.EndTime - userTimeSeconds) / FadeOutSeconds);
+        float fadeOut =
+            (FadeOutSeconds == 0.0f || motionQueueEntry.EndTime < 0.0f)
+                ? 1.0f
+                : CubismMath.GetEasingSine(
+                    (motionQueueEntry.EndTime - userTimeSeconds) / FadeOutSeconds
+                );
 
         fadeWeight = fadeWeight * fadeIn * fadeOut;
 
@@ -209,7 +227,7 @@ public abstract class ACubismMotion
 
     /// <summary>
     /// 获取动作的长度.
-    /// 
+    ///
     /// 循环时为 "-1".
     /// 非循环时请重写此方法.
     /// 为正值时在取得的时刻结束.
@@ -223,7 +241,7 @@ public abstract class ACubismMotion
 
     /// <summary>
     /// 获取动作循环一次的时长.
-    /// 
+    ///
     /// 不循环时返回与 GetDuration() 相同的值.
     /// 无法定义循环一次时长时 (例如程序上会持续运动的子类) 返回 "-1".
     /// </summary>
@@ -278,5 +296,10 @@ public abstract class ACubismMotion
         return 1.0f;
     }
 
-    public abstract void DoUpdateParameters(CubismModel model, float userTimeSeconds, float weight, CubismMotionQueueEntry motionQueueEntry);
+    public abstract void DoUpdateParameters(
+        CubismModel model,
+        float userTimeSeconds,
+        float weight,
+        CubismMotionQueueEntry motionQueueEntry
+    );
 }

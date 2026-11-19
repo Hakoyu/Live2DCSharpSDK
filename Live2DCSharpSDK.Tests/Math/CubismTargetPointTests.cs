@@ -86,10 +86,22 @@ public sealed class CubismTargetPointTests
         {
             point.Update(FrameDeltaTime);
 
-            Assert.IsTrue(point.FaceX >= previousX, $"FaceX must not decrease at frame {frame}: {previousX} -> {point.FaceX}.");
-            Assert.IsTrue(point.FaceY >= previousY, $"FaceY must not decrease at frame {frame}: {previousY} -> {point.FaceY}.");
-            Assert.IsTrue(point.FaceX <= 1.0f, $"FaceX must not overshoot the target at frame {frame}: {point.FaceX}.");
-            Assert.IsTrue(point.FaceY <= 1.0f, $"FaceY must not overshoot the target at frame {frame}: {point.FaceY}.");
+            Assert.IsTrue(
+                point.FaceX >= previousX,
+                $"FaceX must not decrease at frame {frame}: {previousX} -> {point.FaceX}."
+            );
+            Assert.IsTrue(
+                point.FaceY >= previousY,
+                $"FaceY must not decrease at frame {frame}: {previousY} -> {point.FaceY}."
+            );
+            Assert.IsTrue(
+                point.FaceX <= 1.0f,
+                $"FaceX must not overshoot the target at frame {frame}: {point.FaceX}."
+            );
+            Assert.IsTrue(
+                point.FaceY <= 1.0f,
+                $"FaceY must not overshoot the target at frame {frame}: {point.FaceY}."
+            );
 
             previousX = point.FaceX;
             previousY = point.FaceY;
@@ -128,7 +140,10 @@ public sealed class CubismTargetPointTests
         float faceX = point.FaceX;
         float faceY = point.FaceY;
 
-        Assert.IsTrue(faceX > 0.0f, $"Face must have moved before the zero-delta update, got {faceX}.");
+        Assert.IsTrue(
+            faceX > 0.0f,
+            $"Face must have moved before the zero-delta update, got {faceX}."
+        );
 
         point.Update(0.0f);
 
@@ -153,8 +168,14 @@ public sealed class CubismTargetPointTests
 
         Assert.AreEqual(ConvergedFaceValue, point.FaceX, 1e-3f);
         Assert.AreEqual(ConvergedFaceValue, point.FaceY, 1e-3f);
-        Assert.IsTrue(System.MathF.Abs(point.FaceX - 1.0f) <= CubismTargetPoint.Epsilon, $"FaceX must settle within Epsilon of the target, got {point.FaceX}.");
-        Assert.IsTrue(System.MathF.Abs(point.FaceY - 1.0f) <= CubismTargetPoint.Epsilon, $"FaceY must settle within Epsilon of the target, got {point.FaceY}.");
+        Assert.IsTrue(
+            System.MathF.Abs(point.FaceX - 1.0f) <= CubismTargetPoint.Epsilon,
+            $"FaceX must settle within Epsilon of the target, got {point.FaceX}."
+        );
+        Assert.IsTrue(
+            System.MathF.Abs(point.FaceY - 1.0f) <= CubismTargetPoint.Epsilon,
+            $"FaceY must settle within Epsilon of the target, got {point.FaceY}."
+        );
     }
 
     /// <summary>
@@ -170,8 +191,14 @@ public sealed class CubismTargetPointTests
 
         Assert.AreEqual(-ConvergedFaceValue, point.FaceX, 1e-3f);
         Assert.AreEqual(-ConvergedFaceValue, point.FaceY, 1e-3f);
-        Assert.IsTrue(point.FaceX >= -1.0f, $"FaceX must not overshoot the negative target, got {point.FaceX}.");
-        Assert.IsTrue(point.FaceY >= -1.0f, $"FaceY must not overshoot the negative target, got {point.FaceY}.");
+        Assert.IsTrue(
+            point.FaceX >= -1.0f,
+            $"FaceX must not overshoot the negative target, got {point.FaceX}."
+        );
+        Assert.IsTrue(
+            point.FaceY >= -1.0f,
+            $"FaceY must not overshoot the negative target, got {point.FaceY}."
+        );
     }
 
     /// <summary>
@@ -189,8 +216,14 @@ public sealed class CubismTargetPointTests
 
         Advance(point, ConvergenceFrames);
 
-        Assert.IsTrue(System.MathF.Abs(point.FaceX - 0.5f) <= CubismTargetPoint.Epsilon, $"FaceX must stay within Epsilon of the target, got {point.FaceX}.");
-        Assert.IsTrue(System.MathF.Abs(point.FaceY - 0.5f) <= CubismTargetPoint.Epsilon, $"FaceY must stay within Epsilon of the target, got {point.FaceY}.");
+        Assert.IsTrue(
+            System.MathF.Abs(point.FaceX - 0.5f) <= CubismTargetPoint.Epsilon,
+            $"FaceX must stay within Epsilon of the target, got {point.FaceX}."
+        );
+        Assert.IsTrue(
+            System.MathF.Abs(point.FaceY - 0.5f) <= CubismTargetPoint.Epsilon,
+            $"FaceY must stay within Epsilon of the target, got {point.FaceY}."
+        );
     }
 
     /// <summary>

@@ -64,7 +64,10 @@ public static class CubismMaskGroupUtility
     /// <param name="maskIds">按 drawable 顺序拼接的掩码 ID</param>
     /// <returns>唯一的掩码组数</returns>
     /// <exception cref="ArgumentException">maskIds 长度不足以容纳 maskCounts 声明的内容时抛出</exception>
-    internal static int CountUniqueMaskGroups(ReadOnlySpan<int> maskCounts, ReadOnlySpan<int> maskIds)
+    internal static int CountUniqueMaskGroups(
+        ReadOnlySpan<int> maskCounts,
+        ReadOnlySpan<int> maskIds
+    )
     {
         List<int[]> groups = [];
         int offset = 0;
@@ -81,7 +84,8 @@ public static class CubismMaskGroupUtility
             {
                 throw new ArgumentException(
                     $"maskIds must contain at least {offset + count} elements for drawable {i}, but it has {maskIds.Length}.",
-                    nameof(maskIds));
+                    nameof(maskIds)
+                );
             }
 
             int groupOffset = offset;

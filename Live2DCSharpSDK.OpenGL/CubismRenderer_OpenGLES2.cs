@@ -10,22 +10,22 @@ namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
 /// 实现 OpenGLES2 用绘制命令的类
-/// (官方 OpenGL/CubismRenderer_OpenGLES2.hpp:179-559 / .cpp:472-1423). 
-/// R5 中整合 Drawable 与 Offscreen 的绘制顺序 (双重排序数组), 
+/// (官方 OpenGL/CubismRenderer_OpenGLES2.hpp:179-559 / .cpp:472-1423).
+/// R5 中整合 Drawable 与 Offscreen 的绘制顺序 (双重排序数组),
 /// Drawable/Offscreen 两套 Clipping 管理器, 以及模型整体的
-/// 渲染目标 (用于 blend 模式). 
+/// 渲染目标 (用于 blend 模式).
 /// </summary>
 public class CubismRenderer_OpenGLES2 : CubismRenderer
 {
-    public const int ColorChannelCount = 4;   // 实验时 1 通道为 1, 仅 RGB 为 3, 含 Alpha 则为 4
-    public const int ClippingMaskMaxCountOnDefault = 36;  // 通常的帧缓冲每张的 Mask 最大数
-    public const int ClippingMaskMaxCountOnMultiRenderTexture = 32;   // 帧缓冲为 2 张以上时每张帧缓冲的 Mask 最大数
+    public const int ColorChannelCount = 4; // 实验时 1 通道为 1, 仅 RGB 为 3, 含 Alpha 则为 4
+    public const int ClippingMaskMaxCountOnDefault = 36; // 通常的帧缓冲每张的 Mask 最大数
+    public const int ClippingMaskMaxCountOnMultiRenderTexture = 32; // 帧缓冲为 2 张以上时每张帧缓冲的 Mask 最大数
 
     private readonly OpenGLApi GL;
 
     /// <summary>
-    /// 本渲染器专用的离屏渲染目标管理器. 
-    /// 多个渲染器 (多个 GL 上下文) 共存时各自独立, 不再共享进程级单例. 
+    /// 本渲染器专用的离屏渲染目标管理器.
+    /// 多个渲染器 (多个 GL 上下文) 共存时各自独立, 不再共享进程级单例.
     /// </summary>
     public CubismOffscreenManager_OpenGLES2 OffscreenManager { get; }
 
@@ -33,34 +33,42 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// 模型引用的纹理与渲染器绑定的纹理之间的映射
     /// </summary>
     private readonly Dictionary<int, int> _textures;
+
     /// <summary>
     /// 将绘制对象的索引按绘制顺序排列的列表 (Drawable + Offscreen 的连续编号)
     /// </summary>
     private readonly int[] _sortedObjectsIndexList;
+
     /// <summary>
     /// 将绘制对象的种类按绘制顺序排列的列表
     /// </summary>
     private readonly CsmEnum.DrawableObjectType[] _sortedObjectsTypeList;
+
     /// <summary>
     /// 保存 OpenGL 状态的对象
     /// </summary>
     private readonly CubismRendererProfile_OpenGLES2 _rendererProfile;
+
     /// <summary>
     /// Drawable 用裁剪遮罩管理对象.
     /// </summary>
     private CubismClippingManager_OpenGLES2? _drawableClippingManager;
+
     /// <summary>
     /// Offscreen 用裁剪遮罩管理对象.
     /// </summary>
     private CubismClippingManager_OpenGLES2? _offscreenClippingManager;
+
     /// <summary>
     /// 用于绘制到 Mask 纹理的 Clipping 上下文
     /// </summary>
     internal CubismClippingContext? ClippingContextBufferForMask { get; set; }
+
     /// <summary>
     /// 用于 Drawable 在画面上绘制的 Clipping 上下文
     /// </summary>
     internal CubismClippingContext? ClippingContextBufferForDrawable { get; set; }
+
     /// <summary>
     /// 用于 Offscreen 在画面上绘制的 Clipping 上下文
     /// </summary>
@@ -72,14 +80,17 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// 模型整体绘制目标的帧缓冲(blend 模式用).
     /// </summary>
     private readonly List<CubismRenderTarget_OpenGLES2> _modelRenderTargets = [];
+
     /// <summary>
     /// Drawable 的遮罩绘制用帧缓冲.
     /// </summary>
     private readonly List<CubismRenderTarget_OpenGLES2> _drawableMasks = [];
+
     /// <summary>
     /// Offscreen 功能的遮罩绘制用帧缓冲.
     /// </summary>
     private readonly List<CubismRenderTarget_OpenGLES2> _offscreenMasks = [];
+
     /// <summary>
     /// 模型的离屏列表.
     /// </summary>
@@ -89,14 +100,17 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// 当前的帧缓冲对象
     /// </summary>
     private int _currentFBO;
+
     /// <summary>
     /// 当前的 Offscreen 帧缓冲
     /// </summary>
     private CubismOffscreenRenderTarget_OpenGLES2? _currentOffscreen;
+
     /// <summary>
     /// 模型绘制的根帧缓冲
     /// </summary>
     private int _modelRootFBO;
+
     /// <summary>
     /// 是否已 Dispose (防止重复释放. 避免 GL 名称复用事故)
     /// </summary>
@@ -107,18 +121,22 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// 是否已警告模型合成用渲染目标不可用
     /// </summary>
     private bool _warnedModelRenderTargetUnavailable;
+
     /// <summary>
     /// 是否已警告离屏用渲染目标不可用
     /// </summary>
     private bool _warnedOffscreenRenderTargetUnavailable;
+
     /// <summary>
     /// 是否已警告拷贝目标渲染目标不可用
     /// </summary>
     private bool _warnedCopyRenderTargetUnavailable;
+
     /// <summary>
     /// 是否已警告 Drawable 用遮罩缓冲不可用
     /// </summary>
     private bool _warnedDrawableMaskBufferUnavailable;
+
     /// <summary>
     /// 是否已警告 Offscreen 用遮罩缓冲不可用
     /// </summary>
@@ -127,10 +145,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     internal int VertexArray { get; private set; }
     internal int VertexBuffer { get; private set; }
     internal int IndexBuffer { get; private set; }
+
     /// <summary>
     /// 画面整体四边形用的顶点缓冲 (Copy / Offscreen 合成用)
     /// </summary>
     private int _quadVertexBuffer;
+
     /// <summary>
     /// 画面整体四边形用的索引缓冲
     /// </summary>
@@ -163,10 +183,34 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// </summary>
     private static readonly VBO[] QuadVertices =
     [
-        new() { ver0 = -1.0f, ver1 = -1.0f, uv0 = 0.0f, uv1 = 0.0f },
-        new() { ver0 = 1.0f, ver1 = -1.0f, uv0 = 1.0f, uv1 = 0.0f },
-        new() { ver0 = -1.0f, ver1 = 1.0f, uv0 = 0.0f, uv1 = 1.0f },
-        new() { ver0 = 1.0f, ver1 = 1.0f, uv0 = 1.0f, uv1 = 1.0f },
+        new()
+        {
+            ver0 = -1.0f,
+            ver1 = -1.0f,
+            uv0 = 0.0f,
+            uv1 = 0.0f,
+        },
+        new()
+        {
+            ver0 = 1.0f,
+            ver1 = -1.0f,
+            uv0 = 1.0f,
+            uv1 = 0.0f,
+        },
+        new()
+        {
+            ver0 = -1.0f,
+            ver1 = 1.0f,
+            uv0 = 0.0f,
+            uv1 = 1.0f,
+        },
+        new()
+        {
+            ver0 = 1.0f,
+            ver1 = 1.0f,
+            uv0 = 1.0f,
+            uv1 = 1.0f,
+        },
     ];
 
     /// <summary>
@@ -174,10 +218,34 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// </summary>
     private static readonly VBO[] QuadVerticesReverseUv =
     [
-        new() { ver0 = -1.0f, ver1 = -1.0f, uv0 = 0.0f, uv1 = 1.0f },
-        new() { ver0 = 1.0f, ver1 = -1.0f, uv0 = 1.0f, uv1 = 1.0f },
-        new() { ver0 = -1.0f, ver1 = 1.0f, uv0 = 0.0f, uv1 = 0.0f },
-        new() { ver0 = 1.0f, ver1 = 1.0f, uv0 = 1.0f, uv1 = 0.0f },
+        new()
+        {
+            ver0 = -1.0f,
+            ver1 = -1.0f,
+            uv0 = 0.0f,
+            uv1 = 1.0f,
+        },
+        new()
+        {
+            ver0 = 1.0f,
+            ver1 = -1.0f,
+            uv0 = 1.0f,
+            uv1 = 1.0f,
+        },
+        new()
+        {
+            ver0 = -1.0f,
+            ver1 = 1.0f,
+            uv0 = 0.0f,
+            uv1 = 0.0f,
+        },
+        new()
+        {
+            ver0 = 1.0f,
+            ver1 = 1.0f,
+            uv0 = 1.0f,
+            uv1 = 0.0f,
+        },
     ];
 
     /// <summary>
@@ -200,20 +268,28 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
     /// <summary>
     /// 构造函数(本地由宿主创建渲染器并传给模型).
-    /// 在此执行相当于官方 Initialize(model, maskBufferCount) 的初始化. 
+    /// 在此执行相当于官方 Initialize(model, maskBufferCount) 的初始化.
     /// </summary>
-    public unsafe CubismRenderer_OpenGLES2(OpenGLApi gl, LAppDelegate lapp, CubismModel model, int maskBufferCount = 1) : base(model)
+    public unsafe CubismRenderer_OpenGLES2(
+        OpenGLApi gl,
+        LAppDelegate lapp,
+        CubismModel model,
+        int maskBufferCount = 1
+    )
+        : base(model)
     {
         if (gl is null)
         {
-            throw new ArgumentNullException(nameof(gl),
-                "[Live2D OpenGL]CubismRenderer_OpenGLES2 requires an OpenGLApi instance.");
+            throw new ArgumentNullException(
+                nameof(gl),
+                "[Live2D OpenGL]CubismRenderer_OpenGLES2 requires an OpenGLApi instance."
+            );
         }
 
         GL = gl;
 
         // 每个渲染器持有自己的离屏管理器, 与 GL 上下文一一对应.
-        // 旧实现在这里设置静态 s_defaultApi, 后创建的渲染器会覆盖先创建的 (多上下文污染). 
+        // 旧实现在这里设置静态 s_defaultApi, 后创建的渲染器会覆盖先创建的 (多上下文污染).
         OffscreenManager = new(gl);
 
         Shader = new(gl);
@@ -231,7 +307,9 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         if (maskBufferCount < 1)
         {
             maskBufferCount = 1;
-            CubismLog.Warning("[Live2D OpenGL]The number of render textures must be an integer greater than or equal to 1. Set the number of render textures to 1.");
+            CubismLog.Warning(
+                "[Live2D OpenGL]The number of render textures must be an integer greater than or equal to 1. Set the number of render textures to 1."
+            );
         }
 
         //------------ 模型整体的渲染目标(blend 模式用) ------------
@@ -254,7 +332,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         {
             _drawableClippingManager = new CubismClippingManager_OpenGLES2(GL)
             {
-                Type = CsmEnum.DrawableObjectType.Drawable
+                Type = CsmEnum.DrawableObjectType.Drawable,
             };
             _drawableClippingManager.Initialize(model, maskBufferCount);
 
@@ -262,7 +340,10 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             for (int i = 0; i < maskBufferCount; ++i)
             {
                 var mask = new CubismRenderTarget_OpenGLES2(GL);
-                mask.CreateRenderTarget((int)_drawableClippingManager.ClippingMaskBufferSize.X, (int)_drawableClippingManager.ClippingMaskBufferSize.Y);
+                mask.CreateRenderTarget(
+                    (int)_drawableClippingManager.ClippingMaskBufferSize.X,
+                    (int)_drawableClippingManager.ClippingMaskBufferSize.Y
+                );
                 _drawableMasks.Add(mask);
             }
         }
@@ -272,7 +353,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         {
             _offscreenClippingManager = new CubismClippingManager_OpenGLES2(GL)
             {
-                Type = CsmEnum.DrawableObjectType.Offscreen
+                Type = CsmEnum.DrawableObjectType.Offscreen,
             };
             _offscreenClippingManager.Initialize(model, maskBufferCount);
 
@@ -280,7 +361,10 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             for (int i = 0; i < maskBufferCount; ++i)
             {
                 var mask = new CubismRenderTarget_OpenGLES2(GL);
-                mask.CreateRenderTarget((int)_offscreenClippingManager.ClippingMaskBufferSize.X, (int)_offscreenClippingManager.ClippingMaskBufferSize.Y);
+                mask.CreateRenderTarget(
+                    (int)_offscreenClippingManager.ClippingMaskBufferSize.X,
+                    (int)_offscreenClippingManager.ClippingMaskBufferSize.Y
+                );
                 _offscreenMasks.Add(mask);
             }
         }
@@ -313,7 +397,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     }
 
     /// <summary>
-    /// 查找并设置 Offscreen 的父级 (官方 SetupParentOffscreens, .cpp:644-678). 
+    /// 查找并设置 Offscreen 的父级 (官方 SetupParentOffscreens, .cpp:644-678).
     /// </summary>
     private unsafe void SetupParentOffscreens(CubismModel model, int offscreenCount)
     {
@@ -388,7 +472,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         _drawableClippingManager.Dispose();
         _drawableClippingManager = new CubismClippingManager_OpenGLES2(GL)
         {
-            Type = CsmEnum.DrawableObjectType.Drawable
+            Type = CsmEnum.DrawableObjectType.Drawable,
         };
 
         _drawableClippingManager.SetClippingMaskBufferSize(width, height);
@@ -412,7 +496,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         _offscreenClippingManager.Dispose();
         _offscreenClippingManager = new CubismClippingManager_OpenGLES2(GL)
         {
-            Type = CsmEnum.DrawableObjectType.Offscreen
+            Type = CsmEnum.DrawableObjectType.Offscreen,
         };
 
         _offscreenClippingManager.SetClippingMaskBufferSize(width, height);
@@ -486,18 +570,17 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
     /// <summary>
     /// 判定遮罩用渲染目标能否用于绘制.
-    /// 创建失败的 RT 由于 RenderTexture == 0, IsValid() 会返回 false. 
+    /// 创建失败的 RT 由于 RenderTexture == 0, IsValid() 会返回 false.
     /// 对该判定为 false 的缓冲, 不得执行 Viewport / Clear / Mask 绘制
-    /// (执行会破坏当前绑定的 FBO, 即画面或父 FBO). 
+    /// (执行会破坏当前绑定的 FBO, 即画面或父 FBO).
     /// </summary>
     /// <param name="type">Drawable 用 / Offscreen 用的区别</param>
     /// <param name="index">Mask 缓冲的索引</param>
     /// <returns>可用时为 true</returns>
     internal bool IsMaskBufferUsable(CsmEnum.DrawableObjectType type, int index)
     {
-        List<CubismRenderTarget_OpenGLES2> masks = type == CsmEnum.DrawableObjectType.Offscreen
-            ? _offscreenMasks
-            : _drawableMasks;
+        List<CubismRenderTarget_OpenGLES2> masks =
+            type == CsmEnum.DrawableObjectType.Offscreen ? _offscreenMasks : _drawableMasks;
 
         return index >= 0 && index < masks.Count && masks[index].IsValid();
     }
@@ -506,7 +589,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// 只输出一次遮罩用渲染目标不可用的警告.
     /// 实际的 Viewport / Clear / Mask 绘制跳过由
     /// <see cref="CubismClippingManager_OpenGLES2.SetupClippingContext"/> 与
-    /// 高精度 Mask 路径 (DrawDrawable / DrawOffscreen) 侧执行. 
+    /// 高精度 Mask 路径 (DrawDrawable / DrawOffscreen) 侧执行.
     /// </summary>
     /// <param name="type">Drawable 用 / Offscreen 用的区别</param>
     internal void WarnMaskBufferUnavailable(CsmEnum.DrawableObjectType type)
@@ -520,10 +603,11 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
             _warnedOffscreenMaskBufferUnavailable = true;
             CubismLog.Warning(
-                "[Live2D OpenGL]Offscreen clipping mask render target is not available ({0}x{1}). " +
-                "Skip generating clipping masks for offscreens.",
+                "[Live2D OpenGL]Offscreen clipping mask render target is not available ({0}x{1}). "
+                    + "Skip generating clipping masks for offscreens.",
                 (int)(_offscreenClippingManager?.ClippingMaskBufferSize.X ?? 0.0f),
-                (int)(_offscreenClippingManager?.ClippingMaskBufferSize.Y ?? 0.0f));
+                (int)(_offscreenClippingManager?.ClippingMaskBufferSize.Y ?? 0.0f)
+            );
             return;
         }
 
@@ -534,10 +618,11 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
         _warnedDrawableMaskBufferUnavailable = true;
         CubismLog.Warning(
-            "[Live2D OpenGL]Drawable clipping mask render target is not available ({0}x{1}). " +
-            "Skip generating clipping masks for drawables.",
+            "[Live2D OpenGL]Drawable clipping mask render target is not available ({0}x{1}). "
+                + "Skip generating clipping masks for drawables.",
             (int)(_drawableClippingManager?.ClippingMaskBufferSize.X ?? 0.0f),
-            (int)(_drawableClippingManager?.ClippingMaskBufferSize.Y ?? 0.0f));
+            (int)(_drawableClippingManager?.ClippingMaskBufferSize.Y ?? 0.0f)
+        );
     }
 
     /// <summary>
@@ -546,9 +631,8 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// <param name="type">Drawable 用 / Offscreen 用的区别</param>
     private void ValidateMaskBuffers(CsmEnum.DrawableObjectType type)
     {
-        List<CubismRenderTarget_OpenGLES2> masks = type == CsmEnum.DrawableObjectType.Offscreen
-            ? _offscreenMasks
-            : _drawableMasks;
+        List<CubismRenderTarget_OpenGLES2> masks =
+            type == CsmEnum.DrawableObjectType.Offscreen ? _offscreenMasks : _drawableMasks;
 
         for (int i = 0; i < masks.Count; ++i)
         {
@@ -584,7 +668,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// <summary>
     /// 拷贝任意缓冲(对应官方 CopyRenderTarget).
     /// 本地不使用 texture barrier, 因此始终用 glBlitFramebuffer 复制
-    /// (相当于官方 CanUseTextureBarrier()==false 的路径). 
+    /// (相当于官方 CanUseTextureBarrier()==false 的路径).
     /// </summary>
     public CubismRenderTarget_OpenGLES2? CopyRenderTarget(CubismRenderTarget_OpenGLES2 srcBuffer)
     {
@@ -631,20 +715,23 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
         _warnedCopyRenderTargetUnavailable = true;
         CubismLog.Warning(
-            "[Live2D OpenGL]CopyRenderTarget: destination render target is not available ({0}x{1}). " +
-            "Blend-mode texture copy is skipped.",
-            width, height);
+            "[Live2D OpenGL]CopyRenderTarget: destination render target is not available ({0}x{1}). "
+                + "Blend-mode texture copy is skipped.",
+            width,
+            height
+        );
     }
 
     /// <summary>
     /// [覆盖]
-    /// 绘制绘制对象 (美术网格). 
+    /// 绘制绘制对象 (美术网格).
     /// </summary>
     /// <param name="model">绘制目标的模型</param>
     /// <param name="index">绘制目标的网格索引</param>
     internal unsafe void DrawMeshOpenGL(CubismModel model, int index)
     {
-        if (_textures[model.GetDrawableTextureIndex(index)] == 0) return;    // 模型引用的纹理未绑定时跳过绘制
+        if (_textures[model.GetDrawableTextureIndex(index)] == 0)
+            return; // 模型引用的纹理未绑定时跳过绘制
 
         // 背面绘制的启用/禁用
         if (IsCulling)
@@ -656,7 +743,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             GL.Disable(GL.GL_CULL_FACE);
         }
 
-        GL.FrontFace(GL.GL_CCW);    // Cubism SDK OpenGL 中 Mask 与美术网格都以 CCW 为正面
+        GL.FrontFace(GL.GL_CCW); // Cubism SDK OpenGL 中 Mask 与美术网格都以 CCW 为正面
 
         var vertexCount = model.GetDrawableVertexCount(index);
         var vertexArray = model.GetDrawableVertices(index);
@@ -683,13 +770,23 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         GL.BindBuffer(GL.GL_ARRAY_BUFFER, VertexBuffer);
         fixed (void* p = vbo)
         {
-            GL.BufferData(GL.GL_ARRAY_BUFFER, vertexCount * sizeof(VBO), new IntPtr(p), GL.GL_STATIC_DRAW);
+            GL.BufferData(
+                GL.GL_ARRAY_BUFFER,
+                vertexCount * sizeof(VBO),
+                new IntPtr(p),
+                GL.GL_STATIC_DRAW
+            );
         }
 
         GL.BindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
-        GL.BufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(ushort), new IntPtr(indexArray), GL.GL_STATIC_DRAW);
+        GL.BufferData(
+            GL.GL_ELEMENT_ARRAY_BUFFER,
+            indexCount * sizeof(ushort),
+            new IntPtr(indexArray),
+            GL.GL_STATIC_DRAW
+        );
 
-        if (IsGeneratingMask())  // 生成 Mask 时
+        if (IsGeneratingMask()) // 生成 Mask 时
         {
             Shader.SetupShaderProgramForMask(this, model, index);
         }
@@ -711,7 +808,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     }
 
     /// <summary>
-    /// 设置画面整体四边形的顶点属性 (Copy / Offscreen 合成用). 
+    /// 设置画面整体四边形的顶点属性 (Copy / Offscreen 合成用).
     /// </summary>
     /// <param name="shaderSet">使用的 Shader 集合</param>
     /// <param name="reverseUv">是否上下翻转 UV (Offscreen 合成时为 true)</param>
@@ -722,24 +819,48 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         GL.BindBuffer(GL.GL_ARRAY_BUFFER, _quadVertexBuffer);
         fixed (void* p = reverseUv ? QuadVerticesReverseUv : QuadVertices)
         {
-            GL.BufferData(GL.GL_ARRAY_BUFFER, QuadVertices.Length * sizeof(VBO), new IntPtr(p), GL.GL_STATIC_DRAW);
+            GL.BufferData(
+                GL.GL_ARRAY_BUFFER,
+                QuadVertices.Length * sizeof(VBO),
+                new IntPtr(p),
+                GL.GL_STATIC_DRAW
+            );
         }
 
         GL.BindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, _quadIndexBuffer);
         fixed (void* p = QuadIndices)
         {
-            GL.BufferData(GL.GL_ELEMENT_ARRAY_BUFFER, QuadIndices.Length * sizeof(ushort), new IntPtr(p), GL.GL_STATIC_DRAW);
+            GL.BufferData(
+                GL.GL_ELEMENT_ARRAY_BUFFER,
+                QuadIndices.Length * sizeof(ushort),
+                new IntPtr(p),
+                GL.GL_STATIC_DRAW
+            );
         }
 
         GL.EnableVertexAttribArray(shaderSet.AttributePositionLocation);
-        GL.VertexAttribPointer(shaderSet.AttributePositionLocation, 2, GL.GL_FLOAT, false, 4 * sizeof(float), 0);
+        GL.VertexAttribPointer(
+            shaderSet.AttributePositionLocation,
+            2,
+            GL.GL_FLOAT,
+            false,
+            4 * sizeof(float),
+            0
+        );
 
         GL.EnableVertexAttribArray(shaderSet.AttributeTexCoordLocation);
-        GL.VertexAttribPointer(shaderSet.AttributeTexCoordLocation, 2, GL.GL_FLOAT, false, 4 * sizeof(float), 2 * sizeof(float));
+        GL.VertexAttribPointer(
+            shaderSet.AttributeTexCoordLocation,
+            2,
+            GL.GL_FLOAT,
+            false,
+            4 * sizeof(float),
+            2 * sizeof(float)
+        );
     }
 
     /// <summary>
-    /// 绘制画面整体四边形. 
+    /// 绘制画面整体四边形.
     /// </summary>
     internal void DrawRenderTargetQuad()
     {
@@ -747,8 +868,8 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     }
 
     /// <summary>
-    /// 绘制开始时的追加处理. 
-    /// 在绘制模型前实现 Clipping Mask 所需的处理. 
+    /// 绘制开始时的追加处理.
+    /// 在绘制模型前实现 Clipping Mask 所需的处理.
     /// </summary>
     internal void PreDraw()
     {
@@ -821,10 +942,17 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         // Offscreen 缓冲尺寸不同时重建
         for (int i = 0; i < _modelRenderTargets.Count; ++i)
         {
-            if (_modelRenderTargets[i].GetBufferWidth() != _modelRenderTargetWidth ||
-                _modelRenderTargets[i].GetBufferHeight() != _modelRenderTargetHeight)
+            if (
+                _modelRenderTargets[i].GetBufferWidth() != _modelRenderTargetWidth
+                || _modelRenderTargets[i].GetBufferHeight() != _modelRenderTargetHeight
+            )
             {
-                _modelRenderTargets[i].CreateRenderTarget((int)_modelRenderTargetWidth, (int)_modelRenderTargetHeight, 0);
+                _modelRenderTargets[i]
+                    .CreateRenderTarget(
+                        (int)_modelRenderTargetWidth,
+                        (int)_modelRenderTargetHeight,
+                        0
+                    );
             }
         }
 
@@ -836,9 +964,11 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             {
                 _warnedModelRenderTargetUnavailable = true;
                 CubismLog.Warning(
-                    "[Live2D OpenGL]BeforeDrawModelRenderTarget: render target is not available ({0}x{1}). " +
-                    "Fall back to drawing the model into the current framebuffer.",
-                    _modelRenderTargetWidth, _modelRenderTargetHeight);
+                    "[Live2D OpenGL]BeforeDrawModelRenderTarget: render target is not available ({0}x{1}). "
+                        + "Fall back to drawing the model into the current framebuffer.",
+                    _modelRenderTargetWidth,
+                    _modelRenderTargetHeight
+                );
             }
 
             return;
@@ -870,7 +1000,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     }
 
     /// <summary>
-    /// 模型绘制的实现 (官方 DoDrawModel, .cpp:719-789). 
+    /// 模型绘制的实现 (官方 DoDrawModel, .cpp:719-789).
     /// </summary>
     protected override unsafe void DoDrawModel()
     {
@@ -889,21 +1019,32 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             // 尺寸不同时在此重新创建
             for (int i = 0; i < _drawableClippingManager.RenderTextureCount; ++i)
             {
-                if (_drawableMasks[i].BufferWidth != (int)_drawableClippingManager.ClippingMaskBufferSize.X ||
-                    _drawableMasks[i].BufferHeight != (int)_drawableClippingManager.ClippingMaskBufferSize.Y)
+                if (
+                    _drawableMasks[i].BufferWidth
+                        != (int)_drawableClippingManager.ClippingMaskBufferSize.X
+                    || _drawableMasks[i].BufferHeight
+                        != (int)_drawableClippingManager.ClippingMaskBufferSize.Y
+                )
                 {
-                    _drawableMasks[i].CreateRenderTarget(
-                        (int)_drawableClippingManager.ClippingMaskBufferSize.X, (int)_drawableClippingManager.ClippingMaskBufferSize.Y);
+                    _drawableMasks[i]
+                        .CreateRenderTarget(
+                            (int)_drawableClippingManager.ClippingMaskBufferSize.X,
+                            (int)_drawableClippingManager.ClippingMaskBufferSize.Y
+                        );
                 }
             }
 
             // 遮罩用帧缓冲创建失败时只输出一次警告.
-            //      实际的 Clear / Viewport / Mask 绘制跳过由各绘制路径侧执行. 
+            //      实际的 Clear / Viewport / Mask 绘制跳过由各绘制路径侧执行.
             ValidateMaskBuffers(CsmEnum.DrawableObjectType.Drawable);
 
             if (UseHighPrecisionMask)
             {
-                _drawableClippingManager.SetupMatrixForHighPrecision(Model, false, CsmEnum.DrawableObjectType.Drawable);
+                _drawableClippingManager.SetupMatrixForHighPrecision(
+                    Model,
+                    false,
+                    CsmEnum.DrawableObjectType.Drawable
+                );
             }
             else
             {
@@ -918,11 +1059,18 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
             for (int i = 0; i < _offscreenClippingManager.RenderTextureCount; ++i)
             {
-                if (_offscreenMasks[i].BufferWidth != (int)_offscreenClippingManager.ClippingMaskBufferSize.X ||
-                    _offscreenMasks[i].BufferHeight != (int)_offscreenClippingManager.ClippingMaskBufferSize.Y)
+                if (
+                    _offscreenMasks[i].BufferWidth
+                        != (int)_offscreenClippingManager.ClippingMaskBufferSize.X
+                    || _offscreenMasks[i].BufferHeight
+                        != (int)_offscreenClippingManager.ClippingMaskBufferSize.Y
+                )
                 {
-                    _offscreenMasks[i].CreateRenderTarget(
-                        (int)_offscreenClippingManager.ClippingMaskBufferSize.X, (int)_offscreenClippingManager.ClippingMaskBufferSize.Y);
+                    _offscreenMasks[i]
+                        .CreateRenderTarget(
+                            (int)_offscreenClippingManager.ClippingMaskBufferSize.X,
+                            (int)_offscreenClippingManager.ClippingMaskBufferSize.Y
+                        );
                 }
             }
 
@@ -931,7 +1079,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
             if (UseHighPrecisionMask)
             {
-                _offscreenClippingManager.SetupMatrixForHighPrecision(Model, false, CsmEnum.DrawableObjectType.Offscreen, GetMvpMatrix());
+                _offscreenClippingManager.SetupMatrixForHighPrecision(
+                    Model,
+                    false,
+                    CsmEnum.DrawableObjectType.Offscreen,
+                    GetMvpMatrix()
+                );
             }
             else
             {
@@ -957,7 +1110,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
     /// <summary>
     /// 绘制绘制对象 (美术网格, Offscreen) 的循环处理
-    /// (官方 DrawObjectLoop, .cpp:791-833). 
+    /// (官方 DrawObjectLoop, .cpp:791-833).
     /// 实测结论: renderOrder 的数组长度为 drawableCount + offscreenCount(Ren 模型为 198+24=222).
     /// </summary>
     private unsafe void DrawObjectLoop(int lastFBO, int[] lastViewport)
@@ -1000,12 +1153,15 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         while (_currentOffscreen != null)
         {
             // 若还残留 Offscreen, 则向父 Offscreen 传播
-            SubmitDrawToParentOffscreen(_currentOffscreen.GetOffscreenIndex(), CsmEnum.DrawableObjectType.Offscreen);
+            SubmitDrawToParentOffscreen(
+                _currentOffscreen.GetOffscreenIndex(),
+                CsmEnum.DrawableObjectType.Offscreen
+            );
         }
     }
 
     /// <summary>
-    /// 调用各对象的绘制处理 (官方 RenderObject, .cpp:835-852). 
+    /// 调用各对象的绘制处理 (官方 RenderObject, .cpp:835-852).
     /// </summary>
     private void RenderObject(int objectIndex, CsmEnum.DrawableObjectType objectType)
     {
@@ -1024,7 +1180,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     }
 
     /// <summary>
-    /// 绘制绘制对象 (美术网格) (官方 DrawDrawable, .cpp:854-930). 
+    /// 绘制绘制对象 (美术网格) (官方 DrawDrawable, .cpp:854-930).
     /// </summary>
     private unsafe void DrawDrawable(int drawableIndex)
     {
@@ -1037,14 +1193,18 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         SubmitDrawToParentOffscreen(drawableIndex, CsmEnum.DrawableObjectType.Drawable);
 
         // Clipping Mask
-        CubismClippingContext? clipContext = _drawableClippingManager != null
-            ? _drawableClippingManager.ClippingContextListForDraw[drawableIndex]
-            : null;
+        CubismClippingContext? clipContext =
+            _drawableClippingManager != null
+                ? _drawableClippingManager.ClippingContextListForDraw[drawableIndex]
+                : null;
 
         // 遮罩用渲染目标未创建成功时, 不执行 Viewport / Clear / 遮罩绘制.
-        //      RenderTexture == 0 时执行会破坏当前绑定的 FBO (画面或父 FBO). 
-        if (clipContext != null && UseHighPrecisionMask
-            && IsMaskBufferUsable(CsmEnum.DrawableObjectType.Drawable, clipContext.BufferIndex)) // 需要写入 Mask
+        //      RenderTexture == 0 时执行会破坏当前绑定的 FBO (画面或父 FBO).
+        if (
+            clipContext != null
+            && UseHighPrecisionMask
+            && IsMaskBufferUsable(CsmEnum.DrawableObjectType.Drawable, clipContext.BufferIndex)
+        ) // 需要写入 Mask
         {
             int[] preHighPrecisionMaskViewport = _highPrecisionMaskViewportBuffer;
             GL.GetIntegerv(GL.GL_VIEWPORT, preHighPrecisionMaskViewport);
@@ -1052,7 +1212,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             if (clipContext.IsUsing) // 本应写入
             {
                 // 按与生成的 RenderTarget 相同的尺寸设置视口
-                GL.Viewport(0, 0, (int)_drawableClippingManager!.ClippingMaskBufferSize.X, (int)_drawableClippingManager.ClippingMaskBufferSize.Y);
+                GL.Viewport(
+                    0,
+                    0,
+                    (int)_drawableClippingManager!.ClippingMaskBufferSize.X,
+                    (int)_drawableClippingManager.ClippingMaskBufferSize.Y
+                );
 
                 PreDraw(); // 清除缓冲
 
@@ -1061,7 +1226,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
                 GetDrawableMaskBuffer(clipContext.BufferIndex).BeginDraw(_currentFBO);
 
                 // 清除 Mask
-                // 1 为无效 (不被绘制) 区域, 0 为有效 (被绘制) 区域. 
+                // 1 为无效 (不被绘制) 区域, 0 为有效 (被绘制) 区域.
                 GL.ClearColor(1.0f, 1.0f, 1.0f, 1.0f);
                 GL.Clear(GL.GL_COLOR_BUFFER_BIT);
             }
@@ -1092,8 +1257,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
                 // --- 后处理 ---
                 GetDrawableMaskBuffer(clipContext.BufferIndex).EndDraw();
                 ClippingContextBufferForMask = null;
-                GL.Viewport(preHighPrecisionMaskViewport[0], preHighPrecisionMaskViewport[1],
-                    preHighPrecisionMaskViewport[2], preHighPrecisionMaskViewport[3]);
+                GL.Viewport(
+                    preHighPrecisionMaskViewport[0],
+                    preHighPrecisionMaskViewport[1],
+                    preHighPrecisionMaskViewport[2],
+                    preHighPrecisionMaskViewport[3]
+                );
 
                 PreDraw(); // 清除缓冲
             }
@@ -1114,9 +1283,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
 
     /// <summary>
     /// 尝试将 Offscreen 的绘制结果传播到父 Offscreen
-    /// (官方 SubmitDrawToParentOffscreen, .cpp:932-984). 
+    /// (官方 SubmitDrawToParentOffscreen, .cpp:932-984).
     /// </summary>
-    private unsafe void SubmitDrawToParentOffscreen(int objectIndex, CsmEnum.DrawableObjectType objectType)
+    private unsafe void SubmitDrawToParentOffscreen(
+        int objectIndex,
+        CsmEnum.DrawableObjectType objectType
+    )
     {
         if (_currentOffscreen == null || objectIndex == CubismModel.CubismNoIndex_Offscreen)
         {
@@ -1146,7 +1318,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
                 return;
         }
 
-        // 沿层级向上追溯, 若存在当前 Offscreen 的 owner 部件则结束处理. 
+        // 沿层级向上追溯, 若存在当前 Offscreen 的 owner 部件则结束处理.
         while (targetParentIndex != CubismModel.CubismNoIndex_Parent)
         {
             // 对象的父级与当前 owner 相同时结束处理
@@ -1158,17 +1330,17 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             targetParentIndex = Model.GetPartParentPartIndex(targetParentIndex);
         }
 
-        // 调用方的绘制对象不是当前 Offscreen 的绘制目标. 
+        // 调用方的绘制对象不是当前 Offscreen 的绘制目标.
         // 也就是说, 按绘制顺序组的规格, 当前 Offscreen 的所有绘制目标都已完成绘制, 因此
-        // 绘制当前 Offscreen. 
+        // 绘制当前 Offscreen.
         DrawOffscreen(_currentOffscreen);
 
-        // 若还能向父 Offscreen 传播则进行传播. 
+        // 若还能向父 Offscreen 传播则进行传播.
         SubmitDrawToParentOffscreen(objectIndex, objectType);
     }
 
     /// <summary>
-    /// 追加绘制对象 (Offscreen) (官方 AddOffscreen, .cpp:986-1041). 
+    /// 追加绘制对象 (Offscreen) (官方 AddOffscreen, .cpp:986-1041).
     /// </summary>
     private unsafe void AddOffscreen(int offscreenIndex)
     {
@@ -1204,23 +1376,26 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         offscreen.SetOffscreenRenderTarget(_modelRenderTargetWidth, _modelRenderTargetHeight);
 
         // 帧缓冲创建失败时跳过该离屏的绘制.
-        // 若保持 RenderTexture == 0 继续 BeginDraw / Clear / Draw, 会绘制到前一个 FBO (包括画面), 
-        // 导致绘制结果不确定. 
+        // 若保持 RenderTexture == 0 继续 BeginDraw / Clear / Draw, 会绘制到前一个 FBO (包括画面),
+        // 导致绘制结果不确定.
         CubismRenderTarget_OpenGLES2? offscreenTarget = offscreen.GetRenderTarget();
         if (offscreenTarget == null || !offscreenTarget.IsValid())
         {
             // 必须归还 SetOffscreenRenderTarget 借出的池槽位.
             //      若不归还, slot 会保持 IsUsed 状态, 之后再也无法借用该 slot
-            //      (= slot 永久占用. 使用数计数也不会恢复). 
+            //      (= slot 永久占用. 使用数计数也不会恢复).
             offscreen.StopUsingRenderTexture();
 
             if (!_warnedOffscreenRenderTargetUnavailable)
             {
                 _warnedOffscreenRenderTargetUnavailable = true;
                 CubismLog.Warning(
-                    "[Live2D OpenGL]AddOffscreen: render target for offscreen {0} is not available ({1}x{2}). " +
-                    "Skip drawing into this offscreen.",
-                    offscreenIndex, _modelRenderTargetWidth, _modelRenderTargetHeight);
+                    "[Live2D OpenGL]AddOffscreen: render target for offscreen {0} is not available ({1}x{2}). "
+                        + "Skip drawing into this offscreen.",
+                    offscreenIndex,
+                    _modelRenderTargetWidth,
+                    _modelRenderTargetHeight
+                );
             }
 
             return;
@@ -1254,16 +1429,19 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     }
 
     /// <summary>
-    /// 绘制绘制对象 (Offscreen) (官方 DrawOffscreen, .cpp:1043-1112). 
+    /// 绘制绘制对象 (Offscreen) (官方 DrawOffscreen, .cpp:1043-1112).
     /// </summary>
     private unsafe void DrawOffscreen(CubismOffscreenRenderTarget_OpenGLES2 currentOffscreen)
     {
         int offscreenIndex = currentOffscreen.GetOffscreenIndex();
 
         // 绘制目标(FBO)创建失败的离屏不参与合成.
-        //      AddOffscreen 失败时尚未切换 FBO, 因此保持当前绘制目标不变, 
-        //      只将状态回退一层到父级 (同时防止 GetRenderTarget() 为 null 时的异常). 
-        if (currentOffscreen.GetRenderTarget() is not { } offscreenTarget || offscreenTarget.IsValid() is false)
+        //      AddOffscreen 失败时尚未切换 FBO, 因此保持当前绘制目标不变,
+        //      只将状态回退一层到父级 (同时防止 GetRenderTarget() 为 null 时的异常).
+        if (
+            currentOffscreen.GetRenderTarget() is not { } offscreenTarget
+            || offscreenTarget.IsValid() is false
+        )
         {
             _currentOffscreen = _currentOffscreen?.GetOldOffscreen();
             ClippingContextBufferForOffscreen = null;
@@ -1272,14 +1450,18 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         }
 
         // Clipping Mask
-        CubismClippingContext? clipContext = _offscreenClippingManager != null
-            ? _offscreenClippingManager.ClippingContextListForOffscreen[offscreenIndex]
-            : null;
+        CubismClippingContext? clipContext =
+            _offscreenClippingManager != null
+                ? _offscreenClippingManager.ClippingContextListForOffscreen[offscreenIndex]
+                : null;
 
         // 遮罩用渲染目标未创建成功时, 不执行 Viewport / Clear / 遮罩绘制.
-        //      RenderTexture == 0 时执行会破坏当前绑定的 FBO (父 Offscreen). 
-        if (clipContext != null && UseHighPrecisionMask
-            && IsMaskBufferUsable(CsmEnum.DrawableObjectType.Offscreen, clipContext.BufferIndex)) // 需要写入 Mask
+        //      RenderTexture == 0 时执行会破坏当前绑定的 FBO (父 Offscreen).
+        if (
+            clipContext != null
+            && UseHighPrecisionMask
+            && IsMaskBufferUsable(CsmEnum.DrawableObjectType.Offscreen, clipContext.BufferIndex)
+        ) // 需要写入 Mask
         {
             int[] preHighPrecisionMaskViewport = _highPrecisionMaskViewportBuffer;
             GL.GetIntegerv(GL.GL_VIEWPORT, preHighPrecisionMaskViewport);
@@ -1287,7 +1469,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             if (clipContext.IsUsing) // 本应写入
             {
                 // 按与生成的 RenderTarget 相同的尺寸设置视口
-                GL.Viewport(0, 0, (int)_offscreenClippingManager!.ClippingMaskBufferSize.X, (int)_offscreenClippingManager.ClippingMaskBufferSize.Y);
+                GL.Viewport(
+                    0,
+                    0,
+                    (int)_offscreenClippingManager!.ClippingMaskBufferSize.X,
+                    (int)_offscreenClippingManager.ClippingMaskBufferSize.Y
+                );
 
                 PreDraw(); // 清除缓冲
 
@@ -1326,8 +1513,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
                 // --- 后处理 ---
                 GetOffscreenMaskBuffer(clipContext.BufferIndex).EndDraw();
                 ClippingContextBufferForMask = null;
-                GL.Viewport(preHighPrecisionMaskViewport[0], preHighPrecisionMaskViewport[1],
-                    preHighPrecisionMaskViewport[2], preHighPrecisionMaskViewport[3]);
+                GL.Viewport(
+                    preHighPrecisionMaskViewport[0],
+                    preHighPrecisionMaskViewport[1],
+                    preHighPrecisionMaskViewport[2],
+                    preHighPrecisionMaskViewport[3]
+                );
 
                 PreDraw(); // 清除缓冲
             }
@@ -1347,9 +1538,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     }
 
     /// <summary>
-    /// 在画面上绘制 Offscreen (官方 DrawOffscreenOpenGL, .cpp:1166-1202). 
+    /// 在画面上绘制 Offscreen (官方 DrawOffscreenOpenGL, .cpp:1166-1202).
     /// </summary>
-    private void DrawOffscreenOpenGL(CubismModel model, CubismOffscreenRenderTarget_OpenGLES2 offscreen)
+    private void DrawOffscreenOpenGL(
+        CubismModel model,
+        CubismOffscreenRenderTarget_OpenGLES2 offscreen
+    )
     {
         // 背面绘制的启用/禁用
         if (IsCulling)
@@ -1361,7 +1555,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
             GL.Disable(GL.GL_CULL_FACE);
         }
 
-        GL.FrontFace(GL.GL_CCW);    // Cubism SDK OpenGL 中 Mask 与美术网格都以 CCW 为正面
+        GL.FrontFace(GL.GL_CCW); // Cubism SDK OpenGL 中 Mask 与美术网格都以 CCW 为正面
 
         var renderTarget = offscreen.GetRenderTarget()!;
         renderTarget.EndDraw();
@@ -1386,7 +1580,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     }
 
     /// <summary>
-    /// 释放渲染器持有的资源 (包含 §2.F 漏点①的修正). 
+    /// 释放渲染器持有的资源 (包含 §2.F 漏点①的修正).
     /// </summary>
     public override void Dispose()
     {

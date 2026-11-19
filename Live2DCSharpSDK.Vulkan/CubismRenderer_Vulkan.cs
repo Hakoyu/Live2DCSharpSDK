@@ -44,12 +44,18 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <param name="swapchainImage"></param>
     /// <param name="swapchainImageView">swapchain 的 image view</param>
     /// <param name="dFormat"></param>
-    public static void SetConstantSettings(Device device, PhysicalDevice physicalDevice,
-                                           CommandPool commandPool, Queue queue,
-                                           Extent2D extent, Format depthFormat, Format surfaceFormat,
-                                           Image swapchainImage,
-                                           ImageView swapchainImageView,
-                                           Format dFormat)
+    public static void SetConstantSettings(
+        Device device,
+        PhysicalDevice physicalDevice,
+        CommandPool commandPool,
+        Queue queue,
+        Extent2D extent,
+        Format depthFormat,
+        Format surfaceFormat,
+        Image swapchainImage,
+        ImageView swapchainImageView,
+        Format dFormat
+    )
     {
         Device = device;
         PhysicalDevice = physicalDevice;
@@ -111,18 +117,37 @@ public class CubismRenderer_Vulkan : CubismRenderer
         vkVec4[3] = a;
     }
 
-    private static unsafe void SetColorChannel(ModelUBO* ubo, CubismClippingContext_Vulkan contextBuffer)
+    private static unsafe void SetColorChannel(
+        ModelUBO* ubo,
+        CubismClippingContext_Vulkan contextBuffer
+    )
     {
         int channelIndex = contextBuffer.LayoutChannelIndex;
         var colorChannel = contextBuffer.Manager.GetChannelFlagAsColor(channelIndex);
-        UpdateColor(ubo->ChannelFlag, colorChannel.R, colorChannel.G, colorChannel.B, colorChannel.A);
+        UpdateColor(
+            ubo->ChannelFlag,
+            colorChannel.R,
+            colorChannel.G,
+            colorChannel.B,
+            colorChannel.A
+        );
     }
 
-    private static unsafe void SetColorUniformBuffer(ModelUBO* ubo, CubismTextureColor baseColor,
-                                              CubismTextureColor multiplyColor, CubismTextureColor screenColor)
+    private static unsafe void SetColorUniformBuffer(
+        ModelUBO* ubo,
+        CubismTextureColor baseColor,
+        CubismTextureColor multiplyColor,
+        CubismTextureColor screenColor
+    )
     {
         UpdateColor(ubo->BaseColor, baseColor.R, baseColor.G, baseColor.B, baseColor.A);
-        UpdateColor(ubo->MultiplyColor, multiplyColor.R, multiplyColor.G, multiplyColor.B, multiplyColor.A);
+        UpdateColor(
+            ubo->MultiplyColor,
+            multiplyColor.R,
+            multiplyColor.G,
+            multiplyColor.B,
+            multiplyColor.A
+        );
         UpdateColor(ubo->ScreenColor, screenColor.R, screenColor.G, screenColor.B, screenColor.A);
     }
 
@@ -144,125 +169,155 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// 裁剪遮罩管理对象
     /// </summary>
     private CubismClippingManager_Vulkan _clippingManager;
+
     /// <summary>
     /// 离屏用裁剪遮罩管理对象.
     /// </summary>
     private CubismClippingManager_Vulkan? _offscreenClippingManager;
+
     /// <summary>
     /// 离屏用裁剪上下文.
     /// </summary>
     public CubismClippingContext_Vulkan? ClippingContextBufferForOffscreen { get; set; }
+
     /// <summary>
     /// 模型的离屏列表(官方 _offscreenList)
     /// </summary>
     private readonly List<CubismOffscreenRenderTarget_Vulkan> _offscreenList = [];
+
     /// <summary>
     /// 当前正在绘制的离屏(官方 _currentOffscreen)
     /// </summary>
     private CubismOffscreenRenderTarget_Vulkan? _currentOffscreen;
+
     /// <summary>
     /// 当前的绘制目标渲染目标(官方 _currentRenderTarget)
     /// </summary>
     private CubismRenderTarget_Vulkan? _currentRenderTarget;
+
     /// <summary>
     /// 绘制整个模型的渲染目标(官方 _modelRenderTargets)
     /// </summary>
     private readonly List<CubismRenderTarget_Vulkan> _modelRenderTargets = [];
+
     /// <summary>
     /// blend shader 用的快照(直接采样绘制中的 RT 会导致 validation error)
     /// </summary>
     private CubismRenderTarget_Vulkan? _blendSnapshot;
     private bool _blendSnapshotInitialized;
+
     /// <summary>
     /// 离屏用遮罩缓冲区(官方 _offscreenMaskBuffers)
     /// </summary>
     private readonly List<CubismRenderTarget_Vulkan> _offscreenMaskBuffers = [];
+
     /// <summary>
     /// 是否因使用 blend / offscreen 而经由模型 RT 绘制
     /// </summary>
     private bool _useModelRenderTarget;
+
     /// <summary>
     /// 模型 RT 是否已清除(官方 _isClearedModelRenderTarget)
     /// </summary>
     private bool _isClearedModelRenderTarget;
+
     /// <summary>
     /// 是否正在绘制离屏(用于选择遮罩缓冲区)
     /// </summary>
     private bool _isDrawingOffscreen;
+
     /// <summary>
     /// 离屏合成用 descriptor(index = offscreenIndex)
     /// </summary>
     private readonly List<Descriptor> _offscreenDescriptors = [];
+
     /// <summary>
     /// 模型 RT / 离屏合成用拷贝 descriptor
     /// </summary>
     private Descriptor? _copyDescriptor;
+
     /// <summary>
     /// 合成用全屏 quad 的顶点/索引 buffer
     /// </summary>
     private CubismBufferVulkan? _quadVertexBuffer;
     private CubismBufferVulkan? _quadStagingBuffer;
     private CubismBufferVulkan? _quadIndexBuffer;
+
     /// <summary>
     /// 按绘制顺序排列的绘制对象索引列表
     /// </summary>
     private readonly int[] _sortedObjectsIndexList;
+
     /// <summary>
     /// 按绘制顺序排列的对象种类(renderOrder 的长度为 drawableCount + offscreenCount).
     /// </summary>
     private readonly CsmEnum.DrawableObjectType[] _sortedObjectsTypeList;
+
     /// <summary>
     /// 用于绘制到遮罩纹理的裁剪上下文
     /// </summary>
     public CubismClippingContext_Vulkan? ClippingContextBufferForMask { get; set; }
+
     /// <summary>
     /// 用于在画面上绘制的裁剪上下文
     /// </summary>
     public CubismClippingContext_Vulkan? ClippingContextBufferForDraw { get; set; }
+
     /// <summary>
     /// 遮罩绘制用的 framebuffer
     /// </summary>
     private CubismRenderTarget_Vulkan[]? _offscreenFrameBuffers;
+
     /// <summary>
     /// 顶点 buffer
     /// </summary>
     private CubismBufferVulkan[] _vertexBuffers;
+
     /// <summary>
     /// 更新顶点 buffer 时使用的 staging buffer
     /// </summary>
     private readonly List<CubismBufferVulkan> _stagingBuffers = [];
+
     /// <summary>
     /// 索引 buffer
     /// </summary>
     private CubismBufferVulkan[] _indexBuffers;
+
     /// <summary>
     /// descriptor pool
     /// </summary>
     private DescriptorPool _descriptorPool;
+
     /// <summary>
     /// descriptor set 的布局
     /// </summary>
     private DescriptorSetLayout _descriptorSetLayout;
+
     /// <summary>
     /// descriptor 管理对象
     /// </summary>
     private readonly List<Descriptor> _descriptorSets = [];
+
     /// <summary>
     /// 模型使用的纹理
     /// </summary>
     private readonly List<CubismImageVulkan> _textures = [];
+
     /// <summary>
     /// 保存离屏颜色信息的深度 image
     /// </summary>
     private readonly CubismImageVulkan _depthImage;
+
     /// <summary>
     /// semaphore
     /// </summary>
     private Semaphore _updateFinishedSemaphore;
+
     /// <summary>
     /// 更新用命令缓冲区
     /// </summary>
     private CommandBuffer _updateCommandBuffer;
+
     /// <summary>
     /// 绘制用命令缓冲区
     /// </summary>
@@ -285,7 +340,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     public int OffscreenDrawCount { get; private set; }
 
-    public CubismRenderer_Vulkan(Vk vk, VulkanManager manager, CubismModel model, int maskBufferCount = 1) : base(model)
+    public CubismRenderer_Vulkan(
+        Vk vk,
+        VulkanManager manager,
+        CubismModel model,
+        int maskBufferCount = 1
+    )
+        : base(model)
     {
         _vk = vk;
         _vulkanManager = manager;
@@ -321,12 +382,23 @@ public class CubismRenderer_Vulkan : CubismRenderer
             for (int i = 0; i < maskBufferCount; i++)
             {
                 _offscreenFrameBuffers[i] = new(_vk);
-                if (_offscreenFrameBuffers[i].CreateRenderTarget(Device, PhysicalDevice, bufferWidth, bufferHeight,
-                    ImageFormat, DepthFormat) is false)
+                if (
+                    _offscreenFrameBuffers[i]
+                        .CreateRenderTarget(
+                            Device,
+                            PhysicalDevice,
+                            bufferWidth,
+                            bufferHeight,
+                            ImageFormat,
+                            DepthFormat
+                        )
+                    is false
+                )
                 {
                     // 遮罩缓冲区是绘制遮罩的必需资源, 创建失败时抛明确异常而不是继续使用无效句柄.
                     throw new InvalidOperationException(
-                        $"failed to create clipping mask render target ({bufferWidth}x{bufferHeight}).");
+                        $"failed to create clipping mask render target ({bufferWidth}x{bufferHeight})."
+                    );
                 }
 
                 InitializeMaskBufferLayout(_offscreenFrameBuffers[i]);
@@ -338,22 +410,30 @@ public class CubismRenderer_Vulkan : CubismRenderer
         {
             _offscreenClippingManager = new CubismClippingManager_Vulkan(_vk)
             {
-                Type = CsmEnum.DrawableObjectType.Offscreen
+                Type = CsmEnum.DrawableObjectType.Offscreen,
             };
             _offscreenClippingManager.Initialize(model, maskBufferCount);
 
             for (int i = 0; i < maskBufferCount; ++i)
             {
                 var mask = new CubismRenderTarget_Vulkan(_vk);
-                if (mask.CreateRenderTarget(Device, PhysicalDevice,
-                    (uint)_offscreenClippingManager.ClippingMaskBufferSize.X,
-                    (uint)_offscreenClippingManager.ClippingMaskBufferSize.Y,
-                    ImageFormat, DepthFormat) is false)
+                if (
+                    mask.CreateRenderTarget(
+                        Device,
+                        PhysicalDevice,
+                        (uint)_offscreenClippingManager.ClippingMaskBufferSize.X,
+                        (uint)_offscreenClippingManager.ClippingMaskBufferSize.Y,
+                        ImageFormat,
+                        DepthFormat
+                    )
+                    is false
+                )
                 {
                     // 离屏遮罩缓冲区同样属于必需资源, 失败时抛明确异常.
                     throw new InvalidOperationException(
-                        $"failed to create offscreen clipping mask render target " +
-                        $"({_offscreenClippingManager.ClippingMaskBufferSize.X}x{_offscreenClippingManager.ClippingMaskBufferSize.Y}).");
+                        $"failed to create offscreen clipping mask render target "
+                            + $"({_offscreenClippingManager.ClippingMaskBufferSize.X}x{_offscreenClippingManager.ClippingMaskBufferSize.Y})."
+                    );
                 }
 
                 InitializeMaskBufferLayout(mask);
@@ -405,10 +485,20 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = ImageLayout.Undefined,
             NewLayout = ImageLayout.ShaderReadOnlyOptimal,
             Image = mask.GetTextureImage(),
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(commandBuffer, PipelineStageFlags.TopOfPipeBit,
-            PipelineStageFlags.FragmentShaderBit, 0, 0, null, 0, null, 1, ref barrier);
+        _vk.CmdPipelineBarrier(
+            commandBuffer,
+            PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.FragmentShaderBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref barrier
+        );
         mask.SetColorImageCurrentLayout(ImageLayout.ShaderReadOnlyOptimal);
         SubmitCommand(commandBuffer);
     }
@@ -482,7 +572,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             Width = width,
             Height = height,
             MinDepth = minDepth,
-            MaxDepth = maxDepth
+            MaxDepth = maxDepth,
         };
     }
 
@@ -490,16 +580,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
     {
         return new()
         {
-            Offset = new()
-            {
-                X = (int)offsetX,
-                Y = (int)offsetY
-            },
-            Extent = new()
-            {
-                Height = (uint)height,
-                Width = (uint)width
-            }
+            Offset = new() { X = (int)offsetX, Y = (int)offsetY },
+            Extent = new() { Height = (uint)height, Width = (uint)width },
         };
     }
 
@@ -514,7 +596,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             SType = StructureType.CommandBufferAllocateInfo,
             Level = CommandBufferLevel.Primary,
             CommandPool = CommandPool,
-            CommandBufferCount = 1
+            CommandBufferCount = 1,
         };
 
         _vk.AllocateCommandBuffers(Device, ref allocInfo, out var commandBuffer);
@@ -522,7 +604,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         var beginInfo = new CommandBufferBeginInfo
         {
             SType = StructureType.CommandBufferBeginInfo,
-            Flags = CommandBufferUsageFlags.OneTimeSubmitBit
+            Flags = CommandBufferUsageFlags.OneTimeSubmitBit,
         };
 
         _vk.BeginCommandBuffer(commandBuffer, ref beginInfo);
@@ -536,21 +618,25 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <param name="commandBuffer">命令缓冲区</param>
     /// <param name="signalUpdateFinishedSemaphore">fence</param>
     /// <param name="waitUpdateFinishedSemaphore"></param>
-    public unsafe void SubmitCommand(CommandBuffer commandBuffer, Semaphore? signalUpdateFinishedSemaphore = null,
-        Semaphore? waitUpdateFinishedSemaphore = null)
+    public unsafe void SubmitCommand(
+        CommandBuffer commandBuffer,
+        Semaphore? signalUpdateFinishedSemaphore = null,
+        Semaphore? waitUpdateFinishedSemaphore = null
+    )
     {
         _vk.EndCommandBuffer(commandBuffer);
         var submitInfo = new SubmitInfo
         {
             SType = StructureType.SubmitInfo,
             CommandBufferCount = 1,
-            PCommandBuffers = &commandBuffer
+            PCommandBuffers = &commandBuffer,
         };
         if (waitUpdateFinishedSemaphore is { } sem1)
         {
             var waitStages = new PipelineStageFlags[]
             {
-                PipelineStageFlags.VertexInputBit, PipelineStageFlags.ColorAttachmentOutputBit
+                PipelineStageFlags.VertexInputBit,
+                PipelineStageFlags.ColorAttachmentOutputBit,
             };
 
             submitInfo.WaitSemaphoreCount = 1;
@@ -586,11 +672,15 @@ public class CubismRenderer_Vulkan : CubismRenderer
             SType = StructureType.CommandBufferAllocateInfo,
             CommandPool = CommandPool,
             Level = CommandBufferLevel.Primary,
-            CommandBufferCount = 1
+            CommandBufferCount = 1,
         };
 
-        if (_vk.AllocateCommandBuffers(Device, ref allocInfo, out _updateCommandBuffer) != Result.Success
-            || _vk.AllocateCommandBuffers(Device, ref allocInfo, out _drawCommandBuffer) != Result.Success)
+        if (
+            _vk.AllocateCommandBuffers(Device, ref allocInfo, out _updateCommandBuffer)
+                != Result.Success
+            || _vk.AllocateCommandBuffers(Device, ref allocInfo, out _drawCommandBuffer)
+                != Result.Success
+        )
         {
             CubismLog.Error("[Live2D Vulkan]failed to allocate command buffers!");
         }
@@ -617,9 +707,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
             // 降级策略: staging / vertex buffer 任一步失败时只跳过该 drawable, 不影响其它部件.
             var stagingBuffer = new CubismBufferVulkan(_vk);
-            bool stagingOk = stagingBuffer.CreateBuffer(Device, PhysicalDevice, bufferSize,
-                                          BufferUsageFlags.TransferSrcBit,
-                                          MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
+            bool stagingOk = stagingBuffer.CreateBuffer(
+                Device,
+                PhysicalDevice,
+                bufferSize,
+                BufferUsageFlags.TransferSrcBit,
+                MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit
+            );
             if (stagingOk)
             {
                 stagingOk = stagingBuffer.Map(Device, bufferSize);
@@ -630,16 +724,29 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
             if (stagingOk is false)
             {
-                CubismLog.Warning("[Live2D Vulkan]failed to create vertex staging buffer for drawable {0}.", drawAssign);
+                CubismLog.Warning(
+                    "[Live2D Vulkan]failed to create vertex staging buffer for drawable {0}.",
+                    drawAssign
+                );
                 continue;
             }
 
             var vertexBuffer = new CubismBufferVulkan(_vk);
-            if (vertexBuffer.CreateBuffer(Device, PhysicalDevice, bufferSize,
-                                           BufferUsageFlags.TransferDstBit | BufferUsageFlags.VertexBufferBit,
-                                           MemoryPropertyFlags.DeviceLocalBit) is false)
+            if (
+                vertexBuffer.CreateBuffer(
+                    Device,
+                    PhysicalDevice,
+                    bufferSize,
+                    BufferUsageFlags.TransferDstBit | BufferUsageFlags.VertexBufferBit,
+                    MemoryPropertyFlags.DeviceLocalBit
+                )
+                is false
+            )
             {
-                CubismLog.Warning("[Live2D Vulkan]failed to create vertex buffer for drawable {0}.", drawAssign);
+                CubismLog.Warning(
+                    "[Live2D Vulkan]failed to create vertex buffer for drawable {0}.",
+                    drawAssign
+                );
                 continue;
             }
 
@@ -668,40 +775,62 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
             // 降级策略: 索引 buffer 创建失败时只跳过该 drawable.
             var stagingBuffer = new CubismBufferVulkan(_vk);
-            bool stagingOk = stagingBuffer.CreateBuffer(Device, PhysicalDevice, bufferSize,
-                                           BufferUsageFlags.TransferSrcBit,
-                                           MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
+            bool stagingOk = stagingBuffer.CreateBuffer(
+                Device,
+                PhysicalDevice,
+                bufferSize,
+                BufferUsageFlags.TransferSrcBit,
+                MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit
+            );
             if (stagingOk)
             {
-                stagingOk = stagingBuffer.Map(Device, bufferSize) && stagingBuffer.MemCpy(indices, bufferSize);
+                stagingOk =
+                    stagingBuffer.Map(Device, bufferSize)
+                    && stagingBuffer.MemCpy(indices, bufferSize);
             }
 
             stagingBuffer.UnMap(Device);
 
             if (stagingOk is false)
             {
-                CubismLog.Warning("[Live2D Vulkan]failed to create index staging buffer for drawable {0}.", drawAssign);
+                CubismLog.Warning(
+                    "[Live2D Vulkan]failed to create index staging buffer for drawable {0}.",
+                    drawAssign
+                );
                 stagingBuffer.Destroy(Device);
                 continue;
             }
 
             var indexBuffer = new CubismBufferVulkan(_vk);
-            if (indexBuffer.CreateBuffer(Device, PhysicalDevice, bufferSize,
-                                         BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit,
-                                         MemoryPropertyFlags.DeviceLocalBit) is false)
+            if (
+                indexBuffer.CreateBuffer(
+                    Device,
+                    PhysicalDevice,
+                    bufferSize,
+                    BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit,
+                    MemoryPropertyFlags.DeviceLocalBit
+                )
+                is false
+            )
             {
-                CubismLog.Warning("[Live2D Vulkan]failed to create index buffer for drawable {0}.", drawAssign);
+                CubismLog.Warning(
+                    "[Live2D Vulkan]failed to create index buffer for drawable {0}.",
+                    drawAssign
+                );
                 stagingBuffer.Destroy(Device);
                 continue;
             }
 
             var commandBuffer = BeginSingleTimeCommands();
 
-            var copyRegion = new BufferCopy
-            {
-                Size = bufferSize
-            };
-            _vk.CmdCopyBuffer(commandBuffer, stagingBuffer.Buffer, indexBuffer.Buffer, 1, ref copyRegion);
+            var copyRegion = new BufferCopy { Size = bufferSize };
+            _vk.CmdCopyBuffer(
+                commandBuffer,
+                stagingBuffer.Buffer,
+                indexBuffer.Buffer,
+                1,
+                ref copyRegion
+            );
             SubmitCommand(commandBuffer);
             _indexBuffers[drawAssign] = indexBuffer;
             stagingBuffer.Destroy(Device);
@@ -728,25 +857,28 @@ public class CubismRenderer_Vulkan : CubismRenderer
             new()
             {
                 Type = DescriptorType.UniformBuffer,
-                DescriptorCount = (uint)descriptorSetCount
+                DescriptorCount = (uint)descriptorSetCount,
             },
             new()
             {
                 Type = DescriptorType.CombinedImageSampler,
-                DescriptorCount = (uint)(descriptorSetCount * textureCount) // drawableCount * 绘制方式数量 * 纹理数量
-            }
+                DescriptorCount = (uint)(descriptorSetCount * textureCount), // drawableCount * 绘制方式数量 * 纹理数量
+            },
         };
 
         var poolInfo = new DescriptorPoolCreateInfo
         {
             SType = StructureType.DescriptorPoolCreateInfo,
             PoolSizeCount = (uint)poolSizes.Length,
-            MaxSets = (uint)descriptorSetCount
+            MaxSets = (uint)descriptorSetCount,
         };
         fixed (DescriptorPoolSize* ptr = poolSizes)
         {
             poolInfo.PPoolSizes = ptr;
-            if (_vk.CreateDescriptorPool(Device, ref poolInfo, null, out _descriptorPool) != Result.Success)
+            if (
+                _vk.CreateDescriptorPool(Device, ref poolInfo, null, out _descriptorPool)
+                != Result.Success
+            )
             {
                 CubismLog.Error("failed to create descriptor pool!");
             }
@@ -759,9 +891,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
             {
                 Binding = 0,
                 DescriptorCount = 1,
-                DescriptorType =  DescriptorType.UniformBuffer,
+                DescriptorType = DescriptorType.UniformBuffer,
                 PImmutableSamplers = null,
-                StageFlags = ShaderStageFlags.All
+                StageFlags = ShaderStageFlags.All,
             },
             new()
             {
@@ -769,7 +901,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 DescriptorCount = 1,
                 DescriptorType = DescriptorType.CombinedImageSampler,
                 PImmutableSamplers = null,
-                StageFlags = ShaderStageFlags.FragmentBit
+                StageFlags = ShaderStageFlags.FragmentBit,
             },
             new()
             {
@@ -777,7 +909,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 DescriptorCount = 1,
                 DescriptorType = DescriptorType.CombinedImageSampler,
                 PImmutableSamplers = null,
-                StageFlags = ShaderStageFlags.FragmentBit
+                StageFlags = ShaderStageFlags.FragmentBit,
             },
             new()
             {
@@ -786,19 +918,26 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 DescriptorCount = 1,
                 DescriptorType = DescriptorType.CombinedImageSampler,
                 PImmutableSamplers = null,
-                StageFlags = ShaderStageFlags.FragmentBit
-            }
+                StageFlags = ShaderStageFlags.FragmentBit,
+            },
         };
 
         var layoutInfo = new DescriptorSetLayoutCreateInfo
         {
             SType = StructureType.DescriptorSetLayoutCreateInfo,
-            BindingCount = (uint)bindings.Length
+            BindingCount = (uint)bindings.Length,
         };
         fixed (DescriptorSetLayoutBinding* ptr = bindings)
         {
             layoutInfo.PBindings = ptr;
-            if (_vk.CreateDescriptorSetLayout(Device, ref layoutInfo, null, out _descriptorSetLayout) != Result.Success)
+            if (
+                _vk.CreateDescriptorSetLayout(
+                    Device,
+                    ref layoutInfo,
+                    null,
+                    out _descriptorSetLayout
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create descriptor set layout!");
             }
@@ -808,14 +947,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         for (int drawAssign = 0; drawAssign < drawableCount; drawAssign++)
         {
-            var desc = new Descriptor()
-            {
-                UniformBuffer = new CubismBufferVulkan(_vk)
-            };
+            var desc = new Descriptor() { UniformBuffer = new CubismBufferVulkan(_vk) };
 
             if (CreateUniformBuffer(desc.UniformBuffer) is false)
             {
-                throw new InvalidOperationException("failed to create uniform buffer for drawable descriptor set.");
+                throw new InvalidOperationException(
+                    "failed to create uniform buffer for drawable descriptor set."
+                );
             }
 
             _descriptorSets.Add(desc);
@@ -825,33 +963,31 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _offscreenDescriptors.Clear();
         for (int offscreenIndex = 0; offscreenIndex < offscreenCount; ++offscreenIndex)
         {
-            var desc = new Descriptor
-            {
-                UniformBuffer = new CubismBufferVulkan(_vk)
-            };
+            var desc = new Descriptor { UniformBuffer = new CubismBufferVulkan(_vk) };
             if (CreateUniformBuffer(desc.UniformBuffer) is false)
             {
-                throw new InvalidOperationException("failed to create uniform buffer for offscreen descriptor set.");
+                throw new InvalidOperationException(
+                    "failed to create uniform buffer for offscreen descriptor set."
+                );
             }
 
             _offscreenDescriptors.Add(desc);
         }
 
         // Copy 合成用(模型 RT -> swapchain)
-        _copyDescriptor = new Descriptor
-        {
-            UniformBuffer = new CubismBufferVulkan(_vk)
-        };
+        _copyDescriptor = new Descriptor { UniformBuffer = new CubismBufferVulkan(_vk) };
         if (CreateUniformBuffer(_copyDescriptor.UniformBuffer) is false)
         {
-            throw new InvalidOperationException("failed to create uniform buffer for copy descriptor set.");
+            throw new InvalidOperationException(
+                "failed to create uniform buffer for copy descriptor set."
+            );
         }
 
         var allocInfo = new DescriptorSetAllocateInfo
         {
             SType = StructureType.DescriptorSetAllocateInfo,
             DescriptorPool = _descriptorPool,
-            DescriptorSetCount = (uint)descriptorSetCount
+            DescriptorSetCount = (uint)descriptorSetCount,
         };
         var layouts = new DescriptorSetLayout[descriptorSetCount];
         for (int i = 0; i < descriptorSetCount; i++)
@@ -880,7 +1016,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
             for (int offscreenIndex = 0; offscreenIndex < offscreenCount; ++offscreenIndex)
             {
                 _offscreenDescriptors[offscreenIndex].DescriptorSet = descriptorSets[setIndex++];
-                _offscreenDescriptors[offscreenIndex].DescriptorSetMasked = descriptorSets[setIndex++];
+                _offscreenDescriptors[offscreenIndex].DescriptorSetMasked = descriptorSets[
+                    setIndex++
+                ];
             }
 
             _copyDescriptor!.DescriptorSet = descriptorSets[setIndex++];
@@ -894,9 +1032,16 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <returns>创建并映射成功返回 true</returns>
     private bool CreateUniformBuffer(CubismBufferVulkan uniformBuffer)
     {
-        if (uniformBuffer.CreateBuffer(Device, PhysicalDevice, (ulong)Unsafe.SizeOf<ModelUBO>(),
+        if (
+            uniformBuffer.CreateBuffer(
+                Device,
+                PhysicalDevice,
+                (ulong)Unsafe.SizeOf<ModelUBO>(),
                 BufferUsageFlags.UniformBufferBit,
-                MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit) is false)
+                MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit
+            )
+            is false
+        )
         {
             return false;
         }
@@ -927,9 +1072,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
         // 降级策略: quad buffer 任一步失败时放弃合成路径(调用方通过 null 检查跳过).
         ulong vertexSize = (ulong)(Unsafe.SizeOf<ModelVertex>() * vertices.Length);
         _quadStagingBuffer = new(_vk);
-        bool quadStagingOk = _quadStagingBuffer.CreateBuffer(Device, PhysicalDevice, vertexSize,
+        bool quadStagingOk = _quadStagingBuffer.CreateBuffer(
+            Device,
+            PhysicalDevice,
+            vertexSize,
             BufferUsageFlags.TransferSrcBit,
-            MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
+            MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit
+        );
         if (quadStagingOk)
         {
             quadStagingOk = _quadStagingBuffer.Map(Device, vertexSize);
@@ -946,15 +1095,25 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _quadStagingBuffer.UnMap(Device);
 
         _quadVertexBuffer = new(_vk);
-        bool quadVertexOk = quadStagingOk && _quadVertexBuffer.CreateBuffer(Device, PhysicalDevice, vertexSize,
-            BufferUsageFlags.TransferDstBit | BufferUsageFlags.VertexBufferBit,
-            MemoryPropertyFlags.DeviceLocalBit);
+        bool quadVertexOk =
+            quadStagingOk
+            && _quadVertexBuffer.CreateBuffer(
+                Device,
+                PhysicalDevice,
+                vertexSize,
+                BufferUsageFlags.TransferDstBit | BufferUsageFlags.VertexBufferBit,
+                MemoryPropertyFlags.DeviceLocalBit
+            );
 
         ulong indexSize = (ulong)(sizeof(ushort) * indices.Length);
         var indexStaging = new CubismBufferVulkan(_vk);
-        bool quadIndexStagingOk = indexStaging.CreateBuffer(Device, PhysicalDevice, indexSize,
+        bool quadIndexStagingOk = indexStaging.CreateBuffer(
+            Device,
+            PhysicalDevice,
+            indexSize,
             BufferUsageFlags.TransferSrcBit,
-            MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
+            MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit
+        );
         if (quadIndexStagingOk)
         {
             quadIndexStagingOk = indexStaging.Map(Device, indexSize);
@@ -971,13 +1130,21 @@ public class CubismRenderer_Vulkan : CubismRenderer
         indexStaging.UnMap(Device);
 
         _quadIndexBuffer = new(_vk);
-        bool quadIndexOk = quadIndexStagingOk && _quadIndexBuffer.CreateBuffer(Device, PhysicalDevice, indexSize,
-            BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit,
-            MemoryPropertyFlags.DeviceLocalBit);
+        bool quadIndexOk =
+            quadIndexStagingOk
+            && _quadIndexBuffer.CreateBuffer(
+                Device,
+                PhysicalDevice,
+                indexSize,
+                BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit,
+                MemoryPropertyFlags.DeviceLocalBit
+            );
 
         if (quadVertexOk is false || quadIndexOk is false)
         {
-            CubismLog.Warning("[Live2D Vulkan]failed to create fullscreen quad buffers, offscreen composition disabled.");
+            CubismLog.Warning(
+                "[Live2D Vulkan]failed to create fullscreen quad buffers, offscreen composition disabled."
+            );
             indexStaging.Destroy(Device);
             _quadStagingBuffer.Destroy(Device);
             _quadVertexBuffer.Destroy(Device);
@@ -990,9 +1157,21 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         var commandBuffer = BeginSingleTimeCommands();
         var vertexCopy = new BufferCopy { Size = vertexSize };
-        _vk.CmdCopyBuffer(commandBuffer, _quadStagingBuffer.Buffer, _quadVertexBuffer.Buffer, 1, ref vertexCopy);
+        _vk.CmdCopyBuffer(
+            commandBuffer,
+            _quadStagingBuffer.Buffer,
+            _quadVertexBuffer.Buffer,
+            1,
+            ref vertexCopy
+        );
         var indexCopy = new BufferCopy { Size = indexSize };
-        _vk.CmdCopyBuffer(commandBuffer, indexStaging.Buffer, _quadIndexBuffer.Buffer, 1, ref indexCopy);
+        _vk.CmdCopyBuffer(
+            commandBuffer,
+            indexStaging.Buffer,
+            _quadIndexBuffer.Buffer,
+            1,
+            ref indexCopy
+        );
         SubmitCommand(commandBuffer);
         indexStaging.Destroy(Device);
     }
@@ -1003,19 +1182,38 @@ public class CubismRenderer_Vulkan : CubismRenderer
     public void CreateDepthBuffer()
     {
         // 深度附件是图形 pipeline 的必需项, 创建失败无法保证绘制正确性, 直接抛明确异常.
-        if (_depthImage.CreateImage(Device, PhysicalDevice, SwapchainExtent.Width, SwapchainExtent.Height,
-        1, DepthFormat, ImageTiling.Optimal,
-         ImageUsageFlags.DepthStencilAttachmentBit) is false)
+        if (
+            _depthImage.CreateImage(
+                Device,
+                PhysicalDevice,
+                SwapchainExtent.Width,
+                SwapchainExtent.Height,
+                1,
+                DepthFormat,
+                ImageTiling.Optimal,
+                ImageUsageFlags.DepthStencilAttachmentBit
+            )
+            is false
+        )
         {
             throw new InvalidOperationException(
-                $"failed to create depth image ({SwapchainExtent.Width}x{SwapchainExtent.Height}).");
+                $"failed to create depth image ({SwapchainExtent.Width}x{SwapchainExtent.Height})."
+            );
         }
 
-        if (_depthImage.CreateView(Device, DepthFormat,
-             ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit, 1) is false)
+        if (
+            _depthImage.CreateView(
+                Device,
+                DepthFormat,
+                ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit,
+                1
+            )
+            is false
+        )
         {
             throw new InvalidOperationException(
-                $"failed to create depth image view ({SwapchainExtent.Width}x{SwapchainExtent.Height}).");
+                $"failed to create depth image view ({SwapchainExtent.Width}x{SwapchainExtent.Height})."
+            );
         }
     }
 
@@ -1027,12 +1225,11 @@ public class CubismRenderer_Vulkan : CubismRenderer
         // 获取每个设备的 pipeline 与离屏管理器(官方 InitializeRenderer: _deviceInfo = GetDeviceInfo(s_device))
         _deviceInfo = CubismDeviceInfo_Vulkan.GetDeviceInfo(Device);
 
-        vkCmdSetCullModeEXT = Marshal.GetDelegateForFunctionPointer<FvkCmdSetCullMode>(_vk.GetDeviceProcAddr(Device, "vkCmdSetCullModeEXT"));
+        vkCmdSetCullModeEXT = Marshal.GetDelegateForFunctionPointer<FvkCmdSetCullMode>(
+            _vk.GetDeviceProcAddr(Device, "vkCmdSetCullModeEXT")
+        );
 
-        var semaphoreInfo = new SemaphoreCreateInfo
-        {
-            SType = StructureType.SemaphoreCreateInfo
-        };
+        var semaphoreInfo = new SemaphoreCreateInfo { SType = StructureType.SemaphoreCreateInfo };
         _vk.CreateSemaphore(Device, ref semaphoreInfo, null, out _updateFinishedSemaphore);
 
         CreateCommandBuffer();
@@ -1053,8 +1250,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <param name="varray">顶点数组</param>
     /// <param name="uvarray">uv 数组</param>
     /// <param name="commandBuffer">命令缓冲区</param>
-    public unsafe void CopyToBuffer(int drawAssign, int vcount, float* varray, float* uvarray,
-                      CommandBuffer commandBuffer)
+    public unsafe void CopyToBuffer(
+        int drawAssign,
+        int vcount,
+        float* varray,
+        float* uvarray,
+        CommandBuffer commandBuffer
+    )
     {
         var vertices = new ModelVertex[vcount];
 
@@ -1063,25 +1265,19 @@ public class CubismRenderer_Vulkan : CubismRenderer
             // 从模型数据复制
             vertices[ct] = new()
             {
-                Pos = new()
-                {
-                    X = varray[ct1 + 0],
-                    Y = varray[ct1 + 1]
-                },
-                TexCoord = new()
-                {
-                    X = uvarray[ct1 + 0],
-                    Y = uvarray[ct1 + 1]
-                }
+                Pos = new() { X = varray[ct1 + 0], Y = varray[ct1 + 1] },
+                TexCoord = new() { X = uvarray[ct1 + 0], Y = uvarray[ct1 + 1] },
             };
         }
         var bufferSize = Unsafe.SizeOf<ModelVertex>() * vertices.Length;
 
         // 分配失败时该 drawable 的 buffer 可能无效, 此时跳过拷贝(绑定与绘制同样会跳过).
-        if ((uint)drawAssign >= (uint)_stagingBuffers.Count
+        if (
+            (uint)drawAssign >= (uint)_stagingBuffers.Count
             || (uint)drawAssign >= (uint)_vertexBuffers.Length
             || _stagingBuffers[drawAssign].IsValid is false
-            || _vertexBuffers[drawAssign].IsValid is false)
+            || _vertexBuffers[drawAssign].IsValid is false
+        )
         {
             return;
         }
@@ -1094,13 +1290,15 @@ public class CubismRenderer_Vulkan : CubismRenderer
             }
         }
 
-        var copyRegion = new BufferCopy
-        {
-            Size = (ulong)bufferSize
-        };
+        var copyRegion = new BufferCopy { Size = (ulong)bufferSize };
 
-        _vk.CmdCopyBuffer(commandBuffer, _stagingBuffers[drawAssign].Buffer, _vertexBuffers[drawAssign].Buffer, 1,
-                        ref copyRegion);
+        _vk.CmdCopyBuffer(
+            commandBuffer,
+            _stagingBuffers[drawAssign].Buffer,
+            _vertexBuffers[drawAssign].Buffer,
+            1,
+            ref copyRegion
+        );
     }
 
     /// <summary>
@@ -1135,7 +1333,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         {
             Buffer = uniformBuffer,
             Offset = 0,
-            Range = ulong.MaxValue
+            Range = ulong.MaxValue,
         };
         var ubo = new WriteDescriptorSet
         {
@@ -1144,7 +1342,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DstBinding = 0,
             DescriptorType = DescriptorType.UniformBuffer,
             DescriptorCount = 1,
-            PBufferInfo = &uniformBufferInfo
+            PBufferInfo = &uniformBufferInfo,
         };
         descriptorWrites[0] = ubo;
 
@@ -1154,7 +1352,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         {
             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
             ImageView = _textures[textureIndex].View,
-            Sampler = _textures[textureIndex].Sampler
+            Sampler = _textures[textureIndex].Sampler,
         };
         var image1 = new WriteDescriptorSet
         {
@@ -1163,7 +1361,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DstBinding = 1,
             DescriptorType = DescriptorType.CombinedImageSampler,
             DescriptorCount = 1,
-            PImageInfo = &imageInfo1
+            PImageInfo = &imageInfo1,
         };
         descriptorWrites[1] = image1;
 
@@ -1173,7 +1371,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         {
             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
             ImageView = _textures[textureIndex].View,
-            Sampler = _textures[textureIndex].Sampler
+            Sampler = _textures[textureIndex].Sampler,
         };
         var image3 = new WriteDescriptorSet
         {
@@ -1182,7 +1380,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DstBinding = 3,
             DescriptorType = DescriptorType.CombinedImageSampler,
             DescriptorCount = 1,
-            PImageInfo = &imageInfo3
+            PImageInfo = &imageInfo3,
         };
         descriptorWrites[2] = image3;
 
@@ -1192,10 +1390,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
             var imageInfo2 = new DescriptorImageInfo
             {
                 ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
-                ImageView = _offscreenFrameBuffers![ClippingContextBufferForDraw!.
-                BufferIndex].GetTextureView(),
-                Sampler = _offscreenFrameBuffers![ClippingContextBufferForDraw.
-                BufferIndex].GetTextureSampler()
+                ImageView = _offscreenFrameBuffers!
+                    [ClippingContextBufferForDraw!.BufferIndex]
+                    .GetTextureView(),
+                Sampler = _offscreenFrameBuffers!
+                    [ClippingContextBufferForDraw.BufferIndex]
+                    .GetTextureSampler(),
             };
             var image2 = new WriteDescriptorSet
             {
@@ -1204,7 +1404,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 DstBinding = 2,
                 DescriptorType = DescriptorType.CombinedImageSampler,
                 DescriptorCount = 1,
-                PImageInfo = &imageInfo2
+                PImageInfo = &imageInfo2,
             };
             descriptorWrites[3] = image2;
             writeCount = 4;
@@ -1224,15 +1424,22 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <param name="isMasked">是否为遮罩用 set</param>
     /// <param name="imageView">blend 用 texture view</param>
     /// <param name="sampler">sampler</param>
-    public unsafe void UpdateBlendTexture(Descriptor descriptor, bool isMasked, ImageView imageView, Sampler sampler)
+    public unsafe void UpdateBlendTexture(
+        Descriptor descriptor,
+        bool isMasked,
+        ImageView imageView,
+        Sampler sampler
+    )
     {
-        DescriptorSet descriptorSet = isMasked ? descriptor.DescriptorSetMasked : descriptor.DescriptorSet;
+        DescriptorSet descriptorSet = isMasked
+            ? descriptor.DescriptorSetMasked
+            : descriptor.DescriptorSet;
 
         var imageInfo = new DescriptorImageInfo
         {
             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
             ImageView = imageView,
-            Sampler = sampler
+            Sampler = sampler,
         };
         var write = new WriteDescriptorSet
         {
@@ -1241,7 +1448,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DstBinding = 3,
             DescriptorType = DescriptorType.CombinedImageSampler,
             DescriptorCount = 1,
-            PImageInfo = &imageInfo
+            PImageInfo = &imageInfo,
         };
 
         _vk.UpdateDescriptorSets(Device, 1, &write, 0, null);
@@ -1290,7 +1497,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         // 设置颜色常量缓冲区
         var baseColor = GetModelColorWithOpacity(model.GetDrawableOpacity(index));
-        var multiplyColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableMultiplyColor(index);
+        var multiplyColor = model
+            .GetOverrideMultiplyAndScreenColor()
+            .GetDrawableMultiplyColor(index);
         var screenColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableScreenColor(index);
         SetColorUniformBuffer(&ubo, baseColor, multiplyColor, screenColor);
 
@@ -1319,22 +1528,42 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         if (advancedBlend && _blendSnapshot is { } snapshot && snapshot.IsValid())
         {
-            UpdateBlendTexture(descriptor, masked, snapshot.GetTextureView(), snapshot.GetTextureSampler());
+            UpdateBlendTexture(
+                descriptor,
+                masked,
+                snapshot.GetTextureView(),
+                snapshot.GetTextureSampler()
+            );
         }
         else
         {
-            UpdateBlendTexture(descriptor, masked,
-                _textures[textureIndex].View, _textures[textureIndex].Sampler);
+            UpdateBlendTexture(
+                descriptor,
+                masked,
+                _textures[textureIndex].View,
+                _textures[textureIndex].Sampler
+            );
         }
-        var descriptorSet = masked ? _descriptorSets[index].DescriptorSetMasked
-                                                 : _descriptorSets[index].DescriptorSet;
-        _vk.CmdBindDescriptorSets(cmdBuffer, PipelineBindPoint.Graphics,
-                                    _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex), 0, 1,
-                                    ref descriptorSet, 0, null);
+        var descriptorSet = masked
+            ? _descriptorSets[index].DescriptorSetMasked
+            : _descriptorSets[index].DescriptorSet;
+        _vk.CmdBindDescriptorSets(
+            cmdBuffer,
+            PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex),
+            0,
+            1,
+            ref descriptorSet,
+            0,
+            null
+        );
 
         // 绑定 pipeline
-        _vk.CmdBindPipeline(cmdBuffer, PipelineBindPoint.Graphics,
-                          _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex));
+        _vk.CmdBindPipeline(
+            cmdBuffer,
+            PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex)
+        );
 
         // 5.3 以后的 blend 已由 PrepareBlendSnapshot() 重新开启 RT
         // 绘制
@@ -1363,8 +1592,15 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         // 设置颜色常量缓冲区
         var rect = ClippingContextBufferForMask.LayoutBounds;
-        var baseColor = new CubismTextureColor(rect.X * 2.0f - 1.0f, rect.Y * 2.0f - 1.0f, rect.GetRight() * 2.0f - 1.0f, rect.GetBottom() * 2.0f - 1.0f);
-        var multiplyColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableMultiplyColor(index);
+        var baseColor = new CubismTextureColor(
+            rect.X * 2.0f - 1.0f,
+            rect.Y * 2.0f - 1.0f,
+            rect.GetRight() * 2.0f - 1.0f,
+            rect.GetBottom() * 2.0f - 1.0f
+        );
+        var multiplyColor = model
+            .GetOverrideMultiplyAndScreenColor()
+            .GetDrawableMultiplyColor(index);
         var screenColor = model.GetOverrideMultiplyAndScreenColor().GetDrawableScreenColor(index);
         SetColorUniformBuffer(&ubo, baseColor, multiplyColor, screenColor);
 
@@ -1382,13 +1618,23 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         // 绑定 descriptor set
         UpdateDescriptorSet(descriptor, textureIndex, false);
-        _vk.CmdBindDescriptorSets(cmdBuffer, PipelineBindPoint.Graphics,
-                                _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex), 0, 1,
-                                ref _descriptorSets[index].DescriptorSet, 0, null);
+        _vk.CmdBindDescriptorSets(
+            cmdBuffer,
+            PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex),
+            0,
+            1,
+            ref _descriptorSets[index].DescriptorSet,
+            0,
+            null
+        );
 
         // 绑定 pipeline
-        _vk.CmdBindPipeline(cmdBuffer, PipelineBindPoint.Graphics,
-                          _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex));
+        _vk.CmdBindPipeline(
+            cmdBuffer,
+            PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex)
+        );
 
         // 绘制
         _vk.CmdDrawIndexed(cmdBuffer, (uint)model.GetDrawableVertexIndexCount(index), 1, 0, 0, 0);
@@ -1403,8 +1649,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <param name="index">绘制 mesh 的索引</param>
     /// <param name="commandBuffer">命令缓冲区</param>
     /// <param name="updateCommandBuffer">更新用命令缓冲区</param>
-    public unsafe void DrawMeshVulkan(CubismModel model, int index,
-                        CommandBuffer commandBuffer, CommandBuffer updateCommandBuffer)
+    public unsafe void DrawMeshVulkan(
+        CubismModel model,
+        int index,
+        CommandBuffer commandBuffer,
+        CommandBuffer updateCommandBuffer
+    )
     {
         if (Device.Handle == 0)
         {
@@ -1439,10 +1689,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
         }
 
         // 复制到顶点 buffer
-        CopyToBuffer(index, model.GetDrawableVertexCount(index),
-                     model.GetDrawableVertices(index),
-                     (float*)model.GetDrawableVertexUvs(index),
-                     updateCommandBuffer);
+        CopyToBuffer(
+            index,
+            model.GetDrawableVertexCount(index),
+            model.GetDrawableVertices(index),
+            (float*)model.GetDrawableVertexUvs(index),
+            updateCommandBuffer
+        );
 
         if (ClippingContextBufferForMask != null) // 生成遮罩时
         {
@@ -1465,7 +1718,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     public unsafe void BeginRendering(CommandBuffer drawCommandBuffer, bool isResume)
     {
         Image colorImage = UseRenderTarget ? RenderTargetImage : SwapchainImage;
-        ImageLayout currentLayout = _imageLayouts.TryGetValue(colorImage.Handle, out ImageLayout tracked)
+        ImageLayout currentLayout = _imageLayouts.TryGetValue(
+            colorImage.Handle,
+            out ImageLayout tracked
+        )
             ? tracked
             : ImageLayout.Undefined;
 
@@ -1477,13 +1733,26 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = currentLayout,
             NewLayout = ImageLayout.ColorAttachmentOptimal,
             Image = colorImage,
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(drawCommandBuffer, PipelineStageFlags.TopOfPipeBit,
-            PipelineStageFlags.ColorAttachmentOutputBit, 0, 0, null, 0, null, 1, ref colorBarrier);
+        _vk.CmdPipelineBarrier(
+            drawCommandBuffer,
+            PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.ColorAttachmentOutputBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref colorBarrier
+        );
         _imageLayouts[colorImage.Handle] = ImageLayout.ColorAttachmentOptimal;
 
-        ImageLayout depthLayout = _imageLayouts.TryGetValue(_depthImage.Image.Handle, out ImageLayout trackedDepth)
+        ImageLayout depthLayout = _imageLayouts.TryGetValue(
+            _depthImage.Image.Handle,
+            out ImageLayout trackedDepth
+        )
             ? trackedDepth
             : ImageLayout.Undefined;
         var depthBarrier = new ImageMemoryBarrier
@@ -1494,10 +1763,26 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = depthLayout,
             NewLayout = ImageLayout.DepthStencilAttachmentOptimal,
             Image = _depthImage.Image,
-            SubresourceRange = new(ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit, 0, 1, 0, 1)
+            SubresourceRange = new(
+                ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit,
+                0,
+                1,
+                0,
+                1
+            ),
         };
-        _vk.CmdPipelineBarrier(drawCommandBuffer, PipelineStageFlags.TopOfPipeBit,
-            PipelineStageFlags.EarlyFragmentTestsBit, 0, 0, null, 0, null, 1, ref depthBarrier);
+        _vk.CmdPipelineBarrier(
+            drawCommandBuffer,
+            PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.EarlyFragmentTestsBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref depthBarrier
+        );
         _imageLayouts[_depthImage.Image.Handle] = ImageLayout.DepthStencilAttachmentOptimal;
 
         var bgColor = _vulkanManager.LApp.BGColor;
@@ -1507,7 +1792,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         var colorAttachment = new RenderingAttachmentInfo
         {
-            SType = StructureType.RenderingAttachmentInfoKhr
+            SType = StructureType.RenderingAttachmentInfoKhr,
         };
         if (UseRenderTarget)
         {
@@ -1538,21 +1823,17 @@ public class CubismRenderer_Vulkan : CubismRenderer
             ImageLayout = ImageLayout.DepthStencilAttachmentOptimal,
             LoadOp = AttachmentLoadOp.Clear,
             StoreOp = AttachmentStoreOp.DontCare,
-            ClearValue = new(new(1.0f, 0))
+            ClearValue = new(new(1.0f, 0)),
         };
 
         var renderingInfo = new RenderingInfo
         {
             SType = StructureType.RenderingInfo,
-            RenderArea = new()
-            {
-                Offset = new(0, 0),
-                Extent = SwapchainExtent
-            },
+            RenderArea = new() { Offset = new(0, 0), Extent = SwapchainExtent },
             LayerCount = 1,
             ColorAttachmentCount = 1,
             PColorAttachments = &colorAttachment,
-            PDepthAttachment = &depthStencilAttachment
+            PDepthAttachment = &depthStencilAttachment,
         };
 
         _vk.CmdBeginRendering(drawCommandBuffer, &renderingInfo);
@@ -1568,7 +1849,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         // 变更布局
         Image colorImage = UseRenderTarget ? RenderTargetImage : SwapchainImage;
-        ImageLayout newLayout = UseRenderTarget ? ImageLayout.ShaderReadOnlyOptimal : ImageLayout.PresentSrcKhr;
+        ImageLayout newLayout = UseRenderTarget
+            ? ImageLayout.ShaderReadOnlyOptimal
+            : ImageLayout.PresentSrcKhr;
         var memoryBarrier = new ImageMemoryBarrier
         {
             SType = StructureType.ImageMemoryBarrier,
@@ -1577,12 +1860,23 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = ImageLayout.ColorAttachmentOptimal,
             NewLayout = newLayout,
             Image = colorImage,
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
 
-        _vk.CmdPipelineBarrier(drawCommandBuffer, PipelineStageFlags.ColorAttachmentOutputBit,
-            UseRenderTarget ? PipelineStageFlags.FragmentShaderBit : PipelineStageFlags.BottomOfPipeBit,
-            0, 0, null, 0, null, 1, ref memoryBarrier);
+        _vk.CmdPipelineBarrier(
+            drawCommandBuffer,
+            PipelineStageFlags.ColorAttachmentOutputBit,
+            UseRenderTarget
+                ? PipelineStageFlags.FragmentShaderBit
+                : PipelineStageFlags.BottomOfPipeBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref memoryBarrier
+        );
         _imageLayouts[colorImage.Handle] = newLayout;
     }
 
@@ -1633,7 +1927,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <summary>
     /// 按裁剪管理器的 Type 返回遮罩缓冲区(drawable / offscreen 两套).
     /// </summary>
-    public CubismRenderTarget_Vulkan GetMaskBufferForType(CsmEnum.DrawableObjectType type, int index)
+    public CubismRenderTarget_Vulkan GetMaskBufferForType(
+        CsmEnum.DrawableObjectType type,
+        int index
+    )
     {
         if (type == CsmEnum.DrawableObjectType.Offscreen)
         {
@@ -1675,7 +1972,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         return true;
     }
 
-    public unsafe override void Dispose()
+    public override unsafe void Dispose()
     {
         if (_disposed)
         {
@@ -1787,16 +2084,29 @@ public class CubismRenderer_Vulkan : CubismRenderer
         }
 
         var modelRenderTarget = _modelRenderTargets[0];
-        if (!modelRenderTarget.IsValid() ||
-            modelRenderTarget.GetBufferWidth() != SwapchainExtent.Width ||
-            modelRenderTarget.GetBufferHeight() != SwapchainExtent.Height)
+        if (
+            !modelRenderTarget.IsValid()
+            || modelRenderTarget.GetBufferWidth() != SwapchainExtent.Width
+            || modelRenderTarget.GetBufferHeight() != SwapchainExtent.Height
+        )
         {
             modelRenderTarget.DestroyRenderTarget();
-            if (modelRenderTarget.CreateRenderTarget(Device, PhysicalDevice,
-                SwapchainExtent.Width, SwapchainExtent.Height, SwapchainImageFormat, DepthFormat) is false)
+            if (
+                modelRenderTarget.CreateRenderTarget(
+                    Device,
+                    PhysicalDevice,
+                    SwapchainExtent.Width,
+                    SwapchainExtent.Height,
+                    SwapchainImageFormat,
+                    DepthFormat
+                )
+                is false
+            )
             {
                 // 降级: 模型 RT 不可用时退回直接绘制到 swapchain, 避免使用无效附件.
-                CubismLog.Warning("[Live2D Vulkan]model render target unavailable, fallback to direct swapchain rendering.");
+                CubismLog.Warning(
+                    "[Live2D Vulkan]model render target unavailable, fallback to direct swapchain rendering."
+                );
                 _useModelRenderTarget = false;
                 _currentRenderTarget = null;
                 _currentOffscreen = null;
@@ -1810,8 +2120,14 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         // 由于 vkCmdCopyImage 合成无法做 alpha blend, 因此用背景色清除模型 RT 本身
         var bgColor = _vulkanManager.LApp.BGColor;
-        modelRenderTarget.BeginDraw(_drawCommandBuffer, bgColor.R, bgColor.G, bgColor.B, bgColor.A,
-            !_isClearedModelRenderTarget);
+        modelRenderTarget.BeginDraw(
+            _drawCommandBuffer,
+            bgColor.R,
+            bgColor.G,
+            bgColor.B,
+            bgColor.A,
+            !_isClearedModelRenderTarget
+        );
         _currentRenderTarget = modelRenderTarget;
         _currentOffscreen = null;
         _isDrawingOffscreen = false;
@@ -1854,7 +2170,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
         {
             EndRendering(_drawCommandBuffer);
         }
-        else if (!ReferenceEquals(_currentRenderTarget, nextRenderTarget) && _currentRenderTarget.IsRendering())
+        else if (
+            !ReferenceEquals(_currentRenderTarget, nextRenderTarget)
+            && _currentRenderTarget.IsRendering()
+        )
         {
             _currentRenderTarget.EndDraw(_drawCommandBuffer);
         }
@@ -1914,12 +2233,25 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = ImageLayout.ShaderReadOnlyOptimal,
             NewLayout = ImageLayout.TransferSrcOptimal,
             Image = srcImage,
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.FragmentShaderBit,
-            PipelineStageFlags.TransferBit, 0, 0, null, 0, null, 1, ref srcToTransfer);
+        _vk.CmdPipelineBarrier(
+            _drawCommandBuffer,
+            PipelineStageFlags.FragmentShaderBit,
+            PipelineStageFlags.TransferBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref srcToTransfer
+        );
 
-        ImageLayout dstOldLayout = _imageLayouts.TryGetValue(dstImage.Handle, out ImageLayout tracked)
+        ImageLayout dstOldLayout = _imageLayouts.TryGetValue(
+            dstImage.Handle,
+            out ImageLayout tracked
+        )
             ? tracked
             : ImageLayout.Undefined;
         var dstToTransfer = new ImageMemoryBarrier
@@ -1930,26 +2262,49 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = dstOldLayout,
             NewLayout = ImageLayout.TransferDstOptimal,
             Image = dstImage,
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TopOfPipeBit,
-            PipelineStageFlags.TransferBit, 0, 0, null, 0, null, 1, ref dstToTransfer);
+        _vk.CmdPipelineBarrier(
+            _drawCommandBuffer,
+            PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.TransferBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref dstToTransfer
+        );
 
         // 用背景色清除 swapchain 后再复制模型 RT
         var bgColor = _vulkanManager.LApp.BGColor;
         var clearColor = new ClearColorValue(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
         var clearRange = new ImageSubresourceRange(ImageAspectFlags.ColorBit, 0, 1, 0, 1);
-        _vk.CmdClearColorImage(_drawCommandBuffer, dstImage, ImageLayout.TransferDstOptimal,
-            ref clearColor, 1, &clearRange);
+        _vk.CmdClearColorImage(
+            _drawCommandBuffer,
+            dstImage,
+            ImageLayout.TransferDstOptimal,
+            ref clearColor,
+            1,
+            &clearRange
+        );
 
         var copy = new ImageCopy
         {
             SrcSubresource = new(ImageAspectFlags.ColorBit, 0, 0, 1),
             DstSubresource = new(ImageAspectFlags.ColorBit, 0, 0, 1),
-            Extent = new(src.GetBufferWidth(), src.GetBufferHeight(), 1)
+            Extent = new(src.GetBufferWidth(), src.GetBufferHeight(), 1),
         };
-        _vk.CmdCopyImage(_drawCommandBuffer, srcImage, ImageLayout.TransferSrcOptimal,
-            dstImage, ImageLayout.TransferDstOptimal, 1, ref copy);
+        _vk.CmdCopyImage(
+            _drawCommandBuffer,
+            srcImage,
+            ImageLayout.TransferSrcOptimal,
+            dstImage,
+            ImageLayout.TransferDstOptimal,
+            1,
+            ref copy
+        );
 
         var dstToPresent = new ImageMemoryBarrier
         {
@@ -1959,10 +2314,20 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = ImageLayout.TransferDstOptimal,
             NewLayout = ImageLayout.PresentSrcKhr,
             Image = dstImage,
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TransferBit,
-            PipelineStageFlags.BottomOfPipeBit, 0, 0, null, 0, null, 1, ref dstToPresent);
+        _vk.CmdPipelineBarrier(
+            _drawCommandBuffer,
+            PipelineStageFlags.TransferBit,
+            PipelineStageFlags.BottomOfPipeBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref dstToPresent
+        );
         _imageLayouts[dstImage.Handle] = ImageLayout.PresentSrcKhr;
 
         // 把拷贝源 RT 恢复为 ShaderReadOnly, 与下一帧的 BeginDraw 保持一致
@@ -1974,10 +2339,20 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = ImageLayout.TransferSrcOptimal,
             NewLayout = ImageLayout.ShaderReadOnlyOptimal,
             Image = srcImage,
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TransferBit,
-            PipelineStageFlags.FragmentShaderBit, 0, 0, null, 0, null, 1, ref srcToRead);
+        _vk.CmdPipelineBarrier(
+            _drawCommandBuffer,
+            PipelineStageFlags.TransferBit,
+            PipelineStageFlags.FragmentShaderBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref srcToRead
+        );
         src.SetColorImageCurrentLayout(ImageLayout.ShaderReadOnlyOptimal);
     }
 
@@ -1993,8 +2368,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         var baseColor = GetModelColorWithOpacity(1.0f);
         var ubo = new ModelUBO();
-        UpdateColor(ubo.BaseColor, baseColor.R * baseColor.A, baseColor.G * baseColor.A,
-            baseColor.B * baseColor.A, baseColor.A);
+        UpdateColor(
+            ubo.BaseColor,
+            baseColor.R * baseColor.A,
+            baseColor.G * baseColor.A,
+            baseColor.B * baseColor.A,
+            baseColor.A
+        );
         UpdateColor(ubo.MultiplyColor, 1.0f, 1.0f, 1.0f, 1.0f);
         UpdateColor(ubo.ScreenColor, 0.0f, 0.0f, 0.0f, 1.0f);
         _copyDescriptor.UniformBuffer.MemCpy(&ubo, (ulong)Unsafe.SizeOf<ModelUBO>());
@@ -2002,10 +2382,21 @@ public class CubismRenderer_Vulkan : CubismRenderer
         UpdateCopyDescriptor(src);
 
         var descriptorSet = _copyDescriptor.DescriptorSet;
-        _vk.CmdBindDescriptorSets(_drawCommandBuffer, PipelineBindPoint.Graphics,
-            _deviceInfo.Pipeline.GetPipelineLayout(ShaderNames.Copy, 0), 0, 1, ref descriptorSet, 0, null);
-        _vk.CmdBindPipeline(_drawCommandBuffer, PipelineBindPoint.Graphics,
-            _deviceInfo.Pipeline.GetPipeline(ShaderNames.Copy, 0));
+        _vk.CmdBindDescriptorSets(
+            _drawCommandBuffer,
+            PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipelineLayout(ShaderNames.Copy, 0),
+            0,
+            1,
+            ref descriptorSet,
+            0,
+            null
+        );
+        _vk.CmdBindPipeline(
+            _drawCommandBuffer,
+            PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipeline(ShaderNames.Copy, 0)
+        );
 
         vkCmdSetCullModeEXT(_drawCommandBuffer, CullModeFlags.None);
         BindQuadBuffers(_drawCommandBuffer);
@@ -2032,7 +2423,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         {
             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
             ImageView = src.GetTextureView(),
-            Sampler = src.GetTextureSampler()
+            Sampler = src.GetTextureSampler(),
         };
         Span<WriteDescriptorSet> writes = stackalloc WriteDescriptorSet[2];
 
@@ -2040,7 +2431,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         {
             Buffer = _copyDescriptor.UniformBuffer.Buffer,
             Offset = 0,
-            Range = ulong.MaxValue
+            Range = ulong.MaxValue,
         };
         writes[0] = new WriteDescriptorSet
         {
@@ -2049,7 +2440,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DstBinding = 0,
             DescriptorType = DescriptorType.UniformBuffer,
             DescriptorCount = 1,
-            PBufferInfo = &bufferInfo
+            PBufferInfo = &bufferInfo,
         };
         writes[1] = new WriteDescriptorSet
         {
@@ -2058,7 +2449,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DstBinding = 1,
             DescriptorType = DescriptorType.CombinedImageSampler,
             DescriptorCount = 1,
-            PImageInfo = &imageInfo
+            PImageInfo = &imageInfo,
         };
 
         fixed (WriteDescriptorSet* ptr = writes)
@@ -2091,8 +2482,11 @@ public class CubismRenderer_Vulkan : CubismRenderer
         // 越界与所有权检查: 不把 drawable 索引当作 offscreen 使用.
         if ((uint)offscreenIndex >= (uint)_offscreenList.Count)
         {
-            CubismLog.Error("[Vulkan] offscreenIndex out of range: {0} (offscreenCount={1})",
-                offscreenIndex, _offscreenList.Count);
+            CubismLog.Error(
+                "[Vulkan] offscreenIndex out of range: {0} (offscreenCount={1})",
+                offscreenIndex,
+                _offscreenList.Count
+            );
             return;
         }
 
@@ -2103,7 +2497,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
             bool isParent = false;
             int ownerIndex = Model.GetOffscreenOwnerIndices()[offscreenIndex];
             int parentIndex = Model.GetPartParentPartIndex(ownerIndex);
-            int currentOwnerIndex = Model.GetOffscreenOwnerIndices()[_currentOffscreen.GetOffscreenIndex()];
+            int currentOwnerIndex = Model.GetOffscreenOwnerIndices()[
+                _currentOffscreen.GetOffscreenIndex()
+            ];
 
             while (parentIndex != CubismModel.CubismNoIndex_Parent)
             {
@@ -2121,8 +2517,15 @@ public class CubismRenderer_Vulkan : CubismRenderer
             }
         }
 
-        offscreen.SetOffscreenRenderTarget(Device, PhysicalDevice, _deviceInfo.OffscreenManager,
-            SwapchainExtent.Width, SwapchainExtent.Height, SwapchainImageFormat, DepthFormat);
+        offscreen.SetOffscreenRenderTarget(
+            Device,
+            PhysicalDevice,
+            _deviceInfo.OffscreenManager,
+            SwapchainExtent.Width,
+            SwapchainExtent.Height,
+            SwapchainImageFormat,
+            DepthFormat
+        );
 
         CubismRenderTarget_Vulkan? target = offscreen.GetRenderTarget();
         if (target == null || !target.IsValid())
@@ -2142,21 +2545,27 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _currentOffscreen = offscreen;
         _currentRenderTarget = target;
         _isDrawingOffscreen = true;
-        ClippingContextBufferForOffscreen = _offscreenClippingManager?.ClippingContextListForOffscreen[offscreenIndex]
+        ClippingContextBufferForOffscreen =
+            _offscreenClippingManager?.ClippingContextListForOffscreen[offscreenIndex]
             as CubismClippingContext_Vulkan;
     }
 
     /// <summary>
     /// 把离屏传递到父级(对应官方 SubmitDrawToParentOffscreen).
     /// </summary>
-    private unsafe void SubmitDrawToParentOffscreen(int objectIndex, CsmEnum.DrawableObjectType objectType)
+    private unsafe void SubmitDrawToParentOffscreen(
+        int objectIndex,
+        CsmEnum.DrawableObjectType objectType
+    )
     {
         if (_currentOffscreen == null || objectIndex == CubismModel.CubismNoIndex_Offscreen)
         {
             return;
         }
 
-        int currentOwnerIndex = Model.GetOffscreenOwnerIndices()[_currentOffscreen.GetOffscreenIndex()];
+        int currentOwnerIndex = Model.GetOffscreenOwnerIndices()[
+            _currentOffscreen.GetOffscreenIndex()
+        ];
         if (currentOwnerIndex == CubismModel.CubismNoIndex_Offscreen)
         {
             return;
@@ -2174,7 +2583,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 CubismLog.Error("[Vulkan] offscreenIndex out of range: {0}", objectIndex);
                 return;
             }
-            targetParentIndex = Model.GetPartParentPartIndex(Model.GetOffscreenOwnerIndices()[objectIndex]);
+            targetParentIndex = Model.GetPartParentPartIndex(
+                Model.GetOffscreenOwnerIndices()[objectIndex]
+            );
         }
 
         while (targetParentIndex != CubismModel.CubismNoIndex_Parent)
@@ -2213,9 +2624,11 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _currentOffscreen = parent;
         _isDrawingOffscreen = parent != null;
 
-        CubismClippingContext_Vulkan? clipContext = _offscreenClippingManager != null
-            ? _offscreenClippingManager.ClippingContextListForOffscreen[offscreenIndex] as CubismClippingContext_Vulkan
-            : null;
+        CubismClippingContext_Vulkan? clipContext =
+            _offscreenClippingManager != null
+                ? _offscreenClippingManager.ClippingContextListForOffscreen[offscreenIndex]
+                    as CubismClippingContext_Vulkan
+                : null;
         ClippingContextBufferForOffscreen = clipContext;
 
         // 重新开启父级的渲染目标(没有则使用模型 RT)
@@ -2257,8 +2670,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <summary>
     /// 绘制离屏合成用的 quad(对应官方 ExecuteDrawForOffscreen).
     /// </summary>
-    private unsafe void ExecuteDrawForOffscreen(CubismOffscreenRenderTarget_Vulkan offscreen,
-        CubismClippingContext_Vulkan? clipContext)
+    private unsafe void ExecuteDrawForOffscreen(
+        CubismOffscreenRenderTarget_Vulkan offscreen,
+        CubismClippingContext_Vulkan? clipContext
+    )
     {
         int offscreenIndex = offscreen.GetOffscreenIndex();
         if ((uint)offscreenIndex >= (uint)_offscreenDescriptors.Count)
@@ -2318,9 +2733,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
         var baseColor = new CubismTextureColor(opacity, opacity, opacity, opacity);
         Vector4 multiply = Model.GetOffscreenMultiplyColor(offscreenIndex);
         Vector4 screen = Model.GetOffscreenScreenColor(offscreenIndex);
-        SetColorUniformBuffer(&ubo, baseColor,
+        SetColorUniformBuffer(
+            &ubo,
+            baseColor,
             new CubismTextureColor(multiply.X, multiply.Y, multiply.Z, multiply.W),
-            new CubismTextureColor(screen.X, screen.Y, screen.Z, screen.W));
+            new CubismTextureColor(screen.X, screen.Y, screen.Z, screen.W)
+        );
 
         descriptor.UniformBuffer.MemCpy(&ubo, (ulong)Unsafe.SizeOf<ModelUBO>());
 
@@ -2347,13 +2765,31 @@ public class CubismRenderer_Vulkan : CubismRenderer
             blendSampler = srcTarget.GetTextureSampler();
         }
 
-        UpdateOffscreenDescriptor(descriptor, masked, offscreen, clipContext, blendView, blendSampler);
+        UpdateOffscreenDescriptor(
+            descriptor,
+            masked,
+            offscreen,
+            clipContext,
+            blendView,
+            blendSampler
+        );
 
         var descriptorSet = masked ? descriptor.DescriptorSetMasked : descriptor.DescriptorSet;
-        _vk.CmdBindDescriptorSets(_drawCommandBuffer, PipelineBindPoint.Graphics,
-            _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex), 0, 1, ref descriptorSet, 0, null);
-        _vk.CmdBindPipeline(_drawCommandBuffer, PipelineBindPoint.Graphics,
-            _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex));
+        _vk.CmdBindDescriptorSets(
+            _drawCommandBuffer,
+            PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex),
+            0,
+            1,
+            ref descriptorSet,
+            0,
+            null
+        );
+        _vk.CmdBindPipeline(
+            _drawCommandBuffer,
+            PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex)
+        );
 
         BindQuadBuffers(_drawCommandBuffer);
 
@@ -2364,9 +2800,14 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <summary>
     /// 更新离屏合成用的 descriptor.
     /// </summary>
-    private unsafe void UpdateOffscreenDescriptor(Descriptor descriptor, bool masked,
-        CubismOffscreenRenderTarget_Vulkan offscreen, CubismClippingContext_Vulkan? clipContext,
-        ImageView blendView, Sampler blendSampler)
+    private unsafe void UpdateOffscreenDescriptor(
+        Descriptor descriptor,
+        bool masked,
+        CubismOffscreenRenderTarget_Vulkan offscreen,
+        CubismClippingContext_Vulkan? clipContext,
+        ImageView blendView,
+        Sampler blendSampler
+    )
     {
         CubismRenderTarget_Vulkan? src = offscreen.GetRenderTarget();
         if (src == null)
@@ -2374,7 +2815,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
             return;
         }
 
-        DescriptorSet descriptorSet = masked ? descriptor.DescriptorSetMasked : descriptor.DescriptorSet;
+        DescriptorSet descriptorSet = masked
+            ? descriptor.DescriptorSetMasked
+            : descriptor.DescriptorSet;
         Span<WriteDescriptorSet> writes = stackalloc WriteDescriptorSet[4];
         int count = 0;
 
@@ -2382,7 +2825,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         {
             Buffer = descriptor.UniformBuffer.Buffer,
             Offset = 0,
-            Range = ulong.MaxValue
+            Range = ulong.MaxValue,
         };
         writes[count++] = new WriteDescriptorSet
         {
@@ -2391,14 +2834,14 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DstBinding = 0,
             DescriptorType = DescriptorType.UniformBuffer,
             DescriptorCount = 1,
-            PBufferInfo = &bufferInfo
+            PBufferInfo = &bufferInfo,
         };
 
         var srcInfo = new DescriptorImageInfo
         {
             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
             ImageView = src.GetTextureView(),
-            Sampler = src.GetTextureSampler()
+            Sampler = src.GetTextureSampler(),
         };
         writes[count++] = new WriteDescriptorSet
         {
@@ -2407,17 +2850,21 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DstBinding = 1,
             DescriptorType = DescriptorType.CombinedImageSampler,
             DescriptorCount = 1,
-            PImageInfo = &srcInfo
+            PImageInfo = &srcInfo,
         };
 
-        if (masked && clipContext != null && (uint)clipContext.BufferIndex < (uint)_offscreenMaskBuffers.Count)
+        if (
+            masked
+            && clipContext != null
+            && (uint)clipContext.BufferIndex < (uint)_offscreenMaskBuffers.Count
+        )
         {
             var maskBuffer = _offscreenMaskBuffers[clipContext.BufferIndex];
             var maskInfo = new DescriptorImageInfo
             {
                 ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
                 ImageView = maskBuffer.GetTextureView(),
-                Sampler = maskBuffer.GetTextureSampler()
+                Sampler = maskBuffer.GetTextureSampler(),
             };
             writes[count++] = new WriteDescriptorSet
             {
@@ -2426,7 +2873,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 DstBinding = 2,
                 DescriptorType = DescriptorType.CombinedImageSampler,
                 DescriptorCount = 1,
-                PImageInfo = &maskInfo
+                PImageInfo = &maskInfo,
             };
         }
 
@@ -2434,7 +2881,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         {
             ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
             ImageView = blendView,
-            Sampler = blendSampler
+            Sampler = blendSampler,
         };
         writes[count++] = new WriteDescriptorSet
         {
@@ -2443,7 +2890,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DstBinding = 3,
             DescriptorType = DescriptorType.CombinedImageSampler,
             DescriptorCount = 1,
-            PImageInfo = &blendInfo
+            PImageInfo = &blendInfo,
         };
 
         fixed (WriteDescriptorSet* ptr = writes)
@@ -2471,16 +2918,29 @@ public class CubismRenderer_Vulkan : CubismRenderer
             _blendSnapshot = new CubismRenderTarget_Vulkan(_vk);
         }
 
-        if (!_blendSnapshot.IsValid() ||
-            _blendSnapshot.GetBufferWidth() != target.GetBufferWidth() ||
-            _blendSnapshot.GetBufferHeight() != target.GetBufferHeight())
+        if (
+            !_blendSnapshot.IsValid()
+            || _blendSnapshot.GetBufferWidth() != target.GetBufferWidth()
+            || _blendSnapshot.GetBufferHeight() != target.GetBufferHeight()
+        )
         {
             _blendSnapshot.DestroyRenderTarget();
-            if (_blendSnapshot.CreateRenderTarget(Device, PhysicalDevice,
-                target.GetBufferWidth(), target.GetBufferHeight(), SwapchainImageFormat, DepthFormat) is false)
+            if (
+                _blendSnapshot.CreateRenderTarget(
+                    Device,
+                    PhysicalDevice,
+                    target.GetBufferWidth(),
+                    target.GetBufferHeight(),
+                    SwapchainImageFormat,
+                    DepthFormat
+                )
+                is false
+            )
             {
                 // 降级: 快照不可用时调用方退回使用模型纹理作为 binding3.
-                CubismLog.Warning("[Live2D Vulkan]failed to create blend snapshot render target, fallback to model texture.");
+                CubismLog.Warning(
+                    "[Live2D Vulkan]failed to create blend snapshot render target, fallback to model texture."
+                );
                 return false;
             }
 
@@ -2502,32 +2962,61 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = ImageLayout.ShaderReadOnlyOptimal,
             NewLayout = ImageLayout.TransferSrcOptimal,
             Image = target.GetTextureImage(),
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.FragmentShaderBit,
-            PipelineStageFlags.TransferBit, 0, 0, null, 0, null, 1, ref srcBarrier);
+        _vk.CmdPipelineBarrier(
+            _drawCommandBuffer,
+            PipelineStageFlags.FragmentShaderBit,
+            PipelineStageFlags.TransferBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref srcBarrier
+        );
 
         var dstBarrier = new ImageMemoryBarrier
         {
             SType = StructureType.ImageMemoryBarrier,
             SrcAccessMask = AccessFlags.None,
             DstAccessMask = AccessFlags.TransferWriteBit,
-            OldLayout = _blendSnapshotInitialized ? ImageLayout.ShaderReadOnlyOptimal : ImageLayout.Undefined,
+            OldLayout = _blendSnapshotInitialized
+                ? ImageLayout.ShaderReadOnlyOptimal
+                : ImageLayout.Undefined,
             NewLayout = ImageLayout.TransferDstOptimal,
             Image = _blendSnapshot.GetTextureImage(),
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TopOfPipeBit,
-            PipelineStageFlags.TransferBit, 0, 0, null, 0, null, 1, ref dstBarrier);
+        _vk.CmdPipelineBarrier(
+            _drawCommandBuffer,
+            PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.TransferBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref dstBarrier
+        );
 
         var copy = new ImageCopy
         {
             SrcSubresource = new(ImageAspectFlags.ColorBit, 0, 0, 1),
             DstSubresource = new(ImageAspectFlags.ColorBit, 0, 0, 1),
-            Extent = new(target.GetBufferWidth(), target.GetBufferHeight(), 1)
+            Extent = new(target.GetBufferWidth(), target.GetBufferHeight(), 1),
         };
-        _vk.CmdCopyImage(_drawCommandBuffer, target.GetTextureImage(), ImageLayout.TransferSrcOptimal,
-            _blendSnapshot.GetTextureImage(), ImageLayout.TransferDstOptimal, 1, ref copy);
+        _vk.CmdCopyImage(
+            _drawCommandBuffer,
+            target.GetTextureImage(),
+            ImageLayout.TransferSrcOptimal,
+            _blendSnapshot.GetTextureImage(),
+            ImageLayout.TransferDstOptimal,
+            1,
+            ref copy
+        );
 
         var toRead = new ImageMemoryBarrier
         {
@@ -2537,10 +3026,20 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = ImageLayout.TransferDstOptimal,
             NewLayout = ImageLayout.ShaderReadOnlyOptimal,
             Image = _blendSnapshot.GetTextureImage(),
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TransferBit,
-            PipelineStageFlags.FragmentShaderBit, 0, 0, null, 0, null, 1, ref toRead);
+        _vk.CmdPipelineBarrier(
+            _drawCommandBuffer,
+            PipelineStageFlags.TransferBit,
+            PipelineStageFlags.FragmentShaderBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref toRead
+        );
         _blendSnapshotInitialized = true;
 
         // 把 target 从 TransferSrc 恢复到绘制用布局后再重新开启
@@ -2552,10 +3051,20 @@ public class CubismRenderer_Vulkan : CubismRenderer
             OldLayout = ImageLayout.TransferSrcOptimal,
             NewLayout = ImageLayout.ColorAttachmentOptimal,
             Image = target.GetTextureImage(),
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
-        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TransferBit,
-            PipelineStageFlags.ColorAttachmentOutputBit, 0, 0, null, 0, null, 1, ref toColor);
+        _vk.CmdPipelineBarrier(
+            _drawCommandBuffer,
+            PipelineStageFlags.TransferBit,
+            PipelineStageFlags.ColorAttachmentOutputBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref toColor
+        );
         target.SetColorImageCurrentLayout(ImageLayout.ColorAttachmentOptimal);
 
         target.BeginDraw(_drawCommandBuffer, 0.0f, 0.0f, 0.0f, 0.0f, false);
@@ -2565,13 +3074,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <summary>
     /// 绘制模型的实际处理
     /// </summary>
-    protected unsafe override void DoDrawModel()
+    protected override unsafe void DoDrawModel()
     {
         //------------ 使用裁剪遮罩缓冲区预处理方式时 ------------
-        var beginInfo = new CommandBufferBeginInfo
-        {
-            SType = StructureType.CommandBufferBeginInfo
-        };
+        var beginInfo = new CommandBufferBeginInfo { SType = StructureType.CommandBufferBeginInfo };
         _vk.BeginCommandBuffer(_updateCommandBuffer, ref beginInfo);
         _vk.BeginCommandBuffer(_drawCommandBuffer, ref beginInfo);
 
@@ -2583,19 +3089,32 @@ public class CubismRenderer_Vulkan : CubismRenderer
             // 尺寸不同时在此处重新创建
             for (int i = 0; i < _clippingManager.RenderTextureCount; ++i)
             {
-                if (_offscreenFrameBuffers![i].BufferWidth != _clippingManager.ClippingMaskBufferSize.X
-                    || _offscreenFrameBuffers[i].BufferHeight != _clippingManager.ClippingMaskBufferSize.Y)
+                if (
+                    _offscreenFrameBuffers![i].BufferWidth
+                        != _clippingManager.ClippingMaskBufferSize.X
+                    || _offscreenFrameBuffers[i].BufferHeight
+                        != _clippingManager.ClippingMaskBufferSize.Y
+                )
                 {
                     _offscreenFrameBuffers[i].DestroyRenderTarget();
-                    if (_offscreenFrameBuffers[i].CreateRenderTarget(
-                        Device, PhysicalDevice,
-                        (uint)_clippingManager.ClippingMaskBufferSize.X,
-                        (uint)_clippingManager.ClippingMaskBufferSize.Y,
-                        ImageFormat, DepthFormat
-                    ) is false)
+                    if (
+                        _offscreenFrameBuffers[i]
+                            .CreateRenderTarget(
+                                Device,
+                                PhysicalDevice,
+                                (uint)_clippingManager.ClippingMaskBufferSize.X,
+                                (uint)_clippingManager.ClippingMaskBufferSize.Y,
+                                ImageFormat,
+                                DepthFormat
+                            )
+                        is false
+                    )
                     {
                         // 降级: 本帧跳过遮罩生成(模型按无遮罩绘制), 下一帧会重新尝试创建.
-                        CubismLog.Warning("[Live2D Vulkan]recreate clipping mask render target failed ({0}).", i);
+                        CubismLog.Warning(
+                            "[Live2D Vulkan]recreate clipping mask render target failed ({0}).",
+                            i
+                        );
                         maskBuffersReady = false;
                     }
                 }
@@ -2611,7 +3130,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
             }
             else
             {
-                _clippingManager.SetupClippingContext(Model, _drawCommandBuffer, _updateCommandBuffer, this);
+                _clippingManager.SetupClippingContext(
+                    Model,
+                    _drawCommandBuffer,
+                    _updateCommandBuffer,
+                    this
+                );
             }
         }
 
@@ -2623,19 +3147,32 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
             for (int i = 0; i < _offscreenClippingManager.RenderTextureCount; ++i)
             {
-                if (_offscreenMaskBuffers[i].BufferWidth != _offscreenClippingManager.ClippingMaskBufferSize.X
-                    || _offscreenMaskBuffers[i].BufferHeight != _offscreenClippingManager.ClippingMaskBufferSize.Y)
+                if (
+                    _offscreenMaskBuffers[i].BufferWidth
+                        != _offscreenClippingManager.ClippingMaskBufferSize.X
+                    || _offscreenMaskBuffers[i].BufferHeight
+                        != _offscreenClippingManager.ClippingMaskBufferSize.Y
+                )
                 {
                     _offscreenMaskBuffers[i].DestroyRenderTarget();
-                    if (_offscreenMaskBuffers[i].CreateRenderTarget(
-                        Device, PhysicalDevice,
-                        (uint)_offscreenClippingManager.ClippingMaskBufferSize.X,
-                        (uint)_offscreenClippingManager.ClippingMaskBufferSize.Y,
-                        ImageFormat, DepthFormat
-                    ) is false)
+                    if (
+                        _offscreenMaskBuffers[i]
+                            .CreateRenderTarget(
+                                Device,
+                                PhysicalDevice,
+                                (uint)_offscreenClippingManager.ClippingMaskBufferSize.X,
+                                (uint)_offscreenClippingManager.ClippingMaskBufferSize.Y,
+                                ImageFormat,
+                                DepthFormat
+                            )
+                        is false
+                    )
                     {
                         // 降级: 本帧跳过离屏遮罩生成, 下一帧会重新尝试创建.
-                        CubismLog.Warning("[Live2D Vulkan]recreate offscreen mask render target failed ({0}).", i);
+                        CubismLog.Warning(
+                            "[Live2D Vulkan]recreate offscreen mask render target failed ({0}).",
+                            i
+                        );
                         offscreenMaskBuffersReady = false;
                     }
                 }
@@ -2647,12 +3184,21 @@ public class CubismRenderer_Vulkan : CubismRenderer
             }
             else if (UseHighPrecisionMask)
             {
-                _offscreenClippingManager.SetupMatrixForHighPrecision(Model, false,
-                    CsmEnum.DrawableObjectType.Offscreen, GetMvpMatrix());
+                _offscreenClippingManager.SetupMatrixForHighPrecision(
+                    Model,
+                    false,
+                    CsmEnum.DrawableObjectType.Offscreen,
+                    GetMvpMatrix()
+                );
             }
             else
             {
-                _offscreenClippingManager.SetupClippingContext(Model, _drawCommandBuffer, _updateCommandBuffer, this);
+                _offscreenClippingManager.SetupClippingContext(
+                    Model,
+                    _drawCommandBuffer,
+                    _updateCommandBuffer,
+                    this
+                );
             }
         }
 
@@ -2660,7 +3206,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
         SubmitCommand(_drawCommandBuffer, null, _updateFinishedSemaphore);
 
         // 重建 swapchain 时更新深度 buffer 的尺寸
-        if (_depthImage.Width != SwapchainExtent.Width || _depthImage.Height != SwapchainExtent.Height)
+        if (
+            _depthImage.Width != SwapchainExtent.Width
+            || _depthImage.Height != SwapchainExtent.Height
+        )
         {
             _depthImage.Destroy(Device);
             CreateDepthBuffer();
@@ -2716,14 +3265,20 @@ public class CubismRenderer_Vulkan : CubismRenderer
             SubmitDrawToParentOffscreen(drawableIndex, CsmEnum.DrawableObjectType.Drawable);
 
             // 设置裁剪遮罩
-            var clipContext = (_clippingManager != null) ? _clippingManager.ClippingContextListForDraw[drawableIndex]
-                as CubismClippingContext_Vulkan : null;
+            var clipContext =
+                (_clippingManager != null)
+                    ? _clippingManager.ClippingContextListForDraw[drawableIndex]
+                        as CubismClippingContext_Vulkan
+                    : null;
 
             // 高精度遮罩需要有效的遮罩渲染目标, 分配失败时跳过遮罩绘制(按无遮罩渲染).
-            if (clipContext != null && UseHighPrecisionMask
+            if (
+                clipContext != null
+                && UseHighPrecisionMask
                 && _offscreenFrameBuffers != null
                 && (uint)clipContext.BufferIndex < (uint)_offscreenFrameBuffers.Length
-                && _offscreenFrameBuffers[clipContext.BufferIndex].IsValid()) // 需要绘制遮罩
+                && _offscreenFrameBuffers[clipContext.BufferIndex].IsValid()
+            ) // 需要绘制遮罩
             {
                 if (clipContext.IsUsing) // 已确定需要绘制
                 {
@@ -2736,15 +3291,32 @@ public class CubismRenderer_Vulkan : CubismRenderer
                     _vk.BeginCommandBuffer(_updateCommandBuffer, &beginInfo);
                     _vk.BeginCommandBuffer(_drawCommandBuffer, &beginInfo);
 
-                    var currentHighPrecisionMaskColorBuffer = _offscreenFrameBuffers![clipContext.BufferIndex];
-                    currentHighPrecisionMaskColorBuffer.BeginDraw(_drawCommandBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
+                    var currentHighPrecisionMaskColorBuffer = _offscreenFrameBuffers![
+                        clipContext.BufferIndex
+                    ];
+                    currentHighPrecisionMaskColorBuffer.BeginDraw(
+                        _drawCommandBuffer,
+                        1.0f,
+                        1.0f,
+                        1.0f,
+                        1.0f
+                    );
 
                     // 以与生成的 FrameBuffer 相同的尺寸设置 viewport
-                    var viewport1 = GetViewport(_clippingManager!.ClippingMaskBufferSize.X, _clippingManager.ClippingMaskBufferSize.Y,
-                        0.0f, 1.0f);
+                    var viewport1 = GetViewport(
+                        _clippingManager!.ClippingMaskBufferSize.X,
+                        _clippingManager.ClippingMaskBufferSize.Y,
+                        0.0f,
+                        1.0f
+                    );
                     _vk.CmdSetViewport(_drawCommandBuffer, 0, 1, ref viewport1);
 
-                    var rect1 = GetScissor(0.0f, 0.0f, _clippingManager.ClippingMaskBufferSize.X, _clippingManager.ClippingMaskBufferSize.Y);
+                    var rect1 = GetScissor(
+                        0.0f,
+                        0.0f,
+                        _clippingManager.ClippingMaskBufferSize.X,
+                        _clippingManager.ClippingMaskBufferSize.Y
+                    );
                     _vk.CmdSetScissor(_drawCommandBuffer, 0, 1, ref rect1);
 
                     int clipDrawCount = clipContext.ClippingIdCount;
@@ -2761,7 +3333,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
                         IsCulling = Model.GetDrawableCulling(clipDrawIndex) != 0;
 
                         ClippingContextBufferForMask = clipContext;
-                        DrawMeshVulkan(Model, clipDrawIndex, _drawCommandBuffer, _updateCommandBuffer);
+                        DrawMeshVulkan(
+                            Model,
+                            clipDrawIndex,
+                            _drawCommandBuffer,
+                            _updateCommandBuffer
+                        );
                     }
                     // --- 后处理 ---
                     currentHighPrecisionMaskColorBuffer.EndDraw(_drawCommandBuffer); // 结束离屏绘制
@@ -2774,7 +3351,14 @@ public class CubismRenderer_Vulkan : CubismRenderer
                     // 恢复绘制
                     if (_currentRenderTarget != null)
                     {
-                        _currentRenderTarget.BeginDraw(_drawCommandBuffer, 0.0f, 0.0f, 0.0f, 0.0f, false);
+                        _currentRenderTarget.BeginDraw(
+                            _drawCommandBuffer,
+                            0.0f,
+                            0.0f,
+                            0.0f,
+                            0.0f,
+                            false
+                        );
                     }
                     else
                     {
@@ -2810,16 +3394,10 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <summary>
     /// 保持绘制模型前的状态
     /// </summary>
-    protected override void SaveProfile()
-    {
-
-    }
+    protected override void SaveProfile() { }
 
     /// <summary>
     /// 保持绘制模型前的状态
     /// </summary>
-    protected override void RestoreProfile()
-    {
-
-    }
+    protected override void RestoreProfile() { }
 }

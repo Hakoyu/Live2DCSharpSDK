@@ -26,11 +26,7 @@ public sealed class CubismContextTests
     public void Create_BindsAllocatorOptionAndLogLevel()
     {
         TestAllocator allocator = new();
-        CubismOption option = new()
-        {
-            LogFunction = s_noopLog,
-            LoggingLevel = LogLevel.Warning
-        };
+        CubismOption option = new() { LogFunction = s_noopLog, LoggingLevel = LogLevel.Warning };
 
         CubismContext context = CubismContext.Create(allocator, option);
         try
@@ -56,14 +52,12 @@ public sealed class CubismContextTests
     [TestMethod]
     public void Create_WithNullArguments_ThrowsArgumentNullException()
     {
-        CubismOption option = new()
-        {
-            LogFunction = s_noopLog,
-            LoggingLevel = LogLevel.Info
-        };
+        CubismOption option = new() { LogFunction = s_noopLog, LoggingLevel = LogLevel.Info };
 
         Assert.ThrowsExactly<ArgumentNullException>(() => CubismContext.Create(null!, option));
-        Assert.ThrowsExactly<ArgumentNullException>(() => CubismContext.Create(new TestAllocator(), null!));
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
+            CubismContext.Create(new TestAllocator(), null!)
+        );
     }
 
     /// <summary>
@@ -125,7 +119,8 @@ public sealed class CubismContextTests
             Assert.AreEqual(1, CubismIdManagerProbe.GetRegisteredCount(first.IdManager));
             CollectionAssert.AreEqual(
                 new[] { "ParamAngleX" },
-                CubismIdManagerProbe.GetRegisteredIds(first.IdManager).ToArray());
+                CubismIdManagerProbe.GetRegisteredIds(first.IdManager).ToArray()
+            );
 
             Assert.AreNotSame(firstIds, second.IdManager);
             Assert.AreNotSame(firstIds, CubismContext.Default.IdManager);
@@ -159,11 +154,7 @@ public sealed class CubismContextTests
     /// <returns>尚未启动的上下文实例</returns>
     private static CubismContext CreateContext()
     {
-        CubismOption option = new()
-        {
-            LogFunction = s_noopLog,
-            LoggingLevel = LogLevel.Info
-        };
+        CubismOption option = new() { LogFunction = s_noopLog, LoggingLevel = LogLevel.Info };
 
         return CubismContext.Create(new TestAllocator(), option);
     }

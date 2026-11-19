@@ -45,12 +45,15 @@ internal static class CubismContextCurrentHook
         if (fields.Length != 1)
         {
             throw new InvalidOperationException(
-                $"CubismContext is expected to have exactly one AsyncLocal<CubismContext?> field, but {fields.Length} were found.");
+                $"CubismContext is expected to have exactly one AsyncLocal<CubismContext?> field, but {fields.Length} were found."
+            );
         }
 
         if (fields[0].GetValue(null) is not AsyncLocal<CubismContext?> storage)
         {
-            throw new InvalidOperationException("The AsyncLocal field of CubismContext has no value.");
+            throw new InvalidOperationException(
+                "The AsyncLocal field of CubismContext has no value."
+            );
         }
 
         return storage;

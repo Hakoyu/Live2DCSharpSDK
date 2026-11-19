@@ -34,16 +34,25 @@ public sealed class SmokeTests
     public void ReferencesOnlyManagedProjects()
     {
         Assert.AreEqual("Live2DCSharpSDK.Framework", typeof(CubismContext).Assembly.GetName().Name);
-        Assert.AreEqual("Live2DCSharpSDK.App", typeof(ModelResourceLocator).Assembly.GetName().Name);
+        Assert.AreEqual(
+            "Live2DCSharpSDK.App",
+            typeof(ModelResourceLocator).Assembly.GetName().Name
+        );
 
-        string[] renderers = typeof(SmokeTests).Assembly
-            .GetReferencedAssemblies()
+        string[] renderers = typeof(SmokeTests)
+            .Assembly.GetReferencedAssemblies()
             .Select(name => name.Name ?? string.Empty)
-            .Where(name => name.StartsWith("Live2DCSharpSDK.OpenGL", StringComparison.Ordinal)
-                || name.StartsWith("Live2DCSharpSDK.Vulkan", StringComparison.Ordinal))
+            .Where(name =>
+                name.StartsWith("Live2DCSharpSDK.OpenGL", StringComparison.Ordinal)
+                || name.StartsWith("Live2DCSharpSDK.Vulkan", StringComparison.Ordinal)
+            )
             .ToArray();
 
-        Assert.AreEqual(0, renderers.Length, $"Test project must not reference OpenGL/Vulkan: {string.Join(", ", renderers)}");
+        Assert.AreEqual(
+            0,
+            renderers.Length,
+            $"Test project must not reference OpenGL/Vulkan: {string.Join(", ", renderers)}"
+        );
     }
 
     /// <summary>
@@ -70,17 +79,13 @@ public sealed class SmokeTests
         /// </summary>
         /// <param name="executionOrder">执行顺序</param>
         public ProbeUpdater(int executionOrder)
-            : base(executionOrder)
-        {
-        }
+            : base(executionOrder) { }
 
         /// <summary>
         /// 空实现, 不触碰模型.
         /// </summary>
         /// <param name="model">更新目标的模型</param>
         /// <param name="deltaTimeSeconds">增量时间[秒]</param>
-        public override void OnLateUpdate(CubismModel model, float deltaTimeSeconds)
-        {
-        }
+        public override void OnLateUpdate(CubismModel model, float deltaTimeSeconds) { }
     }
 }

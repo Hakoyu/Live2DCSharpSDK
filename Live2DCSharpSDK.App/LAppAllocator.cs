@@ -81,7 +81,9 @@ public class LAppAllocator : ICubismAllocator
 
             if (memory == null)
             {
-                LogErrorNoThrow($"AllocateAligned() failed. size={size}, alignment={effectiveAlignment}.");
+                LogErrorNoThrow(
+                    $"AllocateAligned() failed. size={size}, alignment={effectiveAlignment}."
+                );
                 return IntPtr.Zero;
             }
 
@@ -89,7 +91,9 @@ public class LAppAllocator : ICubismAllocator
         }
         catch (OutOfMemoryException)
         {
-            LogErrorNoThrow($"AllocateAligned() failed. size={size}, alignment={effectiveAlignment}.");
+            LogErrorNoThrow(
+                $"AllocateAligned() failed. size={size}, alignment={effectiveAlignment}."
+            );
             return IntPtr.Zero;
         }
     }
@@ -125,7 +129,9 @@ public class LAppAllocator : ICubismAllocator
             return alignment;
         }
 
-        CubismLog.Warning($"LAppAllocator: invalid alignment {alignment}. Fallback to {FallbackAlignment}.");
+        CubismLog.Warning(
+            $"LAppAllocator: invalid alignment {alignment}. Fallback to {FallbackAlignment}."
+        );
         return FallbackAlignment;
     }
 

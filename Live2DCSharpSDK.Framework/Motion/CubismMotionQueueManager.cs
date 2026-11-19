@@ -4,7 +4,7 @@ namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
 /// 用于动作播放管理的类. 用于播放 CubismMotion 动作等 ACubismMotion 的子类.
-/// 
+///
 /// 播放过程中若通过 StartMotion() 启动了另一个动作, 则平滑切换到新动作并中断旧动作.
 /// 例如将表情用动作, 身体用动作等分开做成动作时,
 /// 需要同时播放多个动作时, 请使用多个 CubismMotionQueueManager 实例.
@@ -22,6 +22,7 @@ public class CubismMotionQueueManager
     /// 回调函数指针
     /// </summary>
     private CubismMotionEventFunction? _eventCallback;
+
     /// <summary>
     /// 返回给回调的数据
     /// </summary>
@@ -53,10 +54,7 @@ public class CubismMotionQueueManager
             motionQueueEntry.SetFadeout(motionQueueEntry.Motion.FadeOutSeconds);
         }
 
-        motionQueueEntry = new CubismMotionQueueEntry()
-        {
-            Motion = motion
-        };
+        motionQueueEntry = new CubismMotionQueueEntry() { Motion = motion };
 
         Motions.Add(motionQueueEntry);
 
@@ -181,7 +179,8 @@ public class CubismMotionQueueManager
             // ------ 检查用户触发事件 ----
             var firedList = motion.GetFiredEvent(
                 item.LastEventCheckSeconds - item.StartTime,
-                userTimeSeconds - item.StartTime);
+                userTimeSeconds - item.StartTime
+            );
 
             for (int i = 0; i < firedList.Count; ++i)
             {
@@ -193,7 +192,7 @@ public class CubismMotionQueueManager
             // ----- 若存在已结束的处理则删除 ------
             if (item.Finished)
             {
-                _remove.Add(item);          // 删除
+                _remove.Add(item); // 删除
             }
             else
             {

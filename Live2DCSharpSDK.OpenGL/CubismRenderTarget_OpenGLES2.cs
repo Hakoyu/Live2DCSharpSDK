@@ -4,27 +4,25 @@ using Live2DCSharpSDK.Framework.Rendering;
 namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
-/// OpenGL 用的渲染目标 (官方 OpenGL/CubismRenderTarget_OpenGLES2.hpp:48-145 / .cpp:28-185). 
+/// OpenGL 用的渲染目标 (官方 OpenGL/CubismRenderTarget_OpenGLES2.hpp:48-145 / .cpp:28-185).
 /// 由旧的 CubismOffscreenSurface_OpenGLES2 迁移到 R5 的名称与契约.
-/// 继承 Framework 侧的 CubismRenderTarget, 并对 ICubismOffscreenManager&lt;T&gt;, 
+/// 继承 Framework 侧的 CubismRenderTarget, 并对 ICubismOffscreenManager&lt;T&gt;,
 /// 提供无参构造, 以满足 new() 约束.
 /// </summary>
 public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
 {
     /// <summary>
-    /// 本渲染目标使用的 OpenGL API. 
-    /// 由构造函数传入, 或由所属的 CubismOffscreenManager_OpenGLES2 在新建后绑定. 
+    /// 本渲染目标使用的 OpenGL API.
+    /// 由构造函数传入, 或由所属的 CubismOffscreenManager_OpenGLES2 在新建后绑定.
     /// </summary>
     private OpenGLApi? _gl;
 
     /// <summary>
-    /// 无参构造函数 (为满足 ICubismOffscreenManager&lt;T&gt; 的 new() 约束). 
+    /// 无参构造函数 (为满足 ICubismOffscreenManager&lt;T&gt; 的 new() 约束).
     /// 创建时未绑定 OpenGLApi, 由所属管理器在归还调用方之前通过 BindApi 绑定;
     /// 绑定之前访问 GL 会抛出 InvalidOperationException.
     /// </summary>
-    public CubismRenderTarget_OpenGLES2()
-    {
-    }
+    public CubismRenderTarget_OpenGLES2() { }
 
     /// <summary>
     /// 带参数的构造函数
@@ -35,22 +33,24 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     {
         if (gl is null)
         {
-            throw new ArgumentNullException(nameof(gl),
-                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2 requires an OpenGLApi instance.");
+            throw new ArgumentNullException(
+                nameof(gl),
+                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2 requires an OpenGLApi instance."
+            );
         }
 
         _gl = gl;
     }
 
     /// <summary>
-    /// 当前渲染目标绑定的 OpenGL API. 未绑定时为 null. 
+    /// 当前渲染目标绑定的 OpenGL API. 未绑定时为 null.
     /// </summary>
     public OpenGLApi? Api => _gl;
 
     /// <summary>
-    /// 绑定 OpenGL API. 
+    /// 绑定 OpenGL API.
     /// 仅由所属的 CubismOffscreenManager_OpenGLES2 在新建渲染目标后调用;
-    /// 已绑定其它 API 时抛出异常, 防止两个上下文互相覆盖 (旧 s_defaultApi 的回归点). 
+    /// 已绑定其它 API 时抛出异常, 防止两个上下文互相覆盖 (旧 s_defaultApi 的回归点).
     /// </summary>
     /// <param name="gl">OpenGL API</param>
     /// <exception cref="ArgumentNullException">gl 为 null 时抛出</exception>
@@ -59,8 +59,10 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     {
         if (gl is null)
         {
-            throw new ArgumentNullException(nameof(gl),
-                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2 requires an OpenGLApi instance.");
+            throw new ArgumentNullException(
+                nameof(gl),
+                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2 requires an OpenGLApi instance."
+            );
         }
 
         if (_gl is null)
@@ -72,18 +74,23 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         if (ReferenceEquals(_gl, gl) is false)
         {
             throw new InvalidOperationException(
-                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2 is already bound to another OpenGLApi instance.");
+                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2 is already bound to another OpenGLApi instance."
+            );
         }
     }
 
-    private OpenGLApi GL => _gl ?? throw new InvalidOperationException(
-        "[Live2D OpenGL]CubismRenderTarget_OpenGLES2: OpenGLApi is not set. " +
-        "Create the render target with an OpenGLApi, or let the owning offscreen manager bind one.");
+    private OpenGLApi GL =>
+        _gl
+        ?? throw new InvalidOperationException(
+            "[Live2D OpenGL]CubismRenderTarget_OpenGLES2: OpenGLApi is not set. "
+                + "Create the render target with an OpenGLApi, or let the owning offscreen manager bind one."
+        );
 
     /// <summary>
     /// 作为渲染目标的地址
     /// </summary>
     public int RenderTexture { get; private set; }
+
     /// <summary>
     /// 绘制时作为纹理使用的地址
     /// </summary>
@@ -93,6 +100,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// 旧帧缓冲
     /// </summary>
     private int _oldFBO;
+
     /// <summary>
     /// 旧视口(对应官方 _oldViewport[4]).
     /// </summary>
@@ -102,12 +110,14 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// Create 时指定的宽度 (本地兼容的 int 公开)
     /// </summary>
     public int BufferWidth => _bufferWidth;
+
     /// <summary>
     /// Create 时指定的高度 (本地兼容的 int 公开)
     /// </summary>
     public int BufferHeight => _bufferHeight;
+
     /// <summary>
-    /// 是否为由参数设置的色彩缓冲? 
+    /// 是否为由参数设置的色彩缓冲?
     /// </summary>
     private bool _isColorBufferInherited;
 
@@ -115,14 +125,17 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     private int _bufferHeight;
 
     /// <summary>
-    /// 复制缓冲的内容 (官方 CopyBuffer, 用于不支持 texture barrier 的环境). 
+    /// 复制缓冲的内容 (官方 CopyBuffer, 用于不支持 texture barrier 的环境).
     /// </summary>
     /// <param name="src">复制源</param>
     /// <param name="dst">复制目标</param>
-    public static void CopyBuffer(CubismRenderTarget_OpenGLES2 src, CubismRenderTarget_OpenGLES2 dst)
+    public static void CopyBuffer(
+        CubismRenderTarget_OpenGLES2 src,
+        CubismRenderTarget_OpenGLES2 dst
+    )
     {
         // 任一方创建失败时不执行拷贝.
-        // 若把 RenderTexture == 0 作为写入目标, 会转送到默认帧缓冲 (画面). 
+        // 若把 RenderTexture == 0 作为写入目标, 会转送到默认帧缓冲 (画面).
         if (!src.IsValid() || !dst.IsValid())
         {
             return;
@@ -130,13 +143,14 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
 
         OpenGLApi gl = src.GL;
 
-        // 双方必须绑定同一个 OpenGLApi 实例. 
-        // 跨上下文拷贝没有意义, 旧实现会静默按最后设置 s_defaultApi 的 API 执行 (G2 的回归点). 
+        // 双方必须绑定同一个 OpenGLApi 实例.
+        // 跨上下文拷贝没有意义, 旧实现会静默按最后设置 s_defaultApi 的 API 执行 (G2 的回归点).
         if (ReferenceEquals(gl, dst.GL) is false)
         {
             throw new InvalidOperationException(
-                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2.CopyBuffer requires both render targets " +
-                "to be bound to the same OpenGLApi instance.");
+                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2.CopyBuffer requires both render targets "
+                    + "to be bound to the same OpenGLApi instance."
+            );
         }
 
         gl.GetIntegerv(gl.GL_FRAMEBUFFER_BINDING, out int framebuffer);
@@ -144,8 +158,18 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         gl.BindFramebuffer(gl.GL_READ_FRAMEBUFFER, src.RenderTexture);
         gl.BindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, dst.RenderTexture);
 
-        gl.BlitFramebuffer(0, 0, src._bufferWidth, src._bufferHeight,
-            0, 0, dst._bufferWidth, dst._bufferHeight, gl.GL_COLOR_BUFFER_BIT, gl.GL_NEAREST);
+        gl.BlitFramebuffer(
+            0,
+            0,
+            src._bufferWidth,
+            src._bufferHeight,
+            0,
+            0,
+            dst._bufferWidth,
+            dst._bufferHeight,
+            gl.GL_COLOR_BUFFER_BIT,
+            gl.GL_NEAREST
+        );
 
         gl.BindFramebuffer(gl.GL_FRAMEBUFFER, framebuffer);
     }
@@ -225,11 +249,15 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// <remarks>
     /// 创建后立即用 glCheckFramebufferStatus 校验完整性.
     /// 不完整时销毁 GL 资源并返回 false (为 false 时
-    /// <see cref="IsValid"/> 为 false, <see cref="RenderTexture"/> / <see cref="ColorBuffer"/> 为 0). 
+    /// <see cref="IsValid"/> 为 false, <see cref="RenderTexture"/> / <see cref="ColorBuffer"/> 为 0).
     /// 宽度, 高度保留为请求值, 因此以相同尺寸再次调用时不会重新创建
-    /// (避免在创建持续失败的环境中每帧重建导致日志刷屏). 
+    /// (避免在创建持续失败的环境中每帧重建导致日志刷屏).
     /// </remarks>
-    public unsafe bool CreateRenderTarget(int displayBufferWidth, int displayBufferHeight, int colorBuffer = 0)
+    public unsafe bool CreateRenderTarget(
+        int displayBufferWidth,
+        int displayBufferHeight,
+        int colorBuffer = 0
+    )
     {
         // 先删除
         DestroyRenderTarget();
@@ -240,7 +268,9 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         {
             CubismLog.Warning(
                 "[Live2D OpenGL]CreateRenderTarget failed: invalid size {0}x{1}. No framebuffer was created.",
-                displayBufferWidth, displayBufferHeight);
+                displayBufferWidth,
+                displayBufferHeight
+            );
             return false;
         }
 
@@ -250,7 +280,17 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
             ColorBuffer = GL.GenTexture();
 
             GL.BindTexture(GL.GL_TEXTURE_2D, ColorBuffer);
-            GL.TexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, displayBufferWidth, displayBufferHeight, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, 0);
+            GL.TexImage2D(
+                GL.GL_TEXTURE_2D,
+                0,
+                GL.GL_RGBA,
+                displayBufferWidth,
+                displayBufferHeight,
+                0,
+                GL.GL_RGBA,
+                GL.GL_UNSIGNED_BYTE,
+                0
+            );
             // 官方 .cpp:98-106 (桌面 GL 为 REPEAT / NEAREST)
             GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
             GL.TexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
@@ -272,10 +312,16 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
 
         int ret = GL.GenFramebuffer();
         GL.BindFramebuffer(GL.GL_FRAMEBUFFER, ret);
-        GL.FramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0, GL.GL_TEXTURE_2D, ColorBuffer, 0);
+        GL.FramebufferTexture2D(
+            GL.GL_FRAMEBUFFER,
+            GL.GL_COLOR_ATTACHMENT0,
+            GL.GL_TEXTURE_2D,
+            ColorBuffer,
+            0
+        );
 
         // 附加纹理后(FBO 仍绑定中)校验帧缓冲完整性.
-        // 向不完整的 FBO 绘制会使绘制结果未定义, 因此在此处按失败处理. 
+        // 向不完整的 FBO 绘制会使绘制结果未定义, 因此在此处按失败处理.
         int status = GL.CheckFramebufferStatus(GL.GL_FRAMEBUFFER);
 
         GL.BindFramebuffer(GL.GL_FRAMEBUFFER, tmpFramebufferObject);
@@ -307,7 +353,7 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// 输出状态码 / 请求尺寸 / 附件(绑定到 COLOR_ATTACHMENT0 的纹理)以及 GL_MAX_TEXTURE_SIZE.
     /// </summary>
     /// <remarks>
-    /// 既有的 <see cref="CubismLog.Error"/> 在输出后会抛出异常, 因此对以 bool 返回失败的此 API, 
+    /// 既有的 <see cref="CubismLog.Error"/> 在输出后会抛出异常, 因此对以 bool 返回失败的此 API,
     /// 为不牵连调用方 (绘制循环), 降级为 Warning 输出
     /// (只降级调用点, 不改变 CubismLog.Error 本体).
     /// </remarks>
@@ -316,11 +362,17 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         GL.GetIntegerv(GL.GL_MAX_TEXTURE_SIZE, out int maxTextureSize);
 
         CubismLog.Warning(
-            "[Live2D OpenGL]CreateRenderTarget failed: framebuffer is not complete. " +
-            "status=0x{0:X4} ({1}), size={2}x{3}, GL_MAX_TEXTURE_SIZE={4}, " +
-            "attachment=GL_COLOR_ATTACHMENT0<-GL_TEXTURE_2D(id={5}, inherited={6})",
-            status, GetFramebufferStatusName(status), width, height, maxTextureSize,
-            ColorBuffer, _isColorBufferInherited);
+            "[Live2D OpenGL]CreateRenderTarget failed: framebuffer is not complete. "
+                + "status=0x{0:X4} ({1}), size={2}x{3}, GL_MAX_TEXTURE_SIZE={4}, "
+                + "attachment=GL_COLOR_ATTACHMENT0<-GL_TEXTURE_2D(id={5}, inherited={6})",
+            status,
+            GetFramebufferStatusName(status),
+            width,
+            height,
+            maxTextureSize,
+            ColorBuffer,
+            _isColorBufferInherited
+        );
     }
 
     /// <summary>
@@ -328,12 +380,18 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// </summary>
     private string GetFramebufferStatusName(int status)
     {
-        if (status == GL.GL_FRAMEBUFFER_COMPLETE) return "GL_FRAMEBUFFER_COMPLETE";
-        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT) return "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
-        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT) return "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
-        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS) return "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
-        if (status == GL.GL_FRAMEBUFFER_UNSUPPORTED) return "GL_FRAMEBUFFER_UNSUPPORTED";
-        if (status == GL.GL_FRAMEBUFFER_UNDEFINED) return "GL_FRAMEBUFFER_UNDEFINED";
+        if (status == GL.GL_FRAMEBUFFER_COMPLETE)
+            return "GL_FRAMEBUFFER_COMPLETE";
+        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)
+            return "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)
+            return "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+        if (status == GL.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS)
+            return "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
+        if (status == GL.GL_FRAMEBUFFER_UNSUPPORTED)
+            return "GL_FRAMEBUFFER_UNSUPPORTED";
+        if (status == GL.GL_FRAMEBUFFER_UNDEFINED)
+            return "GL_FRAMEBUFFER_UNDEFINED";
 
         return "UNKNOWN";
     }

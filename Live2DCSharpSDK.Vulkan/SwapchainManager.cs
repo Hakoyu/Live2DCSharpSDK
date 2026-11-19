@@ -12,7 +12,11 @@ public class SwapchainManager
     /// <param name="physicalDevice">物理设备</param>
     /// <param name="surface">swapchain surface</param>
     /// <returns>物理设备的支持信息</returns>
-    public static unsafe SwapchainSupportDetails QuerySwapchainSupport(KhrSurface vk, PhysicalDevice physicalDevice, SurfaceKHR surface)
+    public static unsafe SwapchainSupportDetails QuerySwapchainSupport(
+        KhrSurface vk,
+        PhysicalDevice physicalDevice,
+        SurfaceKHR surface
+    )
     {
         var details = new SwapchainSupportDetails();
         vk.GetPhysicalDeviceSurfaceCapabilities(physicalDevice, surface, out details.Capabilities);
@@ -29,14 +33,24 @@ public class SwapchainManager
         }
 
         uint presentModeCount = 0;
-        vk.GetPhysicalDeviceSurfacePresentModes(physicalDevice, surface, ref presentModeCount, null);
+        vk.GetPhysicalDeviceSurfacePresentModes(
+            physicalDevice,
+            surface,
+            ref presentModeCount,
+            null
+        );
 
         if (presentModeCount != 0)
         {
             details.PresentModes = new PresentModeKHR[presentModeCount];
             fixed (PresentModeKHR* ptr = details.PresentModes)
             {
-                vk.GetPhysicalDeviceSurfacePresentModes(physicalDevice, surface, ref presentModeCount, ptr);
+                vk.GetPhysicalDeviceSurfacePresentModes(
+                    physicalDevice,
+                    surface,
+                    ref presentModeCount,
+                    ptr
+                );
             }
         }
 
@@ -64,6 +78,7 @@ public class SwapchainManager
     /// image 的分辨率
     /// </summary>
     public Extent2D Extent { get; private set; } = new(0, 0);
+
     /// <summary>
     /// image 数量
     /// </summary>
@@ -75,10 +90,12 @@ public class SwapchainManager
     /// swapchain 的 image
     /// </summary>
     public Image[] Images { get; private set; } = [];
+
     /// <summary>
     /// swapchain 的 image view
     /// </summary>
     public ImageView[] ImageViews { get; private set; } = [];
+
     /// <summary>
     /// swapchain
     /// </summary>
@@ -105,7 +122,17 @@ public class SwapchainManager
     /// <param name="surface">surface</param>
     /// <param name="graphicsFamily">绘制命令使用的队列族</param>
     /// <param name="presentFamily">显示命令使用的队列族</param>
-    public SwapchainManager(KhrSwapchain swapchain, KhrSurface khr, VulkanApi api, Vk vk, PhysicalDevice physicalDevice, Device device, SurfaceKHR surface, int graphicsFamily, int presentFamily)
+    public SwapchainManager(
+        KhrSwapchain swapchain,
+        KhrSurface khr,
+        VulkanApi api,
+        Vk vk,
+        PhysicalDevice physicalDevice,
+        Device device,
+        SurfaceKHR surface,
+        int graphicsFamily,
+        int presentFamily
+    )
     {
         _khrs = swapchain;
         _khr = khr;
@@ -124,7 +151,10 @@ public class SwapchainManager
     {
         for (int i = 0; i < availableFormats.Length; i++)
         {
-            if (availableFormats[i].Format == SwapchainFormat && availableFormats[i].ColorSpace == ColorSpaceKHR.SpaceSrgbNonlinearKhr)
+            if (
+                availableFormats[i].Format == SwapchainFormat
+                && availableFormats[i].ColorSpace == ColorSpaceKHR.SpaceSrgbNonlinearKhr
+            )
             {
                 return availableFormats[i];
             }
@@ -180,7 +210,13 @@ public class SwapchainManager
     /// <param name="surface">surface</param>
     /// <param name="graphicsFamily">绘制命令使用的队列族</param>
     /// <param name="presentFamily">显示命令使用的队列族</param>
-    public unsafe void CreateSwapchain(PhysicalDevice physicalDevice, Device device, SurfaceKHR surface, int graphicsFamily, int presentFamily)
+    public unsafe void CreateSwapchain(
+        PhysicalDevice physicalDevice,
+        Device device,
+        SurfaceKHR surface,
+        int graphicsFamily,
+        int presentFamily
+    )
     {
         var swapChainSupport = QuerySwapchainSupport(_khr, physicalDevice, surface);
         var surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
@@ -188,7 +224,10 @@ public class SwapchainManager
         Extent = ChooseSwapExtent(swapChainSupport.Capabilities);
 
         _imageCount = swapChainSupport.Capabilities.MinImageCount + 1;
-        if (swapChainSupport.Capabilities.MaxImageCount > 0 && _imageCount > swapChainSupport.Capabilities.MaxImageCount)
+        if (
+            swapChainSupport.Capabilities.MaxImageCount > 0
+            && _imageCount > swapChainSupport.Capabilities.MaxImageCount
+        )
         {
             _imageCount = swapChainSupport.Capabilities.MaxImageCount;
         }
@@ -202,13 +241,15 @@ public class SwapchainManager
             ImageColorSpace = surfaceFormat.ColorSpace,
             ImageExtent = Extent,
             ImageArrayLayers = 1,
-            ImageUsage = ImageUsageFlags.ColorAttachmentBit | ImageUsageFlags.TransferSrcBit |
-                 ImageUsageFlags.TransferDstBit,
+            ImageUsage =
+                ImageUsageFlags.ColorAttachmentBit
+                | ImageUsageFlags.TransferSrcBit
+                | ImageUsageFlags.TransferDstBit,
             PreTransform = swapChainSupport.Capabilities.CurrentTransform,
             CompositeAlpha = CompositeAlphaFlagsKHR.OpaqueBitKhr,
             PresentMode = presentMode,
             Clipped = true,
-            OldSwapchain = default
+            OldSwapchain = default,
         };
 
         var ptr1 = stackalloc[] { (uint)graphicsFamily, (uint)presentFamily };
@@ -250,10 +291,12 @@ public class SwapchainManager
                 ViewType = ImageViewType.Type2D,
                 Format = SwapchainFormat,
                 Components = new(0, 0, 0, 0),
-                SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+                SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
             };
 
-            if (_vk.CreateImageView(device, ref viewInfo, null, out ImageViews[i]) != Result.Success)
+            if (
+                _vk.CreateImageView(device, ref viewInfo, null, out ImageViews[i]) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create texture image view");
             }
@@ -268,10 +311,7 @@ public class SwapchainManager
     /// <returns></returns>
     public unsafe Result QueuePresent(Queue queue, uint imageIndex)
     {
-        var presentInfo = new PresentInfoKHR
-        {
-            SType = StructureType.PresentInfoKhr
-        };
+        var presentInfo = new PresentInfoKHR { SType = StructureType.PresentInfoKhr };
 
         var swapChains = stackalloc SwapchainKHR[] { _swapchain };
         presentInfo.SwapchainCount = 1;
@@ -297,7 +337,7 @@ public class SwapchainManager
                 NewLayout = ImageLayout.PresentSrcKhr,
                 Image = Images[i],
                 SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
-                SrcAccessMask = 0
+                SrcAccessMask = 0,
             };
 
             var sourceStage = PipelineStageFlags.AllCommandsBit;
@@ -308,7 +348,7 @@ public class SwapchainManager
                 SType = StructureType.CommandBufferAllocateInfo,
                 Level = CommandBufferLevel.Primary,
                 CommandPool = commandPool,
-                CommandBufferCount = 1
+                CommandBufferCount = 1,
             };
 
             _vk.AllocateCommandBuffers(device, ref allocInfo, out var commandBuffer);
@@ -316,7 +356,7 @@ public class SwapchainManager
             var beginInfo = new CommandBufferBeginInfo
             {
                 SType = StructureType.CommandBufferBeginInfo,
-                Flags = CommandBufferUsageFlags.OneTimeSubmitBit
+                Flags = CommandBufferUsageFlags.OneTimeSubmitBit,
             };
 
             _vk.BeginCommandBuffer(commandBuffer, ref beginInfo);
@@ -340,14 +380,13 @@ public class SwapchainManager
             {
                 SType = StructureType.SubmitInfo,
                 CommandBufferCount = 1,
-                PCommandBuffers = &commandBuffer
+                PCommandBuffers = &commandBuffer,
             };
 
             _vk.QueueSubmit(queue, 1, ref submitInfo, default);
             _vk.QueueWaitIdle(queue);
             _vk.FreeCommandBuffers(device, commandPool, 1, ref commandBuffer);
         }
-
 
         //sourceStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
         //destinationStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;

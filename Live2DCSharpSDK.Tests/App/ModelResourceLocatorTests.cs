@@ -52,9 +52,14 @@ public sealed class ModelResourceLocatorTests
         // start 位于 root/a/b/c/d/e/f, 从 start 向上第 6 层才是 root.
         string start = temp.CreateDirectory("a", "b", "c", "d", "e", "f");
 
-        Assert.IsTrue(Directory.Exists(fixture), "The fixture must exist, otherwise this test proves nothing.");
-        Assert.IsNull(ModelResourceLocator.FindSdkSamplesResources(start),
-            "A fixture 6 levels above the start directory must not be found.");
+        Assert.IsTrue(
+            Directory.Exists(fixture),
+            "The fixture must exist, otherwise this test proves nothing."
+        );
+        Assert.IsNull(
+            ModelResourceLocator.FindSdkSamplesResources(start),
+            "A fixture 6 levels above the start directory must not be found."
+        );
     }
 
     /// <summary>
@@ -71,7 +76,9 @@ public sealed class ModelResourceLocatorTests
         string fixture = CreateSdkSamplesFixture(temp);
         string start = temp.CreateDirectory("a", "b", "c", "d", "e");
 
-        string? found = ModelResourceLocator.FindSdkSamplesResources(start + Path.DirectorySeparatorChar);
+        string? found = ModelResourceLocator.FindSdkSamplesResources(
+            start + Path.DirectorySeparatorChar
+        );
         if (found is null)
         {
             Assert.Fail("A trailing directory separator must not shift the search depth.");
@@ -135,7 +142,8 @@ public sealed class ModelResourceLocatorTests
     {
         using SilentLogScope logScope = new();
 
-        string root = Path.GetPathRoot(Path.GetTempPath()) ?? Path.DirectorySeparatorChar.ToString();
+        string root = Path.GetPathRoot(Path.GetTempPath())
+            ?? Path.DirectorySeparatorChar.ToString();
 
         // 根目录的父目录是 null: 这里只要求不抛异常, 不假设机器上是否存在 SDK 夹具.
         _ = ModelResourceLocator.FindSdkSamplesResources(root);
@@ -153,7 +161,9 @@ public sealed class ModelResourceLocatorTests
         string modelDirectory = temp.CreateDirectory("Haru");
         temp.CreateFile(modelDirectory, "Haru.model3.json");
 
-        string? previousDirectory = Environment.GetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName);
+        string? previousDirectory = Environment.GetEnvironmentVariable(
+            ModelResourceLocator.ModelDirEnvName
+        );
         try
         {
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, temp.Root);
@@ -166,7 +176,10 @@ public sealed class ModelResourceLocatorTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, previousDirectory);
+            Environment.SetEnvironmentVariable(
+                ModelResourceLocator.ModelDirEnvName,
+                previousDirectory
+            );
         }
     }
 
@@ -179,26 +192,45 @@ public sealed class ModelResourceLocatorTests
         using SilentLogScope logScope = new();
 
         string missingDirectory = Path.Combine(
-            Path.GetTempPath(), "live2d-unittest-missing-" + Guid.NewGuid().ToString("N"));
+            Path.GetTempPath(),
+            "live2d-unittest-missing-" + Guid.NewGuid().ToString("N")
+        );
         string modelName = "UnitTestMissingModel" + Guid.NewGuid().ToString("N");
 
-        string? previousDirectory = Environment.GetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName);
-        string? previousName = Environment.GetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName);
+        string? previousDirectory = Environment.GetEnvironmentVariable(
+            ModelResourceLocator.ModelDirEnvName
+        );
+        string? previousName = Environment.GetEnvironmentVariable(
+            ModelResourceLocator.ModelNameEnvName
+        );
         try
         {
-            Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, missingDirectory);
+            Environment.SetEnvironmentVariable(
+                ModelResourceLocator.ModelDirEnvName,
+                missingDirectory
+            );
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName, null);
 
-            bool found = ModelResourceLocator.TryResolve(modelName, out string dir, out string name);
+            bool found = ModelResourceLocator.TryResolve(
+                modelName,
+                out string dir,
+                out string name
+            );
 
             // 唯一模型名保证相对搜索也不会命中: 验证不抛异常, 返回 false, 并保留最后尝试的候选路径.
             Assert.IsFalse(found);
             Assert.AreEqual(modelName, name);
-            Assert.IsFalse(string.IsNullOrEmpty(dir), "TryResolve must report the last candidate path even when nothing is found.");
+            Assert.IsFalse(
+                string.IsNullOrEmpty(dir),
+                "TryResolve must report the last candidate path even when nothing is found."
+            );
         }
         finally
         {
-            Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, previousDirectory);
+            Environment.SetEnvironmentVariable(
+                ModelResourceLocator.ModelDirEnvName,
+                previousDirectory
+            );
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName, previousName);
         }
     }
@@ -216,8 +248,12 @@ public sealed class ModelResourceLocatorTests
         string modelDirectory = temp.CreateDirectory(envModelName);
         temp.CreateFile(modelDirectory, envModelName + ".model3.json");
 
-        string? previousDirectory = Environment.GetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName);
-        string? previousName = Environment.GetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName);
+        string? previousDirectory = Environment.GetEnvironmentVariable(
+            ModelResourceLocator.ModelDirEnvName
+        );
+        string? previousName = Environment.GetEnvironmentVariable(
+            ModelResourceLocator.ModelNameEnvName
+        );
         try
         {
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, temp.Root);
@@ -231,7 +267,10 @@ public sealed class ModelResourceLocatorTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, previousDirectory);
+            Environment.SetEnvironmentVariable(
+                ModelResourceLocator.ModelDirEnvName,
+                previousDirectory
+            );
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName, previousName);
         }
     }
@@ -250,22 +289,37 @@ public sealed class ModelResourceLocatorTests
         string modelDirectory = temp.CreateDirectory(argumentModelName);
         temp.CreateFile(modelDirectory, argumentModelName + ".model3.json");
 
-        string? previousDirectory = Environment.GetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName);
-        string? previousName = Environment.GetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName);
+        string? previousDirectory = Environment.GetEnvironmentVariable(
+            ModelResourceLocator.ModelDirEnvName
+        );
+        string? previousName = Environment.GetEnvironmentVariable(
+            ModelResourceLocator.ModelNameEnvName
+        );
         try
         {
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, temp.Root);
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName, envModelName);
 
-            bool found = ModelResourceLocator.TryResolve(argumentModelName, out string dir, out string name);
+            bool found = ModelResourceLocator.TryResolve(
+                argumentModelName,
+                out string dir,
+                out string name
+            );
 
             Assert.IsTrue(found);
-            Assert.AreEqual(argumentModelName, name, "The explicit model name must win over the environment variable.");
+            Assert.AreEqual(
+                argumentModelName,
+                name,
+                "The explicit model name must win over the environment variable."
+            );
             Assert.AreEqual(temp.Root, dir);
         }
         finally
         {
-            Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, previousDirectory);
+            Environment.SetEnvironmentVariable(
+                ModelResourceLocator.ModelDirEnvName,
+                previousDirectory
+            );
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName, previousName);
         }
     }
@@ -278,8 +332,12 @@ public sealed class ModelResourceLocatorTests
     {
         using SilentLogScope logScope = new();
 
-        string? previousDirectory = Environment.GetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName);
-        string? previousName = Environment.GetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName);
+        string? previousDirectory = Environment.GetEnvironmentVariable(
+            ModelResourceLocator.ModelDirEnvName
+        );
+        string? previousName = Environment.GetEnvironmentVariable(
+            ModelResourceLocator.ModelNameEnvName
+        );
         try
         {
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, null);
@@ -293,7 +351,10 @@ public sealed class ModelResourceLocatorTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable(ModelResourceLocator.ModelDirEnvName, previousDirectory);
+            Environment.SetEnvironmentVariable(
+                ModelResourceLocator.ModelDirEnvName,
+                previousDirectory
+            );
             Environment.SetEnvironmentVariable(ModelResourceLocator.ModelNameEnvName, previousName);
         }
     }
@@ -305,6 +366,10 @@ public sealed class ModelResourceLocatorTests
     /// <returns>Samples/Resources 的绝对路径</returns>
     private static string CreateSdkSamplesFixture(TemporaryDirectory temp)
     {
-        return temp.CreateDirectory(ModelResourceLocator.SdkPackageDirectoryName, "Samples", "Resources");
+        return temp.CreateDirectory(
+            ModelResourceLocator.SdkPackageDirectoryName,
+            "Samples",
+            "Resources"
+        );
     }
 }

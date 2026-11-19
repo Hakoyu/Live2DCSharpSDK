@@ -39,7 +39,7 @@ public static class CubismMotionJson
                 return false;
             }
 
-            for (int segmentPosition = 0; segmentPosition < segments.Count;)
+            for (int segmentPosition = 0; segmentPosition < segments.Count; )
             {
                 if (segmentPosition == 0)
                 {

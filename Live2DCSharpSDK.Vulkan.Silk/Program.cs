@@ -29,7 +29,7 @@ internal class Program : VulkanApi
         var cubismOption = new CubismOption()
         {
             LogFunction = Console.WriteLine,
-            LoggingLevel = LAppDefine.CubismLoggingLevel
+            LoggingLevel = LAppDefine.CubismLoggingLevel,
         };
         // 上下文在窗口/模型创建前启动.
         var cubismContext = CubismContext.Create(cubismAllocator, cubismOption);
@@ -79,7 +79,7 @@ internal class Program : VulkanApi
             {
                 BGColor = new(0, 1, 0, 1),
                 // 上下文交给 delegate 管理, Shutdown 时由 delegate 统一释放.
-                Context = _context
+                Context = _context,
             };
             live2d = app;
 
@@ -95,11 +95,15 @@ internal class Program : VulkanApi
                 try
                 {
                     model = app.Live2dManager.LoadModel(modelDir, modelName);
-                    Console.WriteLine($"[Live2D App]model loaded: {Path.Combine(modelDir, modelName)}");
+                    Console.WriteLine(
+                        $"[Live2D App]model loaded: {Path.Combine(modelDir, modelName)}"
+                    );
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"[Live2D App]model load failed: {e.GetType().Name}: {e.Message}");
+                    Console.WriteLine(
+                        $"[Live2D App]model load failed: {e.GetType().Name}: {e.Message}"
+                    );
                 }
             }
             else
@@ -124,7 +128,9 @@ internal class Program : VulkanApi
                 if (probeOffscreen && ++probeFrames >= 30)
                 {
                     var renderer = model?.Renderer as CubismRenderer_Vulkan;
-                    Console.WriteLine($"OFFSCREEN_PROBE offscreens={renderer?.OffscreenCount} draws={renderer?.OffscreenDrawCount}");
+                    Console.WriteLine(
+                        $"OFFSCREEN_PROBE offscreens={renderer?.OffscreenCount} draws={renderer?.OffscreenDrawCount}"
+                    );
                     window.Close();
                 }
             };

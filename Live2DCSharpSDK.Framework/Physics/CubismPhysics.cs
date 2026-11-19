@@ -37,6 +37,7 @@ public class CubismPhysics
     /// 重力方向
     /// </summary>
     public Vector2 Gravity;
+
     /// <summary>
     /// 风向
     /// </summary>
@@ -46,6 +47,7 @@ public class CubismPhysics
     /// 最近一次摆计算的结果
     /// </summary>
     private readonly List<float[]> _currentRigOutputs = [];
+
     /// <summary>
     /// 上一次摆计算的结果
     /// </summary>
@@ -60,6 +62,7 @@ public class CubismPhysics
     /// Evaluate 中使用的参数缓存
     /// </summary>
     private float[] _parameterCaches = [];
+
     /// <summary>
     /// UpdateParticles 运行时的输入缓存
     /// </summary>
@@ -79,8 +82,10 @@ public class CubismPhysics
         _currentRemainTime = 0.0f;
 
         using var stream = File.Open(buffer, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        var obj = JsonSerializer.Deserialize(stream, CubismPhysicsObjContext.Default.CubismPhysicsObj)
-            ?? throw new Exception("Load Physics error");
+        var obj = JsonSerializer.Deserialize(
+            stream,
+            CubismPhysicsObjContext.Default.CubismPhysicsObj
+        ) ?? throw new Exception("Load Physics error");
 
         _physicsRig = new CubismPhysicsRig
         {
@@ -91,13 +96,15 @@ public class CubismPhysics
             Settings = new CubismPhysicsSubRig[obj.Meta.PhysicsSettingCount],
             Inputs = new CubismPhysicsInput[obj.Meta.TotalInputCount],
             Outputs = new CubismPhysicsOutput[obj.Meta.TotalOutputCount],
-            Particles = new CubismPhysicsParticle[obj.Meta.VertexCount]
+            Particles = new CubismPhysicsParticle[obj.Meta.VertexCount],
         };
 
         _currentRigOutputs.Clear();
         _previousRigOutputs.Clear();
 
-        int inputIndex = 0, outputIndex = 0, particleIndex = 0;
+        int inputIndex = 0,
+            outputIndex = 0,
+            particleIndex = 0;
         for (int i = 0; i < _physicsRig.Settings.Length; ++i)
         {
             var set = obj.PhysicsSettings[i];
@@ -107,17 +114,17 @@ public class CubismPhysics
                 {
                     Minimum = set.Normalization.Position.Minimum,
                     Maximum = set.Normalization.Position.Maximum,
-                    Default = set.Normalization.Position.Default
+                    Default = set.Normalization.Position.Default,
                 },
                 NormalizationAngle = new()
                 {
                     Minimum = set.Normalization.Angle.Minimum,
                     Maximum = set.Normalization.Angle.Maximum,
-                    Default = set.Normalization.Angle.Default
+                    Default = set.Normalization.Angle.Default,
                 },
                 // 输入
                 InputCount = set.Input.Count,
-                BaseInputIndex = inputIndex
+                BaseInputIndex = inputIndex,
             };
 
             for (int j = 0; j < _physicsRig.Settings[i].InputCount; ++j)
@@ -131,25 +138,28 @@ public class CubismPhysics
                     Source = new()
                     {
                         TargetType = CubismPhysicsTargetType.CubismPhysicsTargetType_Parameter,
-                        Id = input.Source.Id
-                    }
+                        Id = input.Source.Id,
+                    },
                 };
 
                 if (input.Type == PhysicsTypeTagX)
                 {
-                    _physicsRig.Inputs[inputIndex + j].Type = CubismPhysicsSource.CubismPhysicsSource_X;
+                    _physicsRig.Inputs[inputIndex + j].Type =
+                        CubismPhysicsSource.CubismPhysicsSource_X;
                     _physicsRig.Inputs[inputIndex + j].GetNormalizedParameterValue =
                         GetInputTranslationXFromNormalizedParameterValue;
                 }
                 else if (input.Type == PhysicsTypeTagY)
                 {
-                    _physicsRig.Inputs[inputIndex + j].Type = CubismPhysicsSource.CubismPhysicsSource_Y;
+                    _physicsRig.Inputs[inputIndex + j].Type =
+                        CubismPhysicsSource.CubismPhysicsSource_Y;
                     _physicsRig.Inputs[inputIndex + j].GetNormalizedParameterValue =
                         GetInputTranslationYFromNormalizedParameterValue;
                 }
                 else if (input.Type == PhysicsTypeTagAngle)
                 {
-                    _physicsRig.Inputs[inputIndex + j].Type = CubismPhysicsSource.CubismPhysicsSource_Angle;
+                    _physicsRig.Inputs[inputIndex + j].Type =
+                        CubismPhysicsSource.CubismPhysicsSource_Angle;
                     _physicsRig.Inputs[inputIndex + j].GetNormalizedParameterValue =
                         GetInputAngleFromNormalizedParameterValue;
                 }
@@ -175,26 +185,29 @@ public class CubismPhysics
                     Destination = new()
                     {
                         TargetType = CubismPhysicsTargetType.CubismPhysicsTargetType_Parameter,
-                        Id = output.Destination.Id
+                        Id = output.Destination.Id,
                     },
-                    Reflect = output.Reflect
+                    Reflect = output.Reflect,
                 };
                 var key = output.Type;
                 if (key == PhysicsTypeTagX)
                 {
-                    _physicsRig.Outputs[outputIndex + j].Type = CubismPhysicsSource.CubismPhysicsSource_X;
+                    _physicsRig.Outputs[outputIndex + j].Type =
+                        CubismPhysicsSource.CubismPhysicsSource_X;
                     _physicsRig.Outputs[outputIndex + j].GetValue = GetOutputTranslationX;
                     _physicsRig.Outputs[outputIndex + j].GetScale = GetOutputScaleTranslationX;
                 }
                 else if (key == PhysicsTypeTagY)
                 {
-                    _physicsRig.Outputs[outputIndex + j].Type = CubismPhysicsSource.CubismPhysicsSource_Y;
+                    _physicsRig.Outputs[outputIndex + j].Type =
+                        CubismPhysicsSource.CubismPhysicsSource_Y;
                     _physicsRig.Outputs[outputIndex + j].GetValue = GetOutputTranslationY;
                     _physicsRig.Outputs[outputIndex + j].GetScale = GetOutputScaleTranslationY;
                 }
                 else if (key == PhysicsTypeTagAngle)
                 {
-                    _physicsRig.Outputs[outputIndex + j].Type = CubismPhysicsSource.CubismPhysicsSource_Angle;
+                    _physicsRig.Outputs[outputIndex + j].Type =
+                        CubismPhysicsSource.CubismPhysicsSource_Angle;
                     _physicsRig.Outputs[outputIndex + j].GetValue = GetOutputAngle;
                     _physicsRig.Outputs[outputIndex + j].GetScale = GetOutputScaleAngle;
                 }
@@ -213,7 +226,7 @@ public class CubismPhysics
                     Delay = par.Delay,
                     Acceleration = par.Acceleration,
                     Radius = par.Radius,
-                    Position = par.Position
+                    Position = par.Position,
                 };
             }
 
@@ -255,7 +268,9 @@ public class CubismPhysics
         float radAngle;
         float outputValue;
         Vector2 totalTranslation;
-        int i, settingIndex, particleIndex;
+        int i,
+            settingIndex,
+            particleIndex;
 
         float* parameterValues;
         float* parameterMaximumValues;
@@ -300,21 +315,34 @@ public class CubismPhysics
 
                 if (_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex == -1)
                 {
-                    _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex = model.GetParameterIndex(_physicsRig.Inputs[i + currentInputIndex].Source.Id);
+                    _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex =
+                        model.GetParameterIndex(
+                            _physicsRig.Inputs[i + currentInputIndex].Source.Id
+                        );
                 }
 
-                _physicsRig.Inputs[i + currentInputIndex].GetNormalizedParameterValue(
-                    ref totalTranslation,
-                    ref totalAngle,
-                    parameterValues[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex],
-                    parameterMinimumValues[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex],
-                    parameterMaximumValues[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex],
-                    parameterDefaultValues[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex],
-                    currentSetting.NormalizationPosition,
-                    currentSetting.NormalizationAngle,
-                    _physicsRig.Inputs[i + currentInputIndex].Reflect,
-                    weight
-                );
+                _physicsRig
+                    .Inputs[i + currentInputIndex]
+                    .GetNormalizedParameterValue(
+                        ref totalTranslation,
+                        ref totalAngle,
+                        parameterValues[
+                            _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex
+                        ],
+                        parameterMinimumValues[
+                            _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex
+                        ],
+                        parameterMaximumValues[
+                            _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex
+                        ],
+                        parameterDefaultValues[
+                            _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex
+                        ],
+                        currentSetting.NormalizationPosition,
+                        currentSetting.NormalizationAngle,
+                        _physicsRig.Inputs[i + currentInputIndex].Reflect,
+                        weight
+                    );
 
                 _parameterCaches[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex] =
                     parameterValues[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex];
@@ -322,8 +350,10 @@ public class CubismPhysics
 
             radAngle = CubismMath.DegreesToRadian(-totalAngle);
 
-            totalTranslation.X = totalTranslation.X * MathF.Cos(radAngle) - totalTranslation.Y * MathF.Sin(radAngle);
-            totalTranslation.Y = totalTranslation.X * MathF.Sin(radAngle) + totalTranslation.Y * MathF.Cos(radAngle);
+            totalTranslation.X =
+                totalTranslation.X * MathF.Cos(radAngle) - totalTranslation.Y * MathF.Sin(radAngle);
+            totalTranslation.Y =
+                totalTranslation.X * MathF.Sin(radAngle) + totalTranslation.Y * MathF.Cos(radAngle);
 
             // 计算质点位置.
             UpdateParticlesForStabilization(
@@ -343,8 +373,10 @@ public class CubismPhysics
 
                 if (_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex == -1)
                 {
-                    _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex = model.GetParameterIndex(
-                        _physicsRig.Outputs[i + currentOutputIndex].Destination.Id);
+                    _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex =
+                        model.GetParameterIndex(
+                            _physicsRig.Outputs[i + currentOutputIndex].Destination.Id
+                        );
                 }
 
                 if (particleIndex < 1 || particleIndex >= currentSetting.ParticleCount)
@@ -354,30 +386,53 @@ public class CubismPhysics
 
                 Vector2 translation = new()
                 {
-                    X = _physicsRig.Particles[particleIndex + currentParticleIndex].Position.X - _physicsRig.Particles[particleIndex - 1 + currentParticleIndex].Position.X,
-                    Y = _physicsRig.Particles[particleIndex + currentParticleIndex].Position.Y - _physicsRig.Particles[particleIndex - 1 + currentParticleIndex].Position.Y
+                    X =
+                        _physicsRig.Particles[particleIndex + currentParticleIndex].Position.X
+                        - _physicsRig
+                            .Particles[particleIndex - 1 + currentParticleIndex]
+                            .Position
+                            .X,
+                    Y =
+                        _physicsRig.Particles[particleIndex + currentParticleIndex].Position.Y
+                        - _physicsRig
+                            .Particles[particleIndex - 1 + currentParticleIndex]
+                            .Position
+                            .Y,
                 };
 
-                outputValue = _physicsRig.Outputs[i + currentOutputIndex].GetValue(
-                    translation,
-                    _physicsRig.Particles,
-                    currentParticleIndex,
-                    particleIndex,
-                    _physicsRig.Outputs[i + currentOutputIndex].Reflect,
-                    Gravity
-                );
+                outputValue = _physicsRig
+                    .Outputs[i + currentOutputIndex]
+                    .GetValue(
+                        translation,
+                        _physicsRig.Particles,
+                        currentParticleIndex,
+                        particleIndex,
+                        _physicsRig.Outputs[i + currentOutputIndex].Reflect,
+                        Gravity
+                    );
 
                 _currentRigOutputs[settingIndex][i] = outputValue;
                 _previousRigOutputs[settingIndex][i] = outputValue;
 
                 UpdateOutputParameterValue(
-                    ref parameterValues[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex],
-                    parameterMinimumValues[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex],
-                    parameterMaximumValues[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex],
+                    ref parameterValues[
+                        _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                    ],
+                    parameterMinimumValues[
+                        _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                    ],
+                    parameterMaximumValues[
+                        _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                    ],
                     outputValue,
-                    _physicsRig.Outputs[i + currentOutputIndex]);
+                    _physicsRig.Outputs[i + currentOutputIndex]
+                );
 
-                _parameterCaches[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex] = parameterValues[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex];
+                _parameterCaches[
+                    _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                ] = parameterValues[
+                    _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                ];
             }
         }
     }
@@ -432,7 +487,9 @@ public class CubismPhysics
         float radAngle;
         float outputValue;
         Vector2 totalTranslation;
-        int i, settingIndex, particleIndex;
+        int i,
+            settingIndex,
+            particleIndex;
 
         if (0.0f >= deltaTimeSeconds)
         {
@@ -500,7 +557,9 @@ public class CubismPhysics
             float inputWeight = physicsDeltaTime / _currentRemainTime;
             for (int j = 0; j < model.GetParameterCount(); ++j)
             {
-                _parameterCaches[j] = _parameterInputCaches[j] * (1.0f - inputWeight) + parameterValues[j] * inputWeight;
+                _parameterCaches[j] =
+                    _parameterInputCaches[j] * (1.0f - inputWeight)
+                    + parameterValues[j] * inputWeight;
                 _parameterInputCaches[j] = _parameterCaches[j];
             }
 
@@ -521,27 +580,44 @@ public class CubismPhysics
 
                     if (_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex == -1)
                     {
-                        _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex = model.GetParameterIndex(_physicsRig.Inputs[i + currentInputIndex].Source.Id);
+                        _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex =
+                            model.GetParameterIndex(
+                                _physicsRig.Inputs[i + currentInputIndex].Source.Id
+                            );
                     }
 
-                    _physicsRig.Inputs[i + currentInputIndex].GetNormalizedParameterValue(
-                        ref totalTranslation,
-                        ref totalAngle,
-                        _parameterCaches[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex],
-                        parameterMinimumValues[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex],
-                        parameterMaximumValues[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex],
-                        parameterDefaultValues[_physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex],
-                        currentSetting.NormalizationPosition,
-                        currentSetting.NormalizationAngle,
-                        _physicsRig.Inputs[i + currentInputIndex].Reflect,
-                        weight
-                    );
+                    _physicsRig
+                        .Inputs[i + currentInputIndex]
+                        .GetNormalizedParameterValue(
+                            ref totalTranslation,
+                            ref totalAngle,
+                            _parameterCaches[
+                                _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex
+                            ],
+                            parameterMinimumValues[
+                                _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex
+                            ],
+                            parameterMaximumValues[
+                                _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex
+                            ],
+                            parameterDefaultValues[
+                                _physicsRig.Inputs[i + currentInputIndex].SourceParameterIndex
+                            ],
+                            currentSetting.NormalizationPosition,
+                            currentSetting.NormalizationAngle,
+                            _physicsRig.Inputs[i + currentInputIndex].Reflect,
+                            weight
+                        );
                 }
 
                 radAngle = CubismMath.DegreesToRadian(-totalAngle);
 
-                totalTranslation.X = totalTranslation.X * MathF.Cos(radAngle) - totalTranslation.Y * MathF.Sin(radAngle);
-                totalTranslation.Y = totalTranslation.X * MathF.Sin(radAngle) + totalTranslation.Y * MathF.Cos(radAngle);
+                totalTranslation.X =
+                    totalTranslation.X * MathF.Cos(radAngle)
+                    - totalTranslation.Y * MathF.Sin(radAngle);
+                totalTranslation.Y =
+                    totalTranslation.X * MathF.Sin(radAngle)
+                    + totalTranslation.Y * MathF.Cos(radAngle);
 
                 // 计算质点位置.
                 UpdateParticles(
@@ -563,7 +639,10 @@ public class CubismPhysics
 
                     if (_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex == -1)
                     {
-                        _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex = model.GetParameterIndex(_physicsRig.Outputs[i + currentOutputIndex].Destination.Id);
+                        _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex =
+                            model.GetParameterIndex(
+                                _physicsRig.Outputs[i + currentOutputIndex].Destination.Id
+                            );
                     }
 
                     if (particleIndex < 1 || particleIndex >= currentSetting.ParticleCount)
@@ -572,27 +651,45 @@ public class CubismPhysics
                     }
 
                     Vector2 translation;
-                    translation.X = _physicsRig.Particles[particleIndex + currentParticleIndex].Position.X - _physicsRig.Particles[particleIndex - 1 + currentParticleIndex].Position.X;
-                    translation.Y = _physicsRig.Particles[particleIndex + currentParticleIndex].Position.Y - _physicsRig.Particles[particleIndex - 1 + currentParticleIndex].Position.Y;
+                    translation.X =
+                        _physicsRig.Particles[particleIndex + currentParticleIndex].Position.X
+                        - _physicsRig
+                            .Particles[particleIndex - 1 + currentParticleIndex]
+                            .Position
+                            .X;
+                    translation.Y =
+                        _physicsRig.Particles[particleIndex + currentParticleIndex].Position.Y
+                        - _physicsRig
+                            .Particles[particleIndex - 1 + currentParticleIndex]
+                            .Position
+                            .Y;
 
-                    outputValue = _physicsRig.Outputs[i + currentOutputIndex].GetValue(
-                        translation,
-                        _physicsRig.Particles,
-                        currentParticleIndex,
-                        particleIndex,
-                        _physicsRig.Outputs[i + currentOutputIndex].Reflect,
-                        Gravity
-                    );
+                    outputValue = _physicsRig
+                        .Outputs[i + currentOutputIndex]
+                        .GetValue(
+                            translation,
+                            _physicsRig.Particles,
+                            currentParticleIndex,
+                            particleIndex,
+                            _physicsRig.Outputs[i + currentOutputIndex].Reflect,
+                            Gravity
+                        );
 
                     _currentRigOutputs[settingIndex][i] = outputValue;
 
-
                     UpdateOutputParameterValue(
-                                ref _parameterCaches[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex],
-                                parameterMinimumValues[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex],
-                                parameterMaximumValues[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex],
-                                outputValue,
-                                _physicsRig.Outputs[i + currentOutputIndex]);
+                        ref _parameterCaches[
+                            _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                        ],
+                        parameterMinimumValues[
+                            _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                        ],
+                        parameterMaximumValues[
+                            _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                        ],
+                        outputValue,
+                        _physicsRig.Outputs[i + currentOutputIndex]
+                    );
                 }
             }
 
@@ -627,7 +724,8 @@ public class CubismPhysics
     private void Initialize()
     {
         CubismPhysicsSubRig currentSetting;
-        int i, settingIndex;
+        int i,
+            settingIndex;
         Vector2 radius;
 
         for (settingIndex = 0; settingIndex < _physicsRig.SubRigCount; ++settingIndex)
@@ -637,7 +735,9 @@ public class CubismPhysics
 
             // 初始化质点起点.
             _physicsRig.Particles[index].InitialPosition = new Vector2(0.0f, 0.0f);
-            _physicsRig.Particles[index].LastPosition = _physicsRig.Particles[index].InitialPosition;
+            _physicsRig.Particles[index].LastPosition = _physicsRig
+                .Particles[index]
+                .InitialPosition;
             _physicsRig.Particles[index].LastGravity = new Vector2(0.0f, -1.0f);
             _physicsRig.Particles[index].LastGravity.Y *= -1.0f;
             _physicsRig.Particles[index].Velocity = new Vector2(0.0f, 0.0f);
@@ -647,9 +747,14 @@ public class CubismPhysics
             for (i = 1; i < currentSetting.ParticleCount; ++i)
             {
                 radius = new Vector2(0.0f, _physicsRig.Particles[i + index].Radius);
-                _physicsRig.Particles[i + index].InitialPosition = _physicsRig.Particles[i - 1 + index].InitialPosition + radius;
-                _physicsRig.Particles[i + index].Position = _physicsRig.Particles[i + index].InitialPosition;
-                _physicsRig.Particles[i + index].LastPosition = _physicsRig.Particles[i + index].InitialPosition;
+                _physicsRig.Particles[i + index].InitialPosition =
+                    _physicsRig.Particles[i - 1 + index].InitialPosition + radius;
+                _physicsRig.Particles[i + index].Position = _physicsRig
+                    .Particles[i + index]
+                    .InitialPosition;
+                _physicsRig.Particles[i + index].LastPosition = _physicsRig
+                    .Particles[i + index]
+                    .InitialPosition;
                 _physicsRig.Particles[i + index].LastGravity = new Vector2(0.0f, -1.0f);
                 _physicsRig.Particles[i + index].LastGravity.Y *= -1.0f;
                 _physicsRig.Particles[i + index].Velocity = new Vector2(0.0f, 0.0f);
@@ -665,7 +770,8 @@ public class CubismPhysics
     /// <param name="weight">最新结果的权重</param>
     private unsafe void Interpolate(CubismModel model, float weight)
     {
-        int i, settingIndex;
+        int i,
+            settingIndex;
         float* parameterValues;
         float* parameterMaximumValues;
         float* parameterMinimumValues;
@@ -690,12 +796,20 @@ public class CubismPhysics
                     continue;
                 }
 
-                var value = _previousRigOutputs[settingIndex][i] * (1 - weight) + _currentRigOutputs[settingIndex][i] * weight;
+                var value =
+                    _previousRigOutputs[settingIndex][i] * (1 - weight)
+                    + _currentRigOutputs[settingIndex][i] * weight;
 
                 UpdateOutputParameterValue(
-                    ref parameterValues[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex],
-                    parameterMinimumValues[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex],
-                    parameterMaximumValues[_physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex],
+                    ref parameterValues[
+                        _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                    ],
+                    parameterMinimumValues[
+                        _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                    ],
+                    parameterMaximumValues[
+                        _physicsRig.Outputs[i + currentOutputIndex].DestinationParameterIndex
+                    ],
                     value,
                     _physicsRig.Outputs[i + currentOutputIndex]
                 );
@@ -746,7 +860,8 @@ public class CubismPhysics
         float normalizedMinimum,
         float normalizedMaximum,
         float normalizedDefault,
-        bool isInverted)
+        bool isInverted
+    )
     {
         float result = 0.0f;
 
@@ -774,103 +889,130 @@ public class CubismPhysics
         switch (Sign(paramValue))
         {
             case 1:
+            {
+                float nLength = maxNormValue - middleNormValue;
+                float pLength = maxValue - middleValue;
+                if (pLength != 0.0f)
                 {
-                    float nLength = maxNormValue - middleNormValue;
-                    float pLength = maxValue - middleValue;
-                    if (pLength != 0.0f)
-                    {
-                        result = paramValue * (nLength / pLength);
-                        result += middleNormValue;
-                    }
-
-                    break;
+                    result = paramValue * (nLength / pLength);
+                    result += middleNormValue;
                 }
+
+                break;
+            }
             case -1:
+            {
+                float nLength = minNormValue - middleNormValue;
+                float pLength = minValue - middleValue;
+                if (pLength != 0.0f)
                 {
-                    float nLength = minNormValue - middleNormValue;
-                    float pLength = minValue - middleValue;
-                    if (pLength != 0.0f)
-                    {
-                        result = paramValue * (nLength / pLength);
-                        result += middleNormValue;
-                    }
-
-                    break;
+                    result = paramValue * (nLength / pLength);
+                    result += middleNormValue;
                 }
+
+                break;
+            }
             case 0:
-                {
-                    result = middleNormValue;
+            {
+                result = middleNormValue;
 
-                    break;
-                }
+                break;
+            }
             default:
-                {
-                    break;
-                }
+            {
+                break;
+            }
         }
 
         return isInverted ? result : (result * -1.0f);
     }
 
-    private void GetInputTranslationXFromNormalizedParameterValue(ref Vector2 targetTranslation, ref float targetAngle, float value,
-        float parameterMinimumValue, float parameterMaximumValue,
-        float parameterDefaultValue,
-        CubismPhysicsNormalization normalizationPosition,
-        CubismPhysicsNormalization normalizationAngle, bool isInverted,
-        float weight)
-    {
-        targetTranslation.X += NormalizeParameterValue(
-            value,
-            parameterMinimumValue,
-            parameterMaximumValue,
-            parameterDefaultValue,
-            normalizationPosition.Minimum,
-            normalizationPosition.Maximum,
-            normalizationPosition.Default,
-            isInverted
-        ) * weight;
-    }
-
-    private void GetInputTranslationYFromNormalizedParameterValue(ref Vector2 targetTranslation, ref float targetAngle, float value,
-        float parameterMinimumValue, float parameterMaximumValue,
+    private void GetInputTranslationXFromNormalizedParameterValue(
+        ref Vector2 targetTranslation,
+        ref float targetAngle,
+        float value,
+        float parameterMinimumValue,
+        float parameterMaximumValue,
         float parameterDefaultValue,
         CubismPhysicsNormalization normalizationPosition,
         CubismPhysicsNormalization normalizationAngle,
-        bool isInverted, float weight)
+        bool isInverted,
+        float weight
+    )
     {
-        targetTranslation.Y += NormalizeParameterValue(
-            value,
-            parameterMinimumValue,
-            parameterMaximumValue,
-            parameterDefaultValue,
-            normalizationPosition.Minimum,
-            normalizationPosition.Maximum,
-            normalizationPosition.Default,
-            isInverted
-        ) * weight;
+        targetTranslation.X +=
+            NormalizeParameterValue(
+                value,
+                parameterMinimumValue,
+                parameterMaximumValue,
+                parameterDefaultValue,
+                normalizationPosition.Minimum,
+                normalizationPosition.Maximum,
+                normalizationPosition.Default,
+                isInverted
+            ) * weight;
     }
 
-    private void GetInputAngleFromNormalizedParameterValue(ref Vector2 targetTranslation, ref float targetAngle, float value,
-        float parameterMinimumValue, float parameterMaximumValue,
+    private void GetInputTranslationYFromNormalizedParameterValue(
+        ref Vector2 targetTranslation,
+        ref float targetAngle,
+        float value,
+        float parameterMinimumValue,
+        float parameterMaximumValue,
         float parameterDefaultValue,
         CubismPhysicsNormalization normalizationPosition,
         CubismPhysicsNormalization normalizationAngle,
-        bool isInverted, float weight)
+        bool isInverted,
+        float weight
+    )
     {
-        targetAngle += NormalizeParameterValue(
-            value,
-            parameterMinimumValue,
-            parameterMaximumValue,
-            parameterDefaultValue,
-            normalizationAngle.Minimum,
-            normalizationAngle.Maximum,
-            normalizationAngle.Default,
-            isInverted
-        ) * weight;
+        targetTranslation.Y +=
+            NormalizeParameterValue(
+                value,
+                parameterMinimumValue,
+                parameterMaximumValue,
+                parameterDefaultValue,
+                normalizationPosition.Minimum,
+                normalizationPosition.Maximum,
+                normalizationPosition.Default,
+                isInverted
+            ) * weight;
     }
 
-    private float GetOutputTranslationX(Vector2 translation, CubismPhysicsParticle[] particles, int start,
-        int particleIndex, bool isInverted, Vector2 parentGravity)
+    private void GetInputAngleFromNormalizedParameterValue(
+        ref Vector2 targetTranslation,
+        ref float targetAngle,
+        float value,
+        float parameterMinimumValue,
+        float parameterMaximumValue,
+        float parameterDefaultValue,
+        CubismPhysicsNormalization normalizationPosition,
+        CubismPhysicsNormalization normalizationAngle,
+        bool isInverted,
+        float weight
+    )
+    {
+        targetAngle +=
+            NormalizeParameterValue(
+                value,
+                parameterMinimumValue,
+                parameterMaximumValue,
+                parameterDefaultValue,
+                normalizationAngle.Minimum,
+                normalizationAngle.Maximum,
+                normalizationAngle.Default,
+                isInverted
+            ) * weight;
+    }
+
+    private float GetOutputTranslationX(
+        Vector2 translation,
+        CubismPhysicsParticle[] particles,
+        int start,
+        int particleIndex,
+        bool isInverted,
+        Vector2 parentGravity
+    )
     {
         float outputValue = translation.X;
 
@@ -882,8 +1024,14 @@ public class CubismPhysics
         return outputValue;
     }
 
-    private float GetOutputTranslationY(Vector2 translation, CubismPhysicsParticle[] particles, int start,
-        int particleIndex, bool isInverted, Vector2 parentGravity)
+    private float GetOutputTranslationY(
+        Vector2 translation,
+        CubismPhysicsParticle[] particles,
+        int start,
+        int particleIndex,
+        bool isInverted,
+        Vector2 parentGravity
+    )
     {
         float outputValue = translation.Y;
 
@@ -895,14 +1043,22 @@ public class CubismPhysics
         return outputValue;
     }
 
-    private float GetOutputAngle(Vector2 translation, CubismPhysicsParticle[] particles, int start,
-        int particleIndex, bool isInverted, Vector2 parentGravity)
+    private float GetOutputAngle(
+        Vector2 translation,
+        CubismPhysicsParticle[] particles,
+        int start,
+        int particleIndex,
+        bool isInverted,
+        Vector2 parentGravity
+    )
     {
         float outputValue;
 
         if (particleIndex >= 2)
         {
-            parentGravity = particles[particleIndex - 1 + start].Position - particles[particleIndex - 2 + start].Position;
+            parentGravity =
+                particles[particleIndex - 1 + start].Position
+                - particles[particleIndex - 2 + start].Position;
         }
         else
         {
@@ -944,8 +1100,17 @@ public class CubismPhysics
     /// @param  thresholdValue    运动阈值.
     /// @param  deltaTimeSeconds  增量时间.
     /// @param  airResistance     空气阻力.
-    private static void UpdateParticles(CubismPhysicsParticle[] strand, int start, int strandCount, Vector2 totalTranslation, float totalAngle,
-        Vector2 windDirection, float thresholdValue, float deltaTimeSeconds, float airResistance)
+    private static void UpdateParticles(
+        CubismPhysicsParticle[] strand,
+        int start,
+        int strandCount,
+        Vector2 totalTranslation,
+        float totalAngle,
+        Vector2 windDirection,
+        float thresholdValue,
+        float deltaTimeSeconds,
+        float airResistance
+    )
     {
         int i;
         float totalRadian;
@@ -965,7 +1130,8 @@ public class CubismPhysics
 
         for (i = 1; i < strandCount; ++i)
         {
-            strand[i + start].Force = (currentGravity * strand[i + start].Acceleration) + windDirection;
+            strand[i + start].Force =
+                (currentGravity * strand[i + start].Acceleration) + windDirection;
 
             strand[i + start].LastPosition = strand[i + start].Position;
 
@@ -974,7 +1140,9 @@ public class CubismPhysics
             direction.X = strand[i + start].Position.X - strand[i - 1 + start].Position.X;
             direction.Y = strand[i + start].Position.Y - strand[i - 1 + start].Position.Y;
 
-            radian = CubismMath.DirectionToRadian(strand[i + start].LastGravity, currentGravity) / airResistance;
+            radian =
+                CubismMath.DirectionToRadian(strand[i + start].LastGravity, currentGravity)
+                / airResistance;
 
             direction.X = (MathF.Cos(radian) * direction.X) - (direction.Y * MathF.Sin(radian));
             direction.Y = (MathF.Sin(radian) * direction.X) + (direction.Y * MathF.Cos(radian));
@@ -991,7 +1159,8 @@ public class CubismPhysics
 
             newDirection = Vector2.Normalize(newDirection);
 
-            strand[i + start].Position = strand[i - 1 + start].Position + (newDirection * strand[i + start].Radius);
+            strand[i + start].Position =
+                strand[i - 1 + start].Position + (newDirection * strand[i + start].Radius);
 
             if (MathF.Abs(strand[i + start].Position.X) < thresholdValue)
             {
@@ -1000,8 +1169,10 @@ public class CubismPhysics
 
             if (delay != 0.0f)
             {
-                strand[i + start].Velocity.X = strand[i + start].Position.X - strand[i + start].LastPosition.X;
-                strand[i + start].Velocity.Y = strand[i + start].Position.Y - strand[i + start].LastPosition.Y;
+                strand[i + start].Velocity.X =
+                    strand[i + start].Position.X - strand[i + start].LastPosition.X;
+                strand[i + start].Velocity.Y =
+                    strand[i + start].Position.Y - strand[i + start].LastPosition.Y;
                 strand[i + start].Velocity /= delay;
                 strand[i + start].Velocity *= strand[i + start].Mobility;
             }
@@ -1021,8 +1192,15 @@ public class CubismPhysics
      * @param windDirection         风向.
      * @param thresholdValue        运动阈值.
      */
-    private static void UpdateParticlesForStabilization(CubismPhysicsParticle[] strand, int start, int strandCount, Vector2 totalTranslation, float totalAngle,
-        Vector2 windDirection, float thresholdValue)
+    private static void UpdateParticlesForStabilization(
+        CubismPhysicsParticle[] strand,
+        int start,
+        int strandCount,
+        Vector2 totalTranslation,
+        float totalAngle,
+        Vector2 windDirection,
+        float thresholdValue
+    )
     {
         int i;
         float totalRadian;
@@ -1037,7 +1215,8 @@ public class CubismPhysics
 
         for (i = 1; i < strandCount; ++i)
         {
-            strand[i + start].Force = (currentGravity * strand[i + start].Acceleration) + windDirection;
+            strand[i + start].Force =
+                (currentGravity * strand[i + start].Acceleration) + windDirection;
 
             strand[i + start].LastPosition = strand[i + start].Position;
 
@@ -1065,8 +1244,13 @@ public class CubismPhysics
     /// @param  parameterValueMinimum  参数值下限.
     /// @param  parameterValueMaximum  参数值上限.
     /// @param  translation            移动值.
-    private static void UpdateOutputParameterValue(ref float parameterValue, float parameterValueMinimum, float parameterValueMaximum,
-        float translation, CubismPhysicsOutput output)
+    private static void UpdateOutputParameterValue(
+        ref float parameterValue,
+        float parameterValueMinimum,
+        float parameterValueMaximum,
+        float translation,
+        CubismPhysicsOutput output
+    )
     {
         float outputScale;
         float value;

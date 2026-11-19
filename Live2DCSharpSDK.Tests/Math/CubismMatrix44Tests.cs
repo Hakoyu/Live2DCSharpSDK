@@ -43,10 +43,22 @@ public sealed class CubismMatrix44Tests
     {
         float[] values =
         [
-            1.0f, 2.0f, 3.0f, 4.0f,
-            5.0f, 6.0f, 7.0f, 8.0f,
-            9.0f, 10.0f, 11.0f, 12.0f,
-            13.0f, 14.0f, 15.0f, 16.0f
+            1.0f,
+            2.0f,
+            3.0f,
+            4.0f,
+            5.0f,
+            6.0f,
+            7.0f,
+            8.0f,
+            9.0f,
+            10.0f,
+            11.0f,
+            12.0f,
+            13.0f,
+            14.0f,
+            15.0f,
+            16.0f,
         ];
         var matrix = new CubismMatrix44();
 
@@ -121,12 +133,29 @@ public sealed class CubismMatrix44Tests
 
         float[] expected =
         [
-            0.5f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.25f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            -5.0f, -5.0f, 0.0f, 1.0f
+            0.5f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.25f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            -5.0f,
+            -5.0f,
+            0.0f,
+            1.0f,
         ];
-        AssertElementsEqual(invert, expected, GoldenTolerance, "The inverse of a scale/translate matrix is wrong.");
+        AssertElementsEqual(
+            invert,
+            expected,
+            GoldenTolerance,
+            "The inverse of a scale/translate matrix is wrong."
+        );
 
         // 正变换后再逆变换应回到原坐标.
         Assert.AreEqual(3.0f, invert.TransformX(matrix.TransformX(3.0f)), GoldenTolerance);
@@ -148,12 +177,29 @@ public sealed class CubismMatrix44Tests
 
         float[] expected =
         [
-            2.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 4.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            20.0f, 80.0f, 0.0f, 1.0f
+            2.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            4.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            20.0f,
+            80.0f,
+            0.0f,
+            1.0f,
         ];
-        AssertElementsEqual(product, expected, 0.0f, "The translation-then-scale golden matrix is wrong.");
+        AssertElementsEqual(
+            product,
+            expected,
+            0.0f,
+            "The translation-then-scale golden matrix is wrong."
+        );
     }
 
     /// <summary>
@@ -203,7 +249,11 @@ public sealed class CubismMatrix44Tests
 
         Assert.IsNotNull(invert, "The inverse of a singular matrix must not be null.");
         Assert.AreNotSame(matrix, invert, "The inverse of a singular matrix must be a new object.");
-        AssertIdentity(invert, 0.0f, "The inverse of a singular matrix must be the identity matrix.");
+        AssertIdentity(
+            invert,
+            0.0f,
+            "The inverse of a singular matrix must be the identity matrix."
+        );
 
         // 每次调用都应返回新对象, 且与原矩阵不共享内部数组.
         var second = matrix.GetInvert();
@@ -310,10 +360,22 @@ public sealed class CubismMatrix44Tests
         var matrix = new CubismMatrix44();
         float[] values =
         [
-            cos, sin, 0.0f, 0.0f,
-            -sin, cos, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            5.0f, -3.0f, 0.0f, 1.0f
+            cos,
+            sin,
+            0.0f,
+            0.0f,
+            -sin,
+            cos,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            5.0f,
+            -3.0f,
+            0.0f,
+            1.0f,
         ];
         matrix.SetMatrix(values);
         return matrix;
@@ -326,7 +388,12 @@ public sealed class CubismMatrix44Tests
     /// <param name="expected">期望的 16 个元素</param>
     /// <param name="delta">浮点容限</param>
     /// <param name="because">失败说明</param>
-    private static void AssertElementsEqual(CubismMatrix44 matrix, float[] expected, float delta, string because)
+    private static void AssertElementsEqual(
+        CubismMatrix44 matrix,
+        float[] expected,
+        float delta,
+        string because
+    )
     {
         for (int i = 0; i < 16; i++)
         {

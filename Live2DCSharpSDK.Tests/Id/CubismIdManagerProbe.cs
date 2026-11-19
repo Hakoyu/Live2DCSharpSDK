@@ -21,7 +21,9 @@ internal static class CubismIdManagerProbe
 
         if (ResolveIdsField().GetValue(manager) is not List<string> ids)
         {
-            throw new InvalidOperationException("The internal id field of CubismIdManager is not a List<string>.");
+            throw new InvalidOperationException(
+                "The internal id field of CubismIdManager is not a List<string>."
+            );
         }
 
         return ids.ToArray();
@@ -52,7 +54,8 @@ internal static class CubismIdManagerProbe
         if (fields.Length != 1)
         {
             throw new InvalidOperationException(
-                $"CubismIdManager is expected to have exactly one List<string> field, but {fields.Length} were found.");
+                $"CubismIdManager is expected to have exactly one List<string> field, but {fields.Length} were found."
+            );
         }
 
         return fields[0];

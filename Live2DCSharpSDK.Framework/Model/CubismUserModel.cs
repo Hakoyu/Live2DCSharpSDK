@@ -15,22 +15,27 @@ public abstract class CubismUserModel : IDisposable
     /// 渲染器
     /// </summary>
     public CubismRenderer? Renderer { get; protected set; }
+
     /// <summary>
     /// 模型矩阵
     /// </summary>
     public CubismModelMatrix ModelMatrix { get; protected set; }
+
     /// <summary>
     /// Model 实例
     /// </summary>
     public CubismModel Model => _moc.Model;
+
     /// <summary>
     /// 是否已初始化
     /// </summary>
     public bool Initialized { get; set; }
+
     /// <summary>
     /// 是否已更新
     /// </summary>
     public bool Updating { get; set; }
+
     /// <summary>
     /// 不透明度
     /// </summary>
@@ -55,54 +60,67 @@ public abstract class CubismUserModel : IDisposable
     /// 动作管理
     /// </summary>
     protected CubismMotionManager _motionManager;
+
     /// <summary>
     /// 表情管理
     /// </summary>
     protected CubismExpressionMotionManager _expressionManager;
+
     /// <summary>
     /// 自动眨眼
     /// </summary>
     protected CubismEyeBlink? _eyeBlink;
+
     /// <summary>
     /// 呼吸
     /// </summary>
     protected CubismBreath _breath;
+
     /// <summary>
     /// 姿势管理
     /// </summary>
     protected CubismPose? _pose;
+
     /// <summary>
     /// 鼠标拖拽
     /// </summary>
     protected CubismTargetPoint _dragManager;
+
     /// <summary>
     /// 物理演算
     /// </summary>
     protected CubismPhysics? _physics;
+
     /// <summary>
     /// 用户数据
     /// </summary>
     protected CubismModelUserData? _modelUserData;
+
     /// <summary>
     /// 最后一次口型同步的控制值
     /// </summary>
     protected float _lastLipSyncValue;
+
     /// <summary>
     /// X 轴方向的加速度
     /// </summary>
     protected float _accelerationX;
+
     /// <summary>
     /// Y 轴方向的加速度
     /// </summary>
     protected float _accelerationY;
+
     /// <summary>
     /// Z 轴方向的加速度
     /// </summary>
     protected float _accelerationZ;
+
     /// <summary>
     /// 是否进行 MOC3 一致性校验
     /// </summary>
     protected bool _mocConsistency;
+
     /// <summary>
     /// 是否进行动作一致性校验 (官方 5-r.5 中追加)
     /// </summary>
@@ -117,7 +135,10 @@ public abstract class CubismUserModel : IDisposable
     /// </summary>
     /// <param name="eventValue">已触发事件的字符串数据</param>
     /// <param name="customData">预期为继承 CubismUserModel 的实例</param>
-    public static void CubismDefaultMotionEventCallback(CubismUserModel? customData, string eventValue)
+    public static void CubismDefaultMotionEventCallback(
+        CubismUserModel? customData,
+        string eventValue
+    )
     {
         customData?.MotionEventFired(eventValue);
     }
@@ -136,7 +157,10 @@ public abstract class CubismUserModel : IDisposable
     {
         if (context is null)
         {
-            throw new ArgumentNullException(nameof(context), "CubismUserModel requires a context instance.");
+            throw new ArgumentNullException(
+                nameof(context),
+                "CubismUserModel requires a context instance."
+            );
         }
 
         Context = context;
@@ -235,13 +259,23 @@ public abstract class CubismUserModel : IDisposable
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不被调用.</param>
     /// <param name="shouldCheckMotionConsistency">是否校验 motion3.json 的一致性</param>
     /// <returns>生成的动作数据. 无法读入时为 null</returns>
-    protected ACubismMotion? LoadMotion(string buffer, string name,
+    protected ACubismMotion? LoadMotion(
+        string buffer,
+        string name,
         FinishedMotionCallback? onFinishedMotionHandler = null,
         BeganMotionCallback? onBeganMotionHandler = null,
-        bool shouldCheckMotionConsistency = false)
+        bool shouldCheckMotionConsistency = false
+    )
     {
-        return LoadMotionCore(buffer, name, null, null,
-            onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
+        return LoadMotionCore(
+            buffer,
+            name,
+            null,
+            null,
+            onFinishedMotionHandler,
+            onBeganMotionHandler,
+            shouldCheckMotionConsistency
+        );
     }
 
     /// <summary>
@@ -258,11 +292,15 @@ public abstract class CubismUserModel : IDisposable
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不被调用.</param>
     /// <param name="modelHomeDir">model3.json 所在的目录 (用于解析 motion 的相对路径). 为 NULL 时以当前目录为基准</param>
     /// <returns>生成的动作数据. 没有组/索引/文件时为 null</returns>
-    protected ACubismMotion? LoadMotion(ModelSettingObj? modelSetting, string group, int index,
+    protected ACubismMotion? LoadMotion(
+        ModelSettingObj? modelSetting,
+        string group,
+        int index,
         bool shouldCheckMotionConsistency = false,
         FinishedMotionCallback? onFinishedMotionHandler = null,
         BeganMotionCallback? onBeganMotionHandler = null,
-        string? modelHomeDir = null)
+        string? modelHomeDir = null
+    )
     {
         if (modelSetting == null)
         {
@@ -273,7 +311,9 @@ public abstract class CubismUserModel : IDisposable
         var fileName = modelSetting.GetMotionFileName(group, index);
         if (string.IsNullOrEmpty(fileName))
         {
-            CubismLog.Warning($"Failed to LoadMotion(). Motion is not found. group={group}, index={index}");
+            CubismLog.Warning(
+                $"Failed to LoadMotion(). Motion is not found. group={group}, index={index}"
+            );
             return null;
         }
 
@@ -286,10 +326,15 @@ public abstract class CubismUserModel : IDisposable
         var fadeInTime = modelSetting.GetMotionFadeInTimeValue(group, index);
         var fadeOutTime = modelSetting.GetMotionFadeOutTimeValue(group, index);
 
-        return LoadMotionCore(path, $"{group}_{index}",
+        return LoadMotionCore(
+            path,
+            $"{group}_{index}",
             fadeInTime >= 0.0f ? fadeInTime : null,
             fadeOutTime >= 0.0f ? fadeOutTime : null,
-            onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
+            onFinishedMotionHandler,
+            onBeganMotionHandler,
+            shouldCheckMotionConsistency
+        );
     }
 
     /// <summary>
@@ -303,11 +348,15 @@ public abstract class CubismUserModel : IDisposable
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数</param>
     /// <param name="shouldCheckMotionConsistency">是否校验 motion3.json 的一致性</param>
     /// <returns>生成的动作数据. 无法读入时为 null</returns>
-    private ACubismMotion? LoadMotionCore(string buffer, string name,
-        float? fadeInTime, float? fadeOutTime,
+    private ACubismMotion? LoadMotionCore(
+        string buffer,
+        string name,
+        float? fadeInTime,
+        float? fadeOutTime,
         FinishedMotionCallback? onFinishedMotionHandler,
         BeganMotionCallback? onBeganMotionHandler,
-        bool shouldCheckMotionConsistency)
+        bool shouldCheckMotionConsistency
+    )
     {
         if (string.IsNullOrEmpty(buffer))
         {
@@ -320,14 +369,24 @@ public abstract class CubismUserModel : IDisposable
         ACubismMotion motion;
         try
         {
-            motion = new CubismMotion(buffer, Context, onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
+            motion = new CubismMotion(
+                buffer,
+                Context,
+                onFinishedMotionHandler,
+                onBeganMotionHandler,
+                shouldCheckMotionConsistency
+            );
         }
         catch (CubismMotionConsistencyException e)
         {
             // 官方 CubismMotion::Create 在一致性不一致时返回 NULL, 调用侧 (LAppModel) 会跳过该动作.
             // 本地构造函数会抛异常, 因此在此捕获并转换为 NULL 等价的 null(其他异常不吞掉).
             // 注意: 参数非法, 文件不存在, JSON 损坏等其他异常不予吞掉, 直接向上传播.
-            CubismLog.Warning("[Live2D SDK]failed to load motion (inconsistent): {0} : {1}", name, e.Message);
+            CubismLog.Warning(
+                "[Live2D SDK]failed to load motion (inconsistent): {0} : {1}",
+                name,
+                e.Message
+            );
             return null;
         }
 

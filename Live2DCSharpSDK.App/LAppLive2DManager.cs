@@ -94,7 +94,13 @@ public class LAppLive2DManager(LAppDelegate lapp) : IDisposable
             else if (_models[i].HitTest(LAppDefine.HitAreaNameBody, x, y))
             {
                 CubismLog.Debug($"[Live2D App]hit area: [{LAppDefine.HitAreaNameBody}]");
-                _models[i].StartRandomMotion(LAppDefine.MotionGroupTapBody, MotionPriority.PriorityNormal, OnFinishedMotion, OnBeganMotion);
+                _models[i]
+                    .StartRandomMotion(
+                        LAppDefine.MotionGroupTapBody,
+                        MotionPriority.PriorityNormal,
+                        OnFinishedMotion,
+                        OnBeganMotion
+                    );
             }
         }
     }

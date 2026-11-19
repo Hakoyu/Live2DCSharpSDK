@@ -21,14 +21,17 @@ public class CubismPose
     /// 部件分组
     /// </summary>
     private readonly List<PartData> _partGroups = [];
+
     /// <summary>
     /// 各部件分组的个数
     /// </summary>
     private readonly List<int> _partGroupCounts = [];
+
     /// <summary>
     /// 渐变时间[秒]
     /// </summary>
     private readonly float _fadeTimeSeconds = DefaultFadeInSeconds;
+
     /// <summary>
     /// 上一次操作的模型
     /// </summary>
@@ -49,14 +52,21 @@ public class CubismPose
     {
         if (context is null)
         {
-            throw new ArgumentNullException(nameof(context), "CubismPose requires a context instance.");
+            throw new ArgumentNullException(
+                nameof(context),
+                "CubismPose requires a context instance."
+            );
         }
 
         _context = context;
 
-        using var stream = File.Open(pose3json, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        var json = JsonNode.Parse(stream)?.AsObject()
-            ?? throw new Exception("Pose json is error");
+        using var stream = File.Open(
+            pose3json,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.ReadWrite
+        );
+        var json = JsonNode.Parse(stream)?.AsObject() ?? throw new Exception("Pose json is error");
 
         // 渐变时间的指定
         if (json.ContainsKey(FadeIn))
@@ -84,7 +94,7 @@ public class CubismPose
                 var partInfo = item[groupIndex]!;
                 PartData partData = new()
                 {
-                    PartId = _context.IdManager.GetId(partInfo[Id]!.ToString())
+                    PartId = _context.IdManager.GetId(partInfo[Id]!.ToString()),
                 };
 
                 // 设置链接的部件
@@ -95,10 +105,14 @@ public class CubismPose
 
                     for (int linkIndex = 0; linkIndex < linkCount; ++linkIndex)
                     {
-                        partData.Link.Add(new()
-                        {
-                            PartId = _context.IdManager.GetId(linkListInfo[linkIndex]!.ToString())
-                        });
+                        partData.Link.Add(
+                            new()
+                            {
+                                PartId = _context.IdManager.GetId(
+                                    linkListInfo[linkIndex]!.ToString()
+                                ),
+                            }
+                        );
                     }
                 }
 
@@ -147,7 +161,7 @@ public class CubismPose
 
     /// <summary>
     /// 初始化显示.
-    /// 
+    ///
     /// 初始不透明度不为 0 的参数, 将不透明度设为 1.
     /// </summary>
     /// <param name="model">目标模型</param>
@@ -219,7 +233,12 @@ public class CubismPose
     /// <param name="deltaTimeSeconds">增量时间[秒]</param>
     /// <param name="beginIndex">进行渐变操作的部件分组的起始索引</param>
     /// <param name="partGroupCount">进行渐变操作的部件分组的个数</param>
-    private void DoFade(CubismModel model, float deltaTimeSeconds, int beginIndex, int partGroupCount)
+    private void DoFade(
+        CubismModel model,
+        float deltaTimeSeconds,
+        int beginIndex,
+        int partGroupCount
+    )
     {
         int visiblePartIndex = -1;
         float newOpacity = 1.0f;
@@ -278,7 +297,7 @@ public class CubismPose
             else
             {
                 float opacity = model.GetPartOpacity(partsIndex);
-                float a1;          // 通过计算求得的不透明度
+                float a1; // 通过计算求得的不透明度
 
                 if (newOpacity < Phi)
                 {

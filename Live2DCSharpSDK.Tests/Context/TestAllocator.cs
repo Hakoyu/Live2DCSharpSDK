@@ -34,9 +34,7 @@ internal sealed class TestAllocator : ICubismAllocator
     /// 空实现.
     /// </summary>
     /// <param name="memory">要释放的内存地址</param>
-    public void Deallocate(IntPtr memory)
-    {
-    }
+    public void Deallocate(IntPtr memory) { }
 
     /// <summary>
     /// 空实现, 只记录调用次数.
@@ -54,7 +52,5 @@ internal sealed class TestAllocator : ICubismAllocator
     /// 空实现.
     /// </summary>
     /// <param name="alignedMemory">要释放的内存地址</param>
-    public void DeallocateAligned(IntPtr alignedMemory)
-    {
-    }
+    public void DeallocateAligned(IntPtr alignedMemory) { }
 }

@@ -14,34 +14,42 @@ public class CubismEyeBlink
     /// 操作对象的参数 ID 列表
     /// </summary>
     public readonly List<string> ParameterIds = [];
+
     /// <summary>
     /// 当前状态
     /// </summary>
     private EyeState _blinkingState;
+
     /// <summary>
     /// 下一次眨眼的时间[秒]
     /// </summary>
     private float _nextBlinkingTime;
+
     /// <summary>
     /// 当前状态的开始时刻[秒]
     /// </summary>
     private float _stateStartTimeSeconds;
+
     /// <summary>
     /// 眨眼间隔[秒]
     /// </summary>
     private float _blinkingIntervalSeconds;
+
     /// <summary>
     /// 眼睑闭合动作的持续时间[秒]
     /// </summary>
     private float _closingSeconds;
+
     /// <summary>
     /// 眼睑保持闭合的持续时间[秒]
     /// </summary>
     private float _closedSeconds;
+
     /// <summary>
     /// 眼睑睁开动作的持续时间[秒]
     /// </summary>
     private float _openingSeconds;
+
     /// <summary>
     /// 增量时间的累计值[秒]
     /// </summary>
@@ -64,7 +72,10 @@ public class CubismEyeBlink
     {
         if (context is null)
         {
-            throw new ArgumentNullException(nameof(context), "CubismEyeBlink requires a context instance.");
+            throw new ArgumentNullException(
+                nameof(context),
+                "CubismEyeBlink requires a context instance."
+            );
         }
 
         _context = context;

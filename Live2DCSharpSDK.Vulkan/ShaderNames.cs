@@ -14,6 +14,7 @@ public static class ShaderNames
 {
     /// <summary>复制用 shader</summary>
     public const int Copy = 0;
+
     /// <summary>遮罩生成用 shader</summary>
     public const int SetupMask = 1;
 
@@ -75,6 +76,7 @@ public static class ShaderNames
 
     /// <summary>遮罩/已乘 alpha 变种的数量(官方 CSM_CREATE_SHADER_NAMES 的 6 项)</summary>
     public const int VariantCount = 6;
+
     /// <summary>alpha 混合类型的数量(官方 AlphaBlendMode_Count)</summary>
     public const int AlphaBlendModeCount = 5;
 
@@ -117,8 +119,8 @@ public static class ShaderNames
 
         // 5.3 以后: Core 的 color 3..17 对应 shader 内部的 ColorBlendMode 1..15
         int colorIndex = colorBlendType - 2;
-        return BlendOverlapBegin + (colorIndex - 1) * AlphaBlendModeCount * VariantCount
-               + alphaBlendType * VariantCount;
+        return BlendOverlapBegin
+            + (colorIndex - 1) * AlphaBlendModeCount * VariantCount
+            + alphaBlendType * VariantCount;
     }
-
 }

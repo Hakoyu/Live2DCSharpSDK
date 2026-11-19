@@ -6,18 +6,22 @@
 public abstract class TextureInfo
 {
     public int Index;
+
     /// <summary>
     /// 纹理 ID
     /// </summary>
     public int Id;
+
     /// <summary>
     /// 宽度
     /// </summary>
     public int Width;
+
     /// <summary>
     /// 高度
     /// </summary>
     public int Height;
+
     /// <summary>
     /// 文件名
     /// </summary>

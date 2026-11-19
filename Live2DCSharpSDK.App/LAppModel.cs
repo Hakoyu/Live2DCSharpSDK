@@ -15,22 +15,27 @@ public class LAppModel : CubismUserModel
     /// 模型设置信息
     /// </summary>
     private readonly ModelSettingObj _modelSetting;
+
     /// <summary>
     /// 存放模型设置的目录
     /// </summary>
     private readonly string _modelHomeDir;
+
     /// <summary>
     /// 模型中配置的眨眼功能参数 ID
     /// </summary>
     private readonly List<string> _eyeBlinkIds = [];
+
     /// <summary>
     /// 模型中配置的口型同步功能参数 ID
     /// </summary>
     private readonly List<string> _lipSyncIds = [];
+
     /// <summary>
     /// 已加载的动作列表
     /// </summary>
     private readonly Dictionary<string, ACubismMotion> _motions = [];
+
     /// <summary>
     /// 已加载的表情列表
     /// </summary>
@@ -46,8 +51,7 @@ public class LAppModel : CubismUserModel
             var count = Model.GetPartCount();
             for (int a = 0; a < count; a++)
             {
-                list.Add((Model.GetPartId(a),
-                    a, Model.GetPartOpacity(a)));
+                list.Add((Model.GetPartId(a), a, Model.GetPartOpacity(a)));
             }
             return list;
         }
@@ -92,22 +96,27 @@ public class LAppModel : CubismUserModel
     /// 参数 ID: ParamAngleX
     /// </summary>
     public string IdParamAngleX { get; set; }
+
     /// <summary>
     /// 参数 ID: ParamAngleY
     /// </summary>
     public string IdParamAngleY { get; set; }
+
     /// <summary>
     /// 参数 ID: ParamAngleZ
     /// </summary>
     public string IdParamAngleZ { get; set; }
+
     /// <summary>
     /// 参数 ID: ParamBodyAngleX
     /// </summary>
     public string IdParamBodyAngleX { get; set; }
+
     /// <summary>
     /// 参数 ID: ParamEyeBallX
     /// </summary>
     public string IdParamEyeBallX { get; set; }
+
     /// <summary>
     /// 参数 ID: ParamEyeBallXY
     /// </summary>
@@ -164,20 +173,13 @@ public class LAppModel : CubismUserModel
             _motionConsistency = true;
         }
 
-        IdParamBreath = Context.IdManager
-            .GetId(CubismDefaultParameterId.ParamBreath);
-        IdParamAngleX = Context.IdManager
-            .GetId(CubismDefaultParameterId.ParamAngleX);
-        IdParamAngleY = Context.IdManager
-            .GetId(CubismDefaultParameterId.ParamAngleY);
-        IdParamAngleZ = Context.IdManager
-            .GetId(CubismDefaultParameterId.ParamAngleZ);
-        IdParamBodyAngleX = Context.IdManager
-            .GetId(CubismDefaultParameterId.ParamBodyAngleX);
-        IdParamEyeBallX = Context.IdManager
-            .GetId(CubismDefaultParameterId.ParamEyeBallX);
-        IdParamEyeBallY = Context.IdManager
-            .GetId(CubismDefaultParameterId.ParamEyeBallY);
+        IdParamBreath = Context.IdManager.GetId(CubismDefaultParameterId.ParamBreath);
+        IdParamAngleX = Context.IdManager.GetId(CubismDefaultParameterId.ParamAngleX);
+        IdParamAngleY = Context.IdManager.GetId(CubismDefaultParameterId.ParamAngleY);
+        IdParamAngleZ = Context.IdManager.GetId(CubismDefaultParameterId.ParamAngleZ);
+        IdParamBodyAngleX = Context.IdManager.GetId(CubismDefaultParameterId.ParamBodyAngleX);
+        IdParamEyeBallX = Context.IdManager.GetId(CubismDefaultParameterId.ParamEyeBallX);
+        IdParamEyeBallY = Context.IdManager.GetId(CubismDefaultParameterId.ParamEyeBallY);
 
         _modelHomeDir = dir;
 
@@ -185,8 +187,10 @@ public class LAppModel : CubismUserModel
 
         using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
-        _modelSetting = JsonSerializer.Deserialize(stream, ModelSettingObjContext.Default.ModelSettingObj)
-            ?? throw new Exception("model3.json error");
+        _modelSetting = JsonSerializer.Deserialize(
+            stream,
+            ModelSettingObjContext.Default.ModelSettingObj
+        ) ?? throw new Exception("model3.json error");
 
         Updating = true;
         Initialized = false;
@@ -348,8 +352,7 @@ public class LAppModel : CubismUserModel
 
         // 拖拽导致的朝向(对应官方 LAppModel.cpp:255-269, 系数与手写实现一致).
         _look = CubismLook.Create();
-        _look.SetParameters(
-        [
+        _look.SetParameters([
             new() { ParameterId = IdParamAngleX, FactorX = 30.0f },
             new() { ParameterId = IdParamAngleY, FactorY = 30.0f },
             new() { ParameterId = IdParamAngleZ, FactorXY = -30.0f },
@@ -417,7 +420,7 @@ public class LAppModel : CubismUserModel
                     Offset = 0.0f,
                     Peak = 15.0f,
                     Cycle = 6.5345f,
-                    Weight = 0.5f
+                    Weight = 0.5f,
                 },
                 new()
                 {
@@ -425,7 +428,7 @@ public class LAppModel : CubismUserModel
                     Offset = 0.0f,
                     Peak = 8.0f,
                     Cycle = 3.5345f,
-                    Weight = 0.5f
+                    Weight = 0.5f,
                 },
                 new()
                 {
@@ -433,7 +436,7 @@ public class LAppModel : CubismUserModel
                     Offset = 0.0f,
                     Peak = 10.0f,
                     Cycle = 5.5345f,
-                    Weight = 0.5f
+                    Weight = 0.5f,
                 },
                 new()
                 {
@@ -441,7 +444,7 @@ public class LAppModel : CubismUserModel
                     Offset = 0.0f,
                     Peak = 4.0f,
                     Cycle = 15.5345f,
-                    Weight = 0.5f
+                    Weight = 0.5f,
                 },
                 new()
                 {
@@ -449,9 +452,9 @@ public class LAppModel : CubismUserModel
                     Offset = 0.5f,
                     Peak = 0.5f,
                     Cycle = 3.2345f,
-                    Weight = 0.5f
-                }
-            ]
+                    Weight = 0.5f,
+                },
+            ],
         };
     }
 
@@ -553,7 +556,12 @@ public class LAppModel : CubismUserModel
     /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>
     /// <returns>动作的队列条目. 无法开始时返回 null.</returns>
-    public CubismMotionQueueEntry? StartMotion(string name, MotionPriority priority, FinishedMotionCallback? onFinishedMotionHandler = null, BeganMotionCallback? onBeganMotionHandler = null)
+    public CubismMotionQueueEntry? StartMotion(
+        string name,
+        MotionPriority priority,
+        FinishedMotionCallback? onFinishedMotionHandler = null,
+        BeganMotionCallback? onBeganMotionHandler = null
+    )
     {
         // 以最后一个下划线拆分: 官方动作名的格式是 "组名_编号", 组名本身允许包含下划线(如 "Tap_Body_0").
         if (string.IsNullOrEmpty(name))
@@ -570,13 +578,22 @@ public class LAppModel : CubismUserModel
         }
 
         string noText = name[(separator + 1)..];
-        if (int.TryParse(noText, NumberStyles.None, CultureInfo.InvariantCulture, out int no) is false)
+        if (
+            int.TryParse(noText, NumberStyles.None, CultureInfo.InvariantCulture, out int no)
+            is false
+        )
         {
             CubismLog.Warning($"[Live2D App]motion name error: [{name}]. Invalid motion index.");
             return null;
         }
 
-        return StartMotion(name[..separator], no, priority, onFinishedMotionHandler, onBeganMotionHandler);
+        return StartMotion(
+            name[..separator],
+            no,
+            priority,
+            onFinishedMotionHandler,
+            onBeganMotionHandler
+        );
     }
 
     /// <summary>
@@ -589,7 +606,13 @@ public class LAppModel : CubismUserModel
     /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>
     /// <returns>动作的队列条目. 无法开始时返回 null.</returns>
-    public CubismMotionQueueEntry? StartMotion(string group, int no, MotionPriority priority, FinishedMotionCallback? onFinishedMotionHandler = null, BeganMotionCallback? onBeganMotionHandler = null)
+    public CubismMotionQueueEntry? StartMotion(
+        string group,
+        int no,
+        MotionPriority priority,
+        FinishedMotionCallback? onFinishedMotionHandler = null,
+        BeganMotionCallback? onBeganMotionHandler = null
+    )
     {
         if (priority == MotionPriority.PriorityForce)
         {
@@ -603,9 +626,16 @@ public class LAppModel : CubismUserModel
 
         // 组或编号不存在时按 "无法开始" 处理, 与官方 GetMotionFileName 返回空串后走同一分支等价.
         var motions = _modelSetting.FileReferences?.Motions;
-        if (motions is null || motions.TryGetValue(group, out var items) is false || no < 0 || no >= items.Count)
+        if (
+            motions is null
+            || motions.TryGetValue(group, out var items) is false
+            || no < 0
+            || no >= items.Count
+        )
         {
-            CubismLog.Warning($"[Live2D App]Can't start motion [{group}_{no}]. Motion is not found.");
+            CubismLog.Warning(
+                $"[Live2D App]Can't start motion [{group}_{no}]. Motion is not found."
+            );
 
             // 恢复未能开始的动作的预约优先级(官方 LAppModel.cpp:448)
             _motionManager.ReservePriority = MotionPriority.PriorityNone;
@@ -622,8 +652,15 @@ public class LAppModel : CubismUserModel
         {
             // 与官方 LAppModel::StartMotion(LAppModel.cpp:436-439)相同,
             // 经 LoadMotion(modelSetting, group, no, ...) 应用 model3.json 中的 FadeInTime / FadeOutTime.
-            var loaded = LoadMotion(_modelSetting, group, no, _motionConsistency,
-                onFinishedMotionHandler, onBeganMotionHandler, _modelHomeDir);
+            var loaded = LoadMotion(
+                _modelSetting,
+                group,
+                no,
+                _motionConsistency,
+                onFinishedMotionHandler,
+                onBeganMotionHandler,
+                _modelHomeDir
+            );
             if (loaded is not CubismMotion cubismMotion)
             {
                 // 官方只做 CubismLogError(仅断言). 本地的 CubismLog.Error 会抛出异常,
@@ -642,7 +679,9 @@ public class LAppModel : CubismUserModel
         {
             if (value is not CubismMotion cachedMotion)
             {
-                CubismLog.Warning($"[Live2D App]Can't start motion [{group}_{no}]. Cached motion type mismatch.");
+                CubismLog.Warning(
+                    $"[Live2D App]Can't start motion [{group}_{no}]. Cached motion type mismatch."
+                );
                 _motionManager.ReservePriority = MotionPriority.PriorityNone;
                 return null;
             }
@@ -673,10 +712,19 @@ public class LAppModel : CubismUserModel
     /// <param name="onFinishedMotionHandler">动作播放结束时调用的回调函数. 为 NULL 时不调用.</param>
     /// <param name="onBeganMotionHandler">动作播放开始时调用的回调函数. 为 NULL 时不调用.</param>
     /// <returns>动作的队列条目. 无法开始时返回 null.</returns>
-    public object? StartRandomMotion(string group, MotionPriority priority, FinishedMotionCallback? onFinishedMotionHandler = null, BeganMotionCallback? onBeganMotionHandler = null)
+    public object? StartRandomMotion(
+        string group,
+        MotionPriority priority,
+        FinishedMotionCallback? onFinishedMotionHandler = null,
+        BeganMotionCallback? onBeganMotionHandler = null
+    )
     {
         var motions = _modelSetting.FileReferences?.Motions;
-        if (motions is null || motions.TryGetValue(group, out var items) is false || items.Count == 0)
+        if (
+            motions is null
+            || motions.TryGetValue(group, out var items) is false
+            || items.Count == 0
+        )
         {
             // 与官方 StartRandomMotion 相同: 组不存在或为空时直接返回无效句柄, 不抛异常.
             return null;
@@ -830,7 +878,11 @@ public class LAppModel : CubismUserModel
                 if (string.IsNullOrWhiteSpace(texturePath))
                     continue;
                 texturePath = Path.GetFullPath(Path.Combine(_modelHomeDir, texturePath));
-                var texture = _lapp.TextureManager.CreateTextureFromPngFile(this, index, texturePath);
+                var texture = _lapp.TextureManager.CreateTextureFromPngFile(
+                    this,
+                    index,
+                    texturePath
+                );
                 Textures.Add(texture);
             }
         }
@@ -853,8 +905,15 @@ public class LAppModel : CubismUserModel
 
             // 读取动作数据(与官方 LAppModel::PreloadMotionGroup 相同,
             // 经 LoadMotion(modelSetting, group, index, ...) 应用 model3.json 中的淡入淡出值.
-            var tmpMotion = LoadMotion(_modelSetting, group, i, _motionConsistency,
-                null, null, _modelHomeDir);
+            var tmpMotion = LoadMotion(
+                _modelSetting,
+                group,
+                i,
+                _motionConsistency,
+                null,
+                null,
+                _modelHomeDir
+            );
 
             if (tmpMotion is not CubismMotion cubismMotion)
             {

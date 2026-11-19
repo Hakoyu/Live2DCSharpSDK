@@ -9,20 +9,24 @@ public class RectF
     /// 左端 X 坐标
     /// </summary>
     public float X;
+
     /// <summary>
     /// 上端 Y 坐标
     /// </summary>
     public float Y;
+
     /// <summary>
     /// 宽度
     /// </summary>
     public float Width;
+
     /// <summary>
     /// 高度
     /// </summary>
     public float Height;
 
     public RectF() { }
+
     /// <summary>
     /// 带参数的构造函数
     /// </summary>

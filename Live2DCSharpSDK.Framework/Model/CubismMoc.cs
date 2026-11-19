@@ -12,6 +12,7 @@ public class CubismMoc : IDisposable
     /// Moc 数据 (官方 5-r.5 中由 private 改为 protected)
     /// </summary>
     protected readonly IntPtr _moc;
+
     /// <summary>
     /// 已读入模型的 .moc3 Version
     /// </summary>
@@ -41,12 +42,18 @@ public class CubismMoc : IDisposable
     {
         if (context is null)
         {
-            throw new ArgumentNullException(nameof(context), "CubismMoc requires a context instance.");
+            throw new ArgumentNullException(
+                nameof(context),
+                "CubismMoc requires a context instance."
+            );
         }
 
         _context = context;
 
-        IntPtr alignedBuffer = context.Allocator.AllocateAligned(mocBytes.Length, CsmEnum.csmAlignofMoc);
+        IntPtr alignedBuffer = context.Allocator.AllocateAligned(
+            mocBytes.Length,
+            CsmEnum.csmAlignofMoc
+        );
         Marshal.Copy(mocBytes, 0, alignedBuffer, mocBytes.Length);
 
         if (shouldCheckMocConsistency)
@@ -107,7 +114,10 @@ public class CubismMoc : IDisposable
     {
         if (context is null)
         {
-            throw new ArgumentNullException(nameof(context), "CubismMoc requires a context instance.");
+            throw new ArgumentNullException(
+                nameof(context),
+                "CubismMoc requires a context instance."
+            );
         }
 
         if (mocBytes is null || mocBytes.Length == 0)
@@ -117,7 +127,10 @@ public class CubismMoc : IDisposable
             return 0;
         }
 
-        IntPtr alignedBuffer = context.Allocator.AllocateAligned(mocBytes.Length, CsmEnum.csmAlignofMoc);
+        IntPtr alignedBuffer = context.Allocator.AllocateAligned(
+            mocBytes.Length,
+            CsmEnum.csmAlignofMoc
+        );
         Marshal.Copy(mocBytes, 0, alignedBuffer, mocBytes.Length);
 
         var version = CubismCore.GetMocVersion(alignedBuffer, mocBytes.Length);
@@ -149,10 +162,16 @@ public class CubismMoc : IDisposable
     {
         if (context is null)
         {
-            throw new ArgumentNullException(nameof(context), "CubismMoc requires a context instance.");
+            throw new ArgumentNullException(
+                nameof(context),
+                "CubismMoc requires a context instance."
+            );
         }
 
-        IntPtr alignedBuffer = context.Allocator.AllocateAligned(data.Length, CsmEnum.csmAlignofMoc);
+        IntPtr alignedBuffer = context.Allocator.AllocateAligned(
+            data.Length,
+            CsmEnum.csmAlignofMoc
+        );
         Marshal.Copy(data, 0, alignedBuffer, data.Length);
 
         bool consistency = HasMocConsistency(alignedBuffer, data.Length);

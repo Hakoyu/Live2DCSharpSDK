@@ -2,7 +2,7 @@ namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
 /// 在模型绘制前保存并恢复 OpenGLES2 状态的类
-/// (官方 OpenGL/CubismRenderer_OpenGLES2.hpp:116-173). 
+/// (官方 OpenGL/CubismRenderer_OpenGLES2.hpp:116-173).
 /// FBO / viewport 不由 Profile 保存(官方 R5 已移到 DoDrawModel 的局部变量).
 /// blend 模式下额外保存并恢复纹理单元 2(官方只处理 0/1,
 /// 本地为防止 blend 纹理泄漏而补强).
@@ -13,62 +13,77 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     /// 模型绘制前的顶点缓冲
     /// </summary>
     internal int LastArrayBufferBinding;
+
     /// <summary>
     /// 模型绘制前的 Element 缓冲
     /// </summary>
     internal int LastElementArrayBufferBinding;
+
     /// <summary>
     /// 模型绘制前的 Shader 程序缓冲
     /// </summary>
     internal int LastProgram;
+
     /// <summary>
     /// 模型绘制前的活动纹理
     /// </summary>
     internal int LastActiveTexture;
+
     /// <summary>
     /// 模型绘制前的纹理单元 0
     /// </summary>
     internal int LastTexture0Binding2D;
+
     /// <summary>
     /// 模型绘制前的纹理单元 1
     /// </summary>
     internal int LastTexture1Binding2D;
+
     /// <summary>
     /// 模型绘制前的纹理单元 2(blend 用).
     /// </summary>
     internal int LastTexture2Binding2D;
+
     /// <summary>
     /// 模型绘制前的 GL_VERTEX_ATTRIB_ARRAY_ENABLED 参数
     /// </summary>
     internal int[] LastVertexAttribArrayEnabled = new int[4];
+
     /// <summary>
     /// 模型绘制前的 GL_SCISSOR_TEST 参数
     /// </summary>
     internal bool LastScissorTest;
+
     /// <summary>
     /// 模型绘制前的 GL_BLEND 参数
     /// </summary>
     internal bool LastBlend;
+
     /// <summary>
     /// 模型绘制前的 GL_STENCIL_TEST 参数
     /// </summary>
     internal bool LastStencilTest;
+
     /// <summary>
     /// 模型绘制前的 GL_DEPTH_TEST 参数
     /// </summary>
     internal bool LastDepthTest;
+
     /// <summary>
     /// 模型绘制前的 GL_CULL_FACE 参数
     /// </summary>
     internal bool LastCullFace;
+
     /// <summary>
     /// 模型绘制前的 GL_FRONT_FACE 参数
     /// </summary>
     internal int LastFrontFace;
+
     /// <summary>
     /// 模型绘制前的 GL_COLOR_WRITEMASK 参数
     /// </summary>
     internal bool[] LastColorMask = new bool[4];
+
     /// <summary>
     /// 模型绘制前的颜色混合参数
     /// </summary>
@@ -94,10 +109,26 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
         gl.ActiveTexture(gl.GL_TEXTURE0); // 激活纹理单元 0 (作为后续设置的对象)
         gl.GetIntegerv(gl.GL_TEXTURE_BINDING_2D, out LastTexture0Binding2D);
 
-        gl.GetVertexAttribiv(0, gl.GL_VERTEX_ATTRIB_ARRAY_ENABLED, out LastVertexAttribArrayEnabled[0]);
-        gl.GetVertexAttribiv(1, gl.GL_VERTEX_ATTRIB_ARRAY_ENABLED, out LastVertexAttribArrayEnabled[1]);
-        gl.GetVertexAttribiv(2, gl.GL_VERTEX_ATTRIB_ARRAY_ENABLED, out LastVertexAttribArrayEnabled[2]);
-        gl.GetVertexAttribiv(3, gl.GL_VERTEX_ATTRIB_ARRAY_ENABLED, out LastVertexAttribArrayEnabled[3]);
+        gl.GetVertexAttribiv(
+            0,
+            gl.GL_VERTEX_ATTRIB_ARRAY_ENABLED,
+            out LastVertexAttribArrayEnabled[0]
+        );
+        gl.GetVertexAttribiv(
+            1,
+            gl.GL_VERTEX_ATTRIB_ARRAY_ENABLED,
+            out LastVertexAttribArrayEnabled[1]
+        );
+        gl.GetVertexAttribiv(
+            2,
+            gl.GL_VERTEX_ATTRIB_ARRAY_ENABLED,
+            out LastVertexAttribArrayEnabled[2]
+        );
+        gl.GetVertexAttribiv(
+            3,
+            gl.GL_VERTEX_ATTRIB_ARRAY_ENABLED,
+            out LastVertexAttribArrayEnabled[3]
+        );
 
         LastScissorTest = gl.IsEnabled(gl.GL_SCISSOR_TEST);
         LastStencilTest = gl.IsEnabled(gl.GL_STENCIL_TEST);
@@ -163,8 +194,10 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     /// <param name="enabled">为 true 时启用</param>
     internal void SetGlEnable(int index, bool enabled)
     {
-        if (enabled == true) gl.Enable(index);
-        else gl.Disable(index);
+        if (enabled == true)
+            gl.Enable(index);
+        else
+            gl.Disable(index);
     }
 
     /// <summary>
@@ -174,7 +207,9 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     /// <param name="enabled">为 true 时启用</param>
     internal void SetGlEnableVertexAttribArray(int index, bool enabled)
     {
-        if (enabled) gl.EnableVertexAttribArray(index);
-        else gl.DisableVertexAttribArray(index);
+        if (enabled)
+            gl.EnableVertexAttribArray(index);
+        else
+            gl.DisableVertexAttribArray(index);
     }
 }

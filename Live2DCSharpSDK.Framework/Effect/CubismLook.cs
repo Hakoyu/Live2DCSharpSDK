@@ -20,14 +20,17 @@ public class CubismLook
         /// 参数 ID
         /// </summary>
         public required string ParameterId { get; set; }
+
         /// <summary>
         /// X 轴方向拖拽输入的系数
         /// </summary>
         public float FactorX { get; set; }
+
         /// <summary>
         /// Y 轴方向拖拽输入的系数
         /// </summary>
         public float FactorY { get; set; }
+
         /// <summary>
         /// X-Y (交叉) 拖拽输入的系数
         /// </summary>
@@ -42,9 +45,7 @@ public class CubismLook
     /// <summary>
     /// 构造函数 (与官方一致为 private. 生成请使用 <see cref="Create"/>).
     /// </summary>
-    private CubismLook()
-    {
-    }
+    private CubismLook() { }
 
     /// <summary>
     /// 创建实例.
@@ -98,8 +99,10 @@ public class CubismLook
         {
             var data = _lookParameters[i];
 
-            model.AddParameterValue(data.ParameterId,
-                (data.FactorX * dragX) + (data.FactorY * dragY) + (data.FactorXY * dragXY));
+            model.AddParameterValue(
+                data.ParameterId,
+                (data.FactorX * dragX) + (data.FactorY * dragY) + (data.FactorXY * dragXY)
+            );
         }
     }
 }

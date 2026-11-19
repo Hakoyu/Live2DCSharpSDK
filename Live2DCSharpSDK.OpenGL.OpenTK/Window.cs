@@ -22,8 +22,9 @@ public class Window : GameWindow
     /// 已经记录过的 GL 错误码. 同一错误码只记录一次, 避免逐帧刷屏.
     /// </summary>
     private readonly HashSet<ErrorCode> _reportedGlErrors = [];
+
     public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
-            : base(gameWindowSettings, nativeWindowSettings)
+        : base(gameWindowSettings, nativeWindowSettings)
     {
         var version = GL.GetString(StringName.Version);
 
@@ -31,7 +32,7 @@ public class Window : GameWindow
         var cubismOption = new CubismOption()
         {
             LogFunction = Console.WriteLine,
-            LoggingLevel = LAppDefine.CubismLoggingLevel
+            LoggingLevel = LAppDefine.CubismLoggingLevel,
         };
         // 上下文在窗口构造时创建并 StartUp: OnLoad 里构造 delegate 后立即加载模型,
         // 因此上下文必须先处于已启动状态.
@@ -39,14 +40,14 @@ public class Window : GameWindow
         _context.StartUp();
     }
 
-    protected unsafe override void OnLoad()
+    protected override unsafe void OnLoad()
     {
         base.OnLoad();
         lapp = new LAppDelegateOpenGL(new OpenTKApi(this))
         {
             BGColor = new(0, 1, 0, 1),
             // 上下文交给 delegate 管理, 关闭时由 delegate 统一释放.
-            Context = _context
+            Context = _context,
         };
 
         // 模型路径不硬编码, 由 App 层的 ModelResourceLocator 解析
@@ -62,7 +63,9 @@ public class Window : GameWindow
             }
             catch (Exception e)
             {
-                Console.WriteLine($"[Live2D App]model load failed: {e.GetType().Name}: {e.Message}");
+                Console.WriteLine(
+                    $"[Live2D App]model load failed: {e.GetType().Name}: {e.Message}"
+                );
             }
         }
         else
@@ -71,7 +74,9 @@ public class Window : GameWindow
         }
 
         // 高 DPI 或 Retina 下 client 与 framebuffer 尺寸可能不同, 记录一次便于核对口径.
-        Console.WriteLine($"[Live2D App]window: client={ClientSize.X}x{ClientSize.Y}, framebuffer={FramebufferSize.X}x{FramebufferSize.Y}");
+        Console.WriteLine(
+            $"[Live2D App]window: client={ClientSize.X}x{ClientSize.Y}, framebuffer={FramebufferSize.X}x{FramebufferSize.Y}"
+        );
         ApplyFramebufferViewport();
     }
 
@@ -151,7 +156,9 @@ public class Window : GameWindow
         catch (Exception e)
         {
             // 结束路径中即使 context 已失效也不妨碍进程退出(GL 名字由 OS 回收).
-            Console.WriteLine($"[Live2D App]release on close failed: {e.GetType().Name}: {e.Message}");
+            Console.WriteLine(
+                $"[Live2D App]release on close failed: {e.GetType().Name}: {e.Message}"
+            );
         }
     }
 }

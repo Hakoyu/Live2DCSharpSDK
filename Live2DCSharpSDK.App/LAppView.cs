@@ -15,10 +15,12 @@ public abstract class LAppView(LAppDelegate lapp)
     /// 触摸管理器
     /// </summary>
     private readonly TouchManager _touchManager = new();
+
     /// <summary>
     /// 从设备坐标到屏幕坐标的矩阵
     /// </summary>
     private readonly CubismMatrix44 _deviceToScreen = new();
+
     /// <summary>
     /// viewMatrix
     /// </summary>

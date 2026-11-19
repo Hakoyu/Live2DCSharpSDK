@@ -12,6 +12,7 @@ public class CubismBreath
     /// 呼吸效果的参数列表.
     /// </summary>
     public required List<BreathParameterData> Parameters { get; init; }
+
     /// <summary>
     /// 累计时间[秒]
     /// </summary>
@@ -31,8 +32,11 @@ public class CubismBreath
 
         foreach (var item in Parameters)
         {
-            model.AddParameterValue(item.ParameterId, item.Offset +
-                (item.Peak * MathF.Sin(t / item.Cycle)), item.Weight);
+            model.AddParameterValue(
+                item.ParameterId,
+                item.Offset + (item.Peak * MathF.Sin(t / item.Cycle)),
+                item.Weight
+            );
         }
     }
 }

@@ -124,7 +124,10 @@ public sealed class CubismMaskGroupUtilityTests
             }
         }
 
-        Assert.AreEqual(49, CubismMaskGroupUtility.CountUniqueMaskGroups(maskCounts.ToArray(), maskIds.ToArray()));
+        Assert.AreEqual(
+            49,
+            CubismMaskGroupUtility.CountUniqueMaskGroups(maskCounts.ToArray(), maskIds.ToArray())
+        );
     }
 
     /// <summary>
@@ -153,7 +156,10 @@ public sealed class CubismMaskGroupUtilityTests
 
         maskIds.Add(99);
 
-        Assert.AreEqual(2, CubismMaskGroupUtility.CountUniqueMaskGroups(maskCounts, maskIds.ToArray()));
+        Assert.AreEqual(
+            2,
+            CubismMaskGroupUtility.CountUniqueMaskGroups(maskCounts, maskIds.ToArray())
+        );
     }
 
     /// <summary>
@@ -162,7 +168,9 @@ public sealed class CubismMaskGroupUtilityTests
     [TestMethod]
     public void TooShortMaskIdsThrowsArgumentException()
     {
-        Assert.ThrowsExactly<ArgumentException>(() => CubismMaskGroupUtility.CountUniqueMaskGroups([2], [7]));
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            CubismMaskGroupUtility.CountUniqueMaskGroups([2], [7])
+        );
     }
 
     /// <summary>
@@ -203,7 +211,10 @@ public sealed class CubismMaskGroupUtilityTests
             }
 
             int expected = CountUniqueMaskGroupsLegacy(drawableMasks);
-            int actual = CubismMaskGroupUtility.CountUniqueMaskGroups(maskCounts, maskIds.ToArray());
+            int actual = CubismMaskGroupUtility.CountUniqueMaskGroups(
+                maskCounts,
+                maskIds.ToArray()
+            );
 
             Assert.AreEqual(expected, actual, $"round={round}, drawables={drawableCount}");
         }

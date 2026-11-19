@@ -8,7 +8,7 @@ namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
 /// 生成与销毁 OpenGLES2 用 Shader 程序的类
-/// (官方 OpenGL/CubismShader_OpenGLES2.hpp:54-340 / .cpp:48-1121). 
+/// (官方 OpenGL/CubismShader_OpenGLES2.hpp:54-340 / .cpp:48-1121).
 ///
 /// GLSL 不像官方 R5 那样外置为文件, 而是作为 C# 字符串常量内置
 /// (不引入 csmLoadFileFunction 机制).
@@ -25,17 +25,19 @@ internal class CubismShader_OpenGLES2(OpenGLApi gl)
     public const string CSM_FRAGMENT_SHADER_FP_PRECISION = CSM_FRAGMENT_SHADER_FP_PRECISION_HIGH;
 
     private const string GLES2 = "#version 100\n";
-    private const string GLES2C = GLES2 + "precision " + CSM_FRAGMENT_SHADER_FP_PRECISION + " float;";
+    private const string GLES2C =
+        GLES2 + "precision " + CSM_FRAGMENT_SHADER_FP_PRECISION + " float;";
     private const string Normal = "#version 120\n";
-    private const string Tegra = "#version 100\n" +
-        "#extension GL_NV_shader_framebuffer_fetch : enable\n" +
-        "precision " + CSM_FRAGMENT_SHADER_FP_PRECISION + " float;";
+    private const string Tegra =
+        "#version 100\n"
+        + "#extension GL_NV_shader_framebuffer_fetch : enable\n"
+        + "precision "
+        + CSM_FRAGMENT_SHADER_FP_PRECISION
+        + " float;";
 
     // ===== SetupMask =====
-    public const string VertShaderSrcSetupMask_ES2 =
-        GLES2 + VertShaderSrcSetupMask_Base;
-    public const string VertShaderSrcSetupMask_Normal =
-        Normal + VertShaderSrcSetupMask_Base;
+    public const string VertShaderSrcSetupMask_ES2 = GLES2 + VertShaderSrcSetupMask_Base;
+    public const string VertShaderSrcSetupMask_Normal = Normal + VertShaderSrcSetupMask_Base;
     private const string VertShaderSrcSetupMask_Base =
         @"attribute vec4 a_position;
 attribute vec2 a_texCoord;
@@ -68,8 +70,7 @@ float isInside =
 gl_FragColor = u_channelFlag * texture2D(s_texture0 , v_texCoord).a * isInside;
 }";
 
-    public const string FragShaderSrcSetupMaskTegra =
-        Tegra + FragShaderSrcSetupMask_Base;
+    public const string FragShaderSrcSetupMaskTegra = Tegra + FragShaderSrcSetupMask_Base;
 
     // ===== 顶点 Shader =====
     public const string VertShaderSrc_ES2 = GLES2 + VertShaderSrc_Base;
@@ -107,7 +108,7 @@ v_texCoord.y = 1.0 - v_texCoord.y;
     public const string FragShaderSrc_ES2 = GLES2C + FragShaderSrc_Base;
     public const string FragShaderSrc_Normal = Normal + FragShaderSrc_Base;
     private const string FragShaderSrc_Base =
-    @"varying vec2 v_texCoord;
+        @"varying vec2 v_texCoord;
 uniform sampler2D s_texture0;
 uniform vec4 u_baseColor;
 uniform vec4 u_multiplyColor;
@@ -123,8 +124,10 @@ gl_FragColor = vec4(color.rgb * color.a,  color.a);
 
     public const string FragShaderSrcTegra = Tegra + FragShaderSrc_Base;
 
-    public const string FragShaderSrcPremultipliedAlpha_ES2 = GLES2C + FragShaderSrcPremultipliedAlpha_Base;
-    public const string FragShaderSrcPremultipliedAlpha_Normal = Normal + FragShaderSrcPremultipliedAlpha_Base;
+    public const string FragShaderSrcPremultipliedAlpha_ES2 =
+        GLES2C + FragShaderSrcPremultipliedAlpha_Base;
+    public const string FragShaderSrcPremultipliedAlpha_Normal =
+        Normal + FragShaderSrcPremultipliedAlpha_Base;
     public const string FragShaderSrcPremultipliedAlpha_Base =
         @"varying vec2 v_texCoord;
 uniform sampler2D s_texture0;
@@ -139,7 +142,8 @@ texColor.rgb = (texColor.rgb + u_screenColor.rgb * texColor.a) - (texColor.rgb *
 gl_FragColor = texColor * u_baseColor;
 }";
 
-    public const string FragShaderSrcPremultipliedAlphaTegra = Tegra + FragShaderSrcPremultipliedAlpha_Base;
+    public const string FragShaderSrcPremultipliedAlphaTegra =
+        Tegra + FragShaderSrcPremultipliedAlpha_Base;
 
     public const string FragShaderSrcMask_ES2 = GLES2C + FragShaderSrcMask_Base;
     public const string FragShaderSrcMask_Normal = Normal + FragShaderSrcMask_Base;
@@ -193,8 +197,10 @@ gl_FragColor = col_formask;
 
     public const string FragShaderSrcMaskInvertedTegra = Tegra + FragShaderSrcMaskInverted_Base;
 
-    public const string FragShaderSrcMaskPremultipliedAlpha_ES2 = GLES2C + FragShaderSrcMaskPremultipliedAlpha_Base;
-    public const string FragShaderSrcMaskPremultipliedAlpha_Normal = Normal + FragShaderSrcMaskPremultipliedAlpha_Base;
+    public const string FragShaderSrcMaskPremultipliedAlpha_ES2 =
+        GLES2C + FragShaderSrcMaskPremultipliedAlpha_Base;
+    public const string FragShaderSrcMaskPremultipliedAlpha_Normal =
+        Normal + FragShaderSrcMaskPremultipliedAlpha_Base;
     public const string FragShaderSrcMaskPremultipliedAlpha_Base =
         @"varying vec2 v_texCoord;
 varying vec4 v_clipPos;
@@ -216,10 +222,13 @@ col_formask = col_formask * maskVal;
 gl_FragColor = col_formask;
 }";
 
-    public const string FragShaderSrcMaskPremultipliedAlphaTegra = Tegra + FragShaderSrcMaskPremultipliedAlpha_Base;
+    public const string FragShaderSrcMaskPremultipliedAlphaTegra =
+        Tegra + FragShaderSrcMaskPremultipliedAlpha_Base;
 
-    public const string FragShaderSrcMaskInvertedPremultipliedAlpha_ES2 = GLES2C + FragShaderSrcMaskInvertedPremultipliedAlpha_Base;
-    public const string FragShaderSrcMaskInvertedPremultipliedAlpha_Normal = Normal + FragShaderSrcMaskInvertedPremultipliedAlpha_Base;
+    public const string FragShaderSrcMaskInvertedPremultipliedAlpha_ES2 =
+        GLES2C + FragShaderSrcMaskInvertedPremultipliedAlpha_Base;
+    public const string FragShaderSrcMaskInvertedPremultipliedAlpha_Normal =
+        Normal + FragShaderSrcMaskInvertedPremultipliedAlpha_Base;
     public const string FragShaderSrcMaskInvertedPremultipliedAlpha_Base =
         @"varying vec2 v_texCoord;
 varying vec4 v_clipPos;
@@ -241,7 +250,8 @@ col_formask = col_formask * (1.0 - maskVal);
 gl_FragColor = col_formask;
 }";
 
-    public const string FragShaderSrcMaskInvertedPremultipliedAlphaTegra = Tegra + FragShaderSrcMaskInvertedPremultipliedAlpha_Base;
+    public const string FragShaderSrcMaskInvertedPremultipliedAlphaTegra =
+        Tegra + FragShaderSrcMaskInvertedPremultipliedAlpha_Base;
 
     // ===== R5 追加: Copy =====
     private const string VertShaderSrcCopy_Base =
@@ -461,8 +471,8 @@ gl_FragColor = AlphaBlend(ColorBlend(colorSource.rgb, colorDestination.rgb), col
 }";
 
     // ===== R5 追加: 颜色混合 / Alpha 混合的公共片段 =====
-    // 官方 .cpp:961-1004 会将 "#define CSM_COLOR_BLEND_MODE n" + ColorBlendShaderPath 的内容, 
-    // 以及 "#define CSM_ALPHA_BLEND_MODE n" + AlphaBlendShaderPath 的内容连接到片元源码末尾. 
+    // 官方 .cpp:961-1004 会将 "#define CSM_COLOR_BLEND_MODE n" + ColorBlendShaderPath 的内容,
+    // 以及 "#define CSM_ALPHA_BLEND_MODE n" + AlphaBlendShaderPath 的内容连接到片元源码末尾.
     // 本地也采用相同的拼接方式.
     private const string FragShaderSrcColorBlendSnippet =
         @"vec4 ConvertPremultipliedToStraight(vec4 source)
@@ -816,7 +826,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
     /// <summary>
     /// 遮罩种类(官方 CubismShader_OpenGLES2.hpp:128-136).
-    /// 该 enum 的值直接作为 Shader 变种的 offset (0..5). 
+    /// 该 enum 的值直接作为 Shader 变种的 offset (0..5).
     /// </summary>
     private enum MaskType
     {
@@ -824,22 +834,27 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         /// 无 Mask
         /// </summary>
         None,
+
         /// <summary>
         /// Clipping
         /// </summary>
         Masked,
+
         /// <summary>
         /// Clipping, 反相
         /// </summary>
         MaskedInverted,
+
         /// <summary>
         /// 预乘 Alpha 对应
         /// </summary>
         PremultipliedAlpha,
+
         /// <summary>
         /// Clipping, 预乘 Alpha 对应
         /// </summary>
         MaskedPremultipliedAlpha,
+
         /// <summary>
         /// Clipping, 反相, 预乘 Alpha 对应
         /// </summary>
@@ -847,8 +862,8 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 官方的 ColorBlendMode (官方 .hpp:138-158). None=-1, 0..15, Count=16. 
-    /// * 与 Core 的 csmColorBlendType_* 编号不同 (没有 AddCompatible/MultiplyCompatible). 
+    /// 官方的 ColorBlendMode (官方 .hpp:138-158). None=-1, 0..15, Count=16.
+    /// * 与 Core 的 csmColorBlendType_* 编号不同 (没有 AddCompatible/MultiplyCompatible).
     /// </summary>
     private enum ColorBlendMode
     {
@@ -873,7 +888,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 官方的 AlphaBlendMode (官方 .hpp:160-169). None=-1, 0..4, Count=5. 
+    /// 官方的 AlphaBlendMode (官方 .hpp:160-169). None=-1, 0..4, Count=5.
     /// </summary>
     private enum AlphaBlendMode
     {
@@ -928,9 +943,9 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 确保 Shader 集合数组 (官方 GenerateShaders 的数组确保部分). 
-    /// [与官方的差异] 实际的 GL program 生成延迟到 GetShaderSet() 首次引用时. 
-    /// 官方 R5 在 Initialize 时无条件下生成全部 494 个 (CubismShader_OpenGLES2.cpp:324-542). 
+    /// 确保 Shader 集合数组 (官方 GenerateShaders 的数组确保部分).
+    /// [与官方的差异] 实际的 GL program 生成延迟到 GetShaderSet() 首次引用时.
+    /// 官方 R5 在 Initialize 时无条件下生成全部 494 个 (CubismShader_OpenGLES2.cpp:324-542).
     /// </summary>
     internal void EnsureGenerated()
     {
@@ -978,8 +993,8 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 编译一个 Shader 集合. 
-    /// 由下标反算 "Shader 种类, 掩码变种, 混合组合" (与官方的生成循环等价). 
+    /// 编译一个 Shader 集合.
+    /// 由下标反算 "Shader 种类, 掩码变种, 混合组合" (与官方的生成循环等价).
     /// </summary>
     private void CompileShaderSet(int index)
     {
@@ -1028,7 +1043,11 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
                 else
                 {
                     vertShaderSrc = (gl.IsES2 ? GLES2 : Normal) + VariantBlendVertexBase(variant);
-                    fragShaderSrc = ComposeBlendFragment(VariantBlendFragmentBase(variant), (int)ColorBlendMode.Normal, group - 2);
+                    fragShaderSrc = ComposeBlendFragment(
+                        VariantBlendFragmentBase(variant),
+                        (int)ColorBlendMode.Normal,
+                        group - 2
+                    );
                 }
             }
             else
@@ -1038,7 +1057,11 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
                 int colorBlendMode = (group - 7) / ShaderNames.AlphaBlendModeCount + 1;
                 int alphaBlendMode = (group - 7) % ShaderNames.AlphaBlendModeCount;
                 vertShaderSrc = (gl.IsES2 ? GLES2 : Normal) + VariantBlendVertexBase(variant);
-                fragShaderSrc = ComposeBlendFragment(VariantBlendFragmentBase(variant), colorBlendMode, alphaBlendMode);
+                fragShaderSrc = ComposeBlendFragment(
+                    VariantBlendFragmentBase(variant),
+                    colorBlendMode,
+                    alphaBlendMode
+                );
             }
         }
 
@@ -1065,7 +1088,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 复制 Shader 集合 (相加, 相乘共用普通 Shader 时使用). 
+    /// 复制 Shader 集合 (相加, 相乘共用普通 Shader 时使用).
     /// </summary>
     private static void CopyShaderSet(CubismShaderSet dst, CubismShaderSet src)
     {
@@ -1084,7 +1107,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 由变种编号选择顶点 Shader 源码 (仅由是否有 Mask 决定). 
+    /// 由变种编号选择顶点 Shader 源码 (仅由是否有 Mask 决定).
     /// </summary>
     private string VariantVertexSource(int variant)
     {
@@ -1098,7 +1121,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 由变种编号选择片元 Shader 源码 (Mask/预乘 Alpha). 
+    /// 由变种编号选择片元 Shader 源码 (Mask/预乘 Alpha).
     /// </summary>
     private string VariantFragmentSource(int variant)
     {
@@ -1140,15 +1163,17 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 由变种编号选择混合用顶点 Shader 主体 (是否有 Mask). 
+    /// 由变种编号选择混合用顶点 Shader 主体 (是否有 Mask).
     /// </summary>
     private static string VariantBlendVertexBase(int variant)
     {
-        return variant is 1 or 2 or 4 or 5 ? VertShaderSrcMaskedBlend_Base : VertShaderSrcBlend_Base;
+        return variant is 1 or 2 or 4 or 5
+            ? VertShaderSrcMaskedBlend_Base
+            : VertShaderSrcBlend_Base;
     }
 
     /// <summary>
-    /// 由变种编号选择混合用片元 Shader 主体 (Mask/预乘 Alpha). 
+    /// 由变种编号选择混合用片元 Shader 主体 (Mask/预乘 Alpha).
     /// </summary>
     private static string VariantBlendFragmentBase(int variant)
     {
@@ -1164,8 +1189,8 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 组装混合用片元 Shader. 
-    /// 与官方 .cpp:961-1004 相同, 执行 "#define 2 行 + ColorBlend/AlphaBlend 片段拼接". 
+    /// 组装混合用片元 Shader.
+    /// 与官方 .cpp:961-1004 相同, 执行 "#define 2 行 + ColorBlend/AlphaBlend 片段拼接".
     /// </summary>
     private string ComposeBlendFragment(string baseBody, int colorBlendMode, int alphaBlendMode)
     {
@@ -1178,47 +1203,101 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 设置 Copy Shader 的 location (官方 .cpp:466-469). 
+    /// 设置 Copy Shader 的 location (官方 .cpp:466-469).
     /// </summary>
     private void SetShaderSetForCopy(CubismShaderSet shaderSet)
     {
-        shaderSet.AttributePositionLocation = gl.GetAttribLocation(shaderSet.ShaderProgram, "a_position");
-        shaderSet.AttributeTexCoordLocation = gl.GetAttribLocation(shaderSet.ShaderProgram, "a_texCoord");
-        shaderSet.SamplerTexture0Location = gl.GetUniformLocation(shaderSet.ShaderProgram, "s_texture0");
-        shaderSet.UniformBaseColorLocation = gl.GetUniformLocation(shaderSet.ShaderProgram, "u_baseColor");
+        shaderSet.AttributePositionLocation = gl.GetAttribLocation(
+            shaderSet.ShaderProgram,
+            "a_position"
+        );
+        shaderSet.AttributeTexCoordLocation = gl.GetAttribLocation(
+            shaderSet.ShaderProgram,
+            "a_texCoord"
+        );
+        shaderSet.SamplerTexture0Location = gl.GetUniformLocation(
+            shaderSet.ShaderProgram,
+            "s_texture0"
+        );
+        shaderSet.UniformBaseColorLocation = gl.GetUniformLocation(
+            shaderSet.ShaderProgram,
+            "u_baseColor"
+        );
     }
 
     /// <summary>
-    /// 设置 SetupMask Shader 的 location (官方 .cpp:471-477). 
-    /// SetupMask 在 SetShaderSet 的 6 个变种中不处理 (必定取得 u_clipMatrix / u_channelFlag). 
+    /// 设置 SetupMask Shader 的 location (官方 .cpp:471-477).
+    /// SetupMask 在 SetShaderSet 的 6 个变种中不处理 (必定取得 u_clipMatrix / u_channelFlag).
     /// </summary>
     private void SetShaderSetForSetupMask(CubismShaderSet shaderSet)
     {
-        shaderSet.AttributePositionLocation = gl.GetAttribLocation(shaderSet.ShaderProgram, "a_position");
-        shaderSet.AttributeTexCoordLocation = gl.GetAttribLocation(shaderSet.ShaderProgram, "a_texCoord");
-        shaderSet.SamplerTexture0Location = gl.GetUniformLocation(shaderSet.ShaderProgram, "s_texture0");
-        shaderSet.UniformClipMatrixLocation = gl.GetUniformLocation(shaderSet.ShaderProgram, "u_clipMatrix");
-        shaderSet.UnifromChannelFlagLocation = gl.GetUniformLocation(shaderSet.ShaderProgram, "u_channelFlag");
-        shaderSet.UniformBaseColorLocation = gl.GetUniformLocation(shaderSet.ShaderProgram, "u_baseColor");
+        shaderSet.AttributePositionLocation = gl.GetAttribLocation(
+            shaderSet.ShaderProgram,
+            "a_position"
+        );
+        shaderSet.AttributeTexCoordLocation = gl.GetAttribLocation(
+            shaderSet.ShaderProgram,
+            "a_texCoord"
+        );
+        shaderSet.SamplerTexture0Location = gl.GetUniformLocation(
+            shaderSet.ShaderProgram,
+            "s_texture0"
+        );
+        shaderSet.UniformClipMatrixLocation = gl.GetUniformLocation(
+            shaderSet.ShaderProgram,
+            "u_clipMatrix"
+        );
+        shaderSet.UnifromChannelFlagLocation = gl.GetUniformLocation(
+            shaderSet.ShaderProgram,
+            "u_channelFlag"
+        );
+        shaderSet.UniformBaseColorLocation = gl.GetUniformLocation(
+            shaderSet.ShaderProgram,
+            "u_baseColor"
+        );
     }
 
     /// <summary>
-    /// 为 CubismShaderSet 设置 location (官方 SetShaderSet .cpp:142-185). 
+    /// 为 CubismShaderSet 设置 location (官方 SetShaderSet .cpp:142-185).
     /// 统一由 MaskType 在一处集中处理(消除内联 if 链的错配).
     /// </summary>
     private void SetShaderSet(CubismShaderSet shaderSets, MaskType maskType, bool isBlendMode)
     {
-        shaderSets.AttributePositionLocation = gl.GetAttribLocation(shaderSets.ShaderProgram, "a_position");
-        shaderSets.AttributeTexCoordLocation = gl.GetAttribLocation(shaderSets.ShaderProgram, "a_texCoord");
-        shaderSets.SamplerTexture0Location = gl.GetUniformLocation(shaderSets.ShaderProgram, "s_texture0");
+        shaderSets.AttributePositionLocation = gl.GetAttribLocation(
+            shaderSets.ShaderProgram,
+            "a_position"
+        );
+        shaderSets.AttributeTexCoordLocation = gl.GetAttribLocation(
+            shaderSets.ShaderProgram,
+            "a_texCoord"
+        );
+        shaderSets.SamplerTexture0Location = gl.GetUniformLocation(
+            shaderSets.ShaderProgram,
+            "s_texture0"
+        );
         if (isBlendMode)
         {
-            shaderSets.SamplerBlendTextureLocation = gl.GetUniformLocation(shaderSets.ShaderProgram, "s_blendTexture");
+            shaderSets.SamplerBlendTextureLocation = gl.GetUniformLocation(
+                shaderSets.ShaderProgram,
+                "s_blendTexture"
+            );
         }
-        shaderSets.UniformMatrixLocation = gl.GetUniformLocation(shaderSets.ShaderProgram, "u_matrix");
-        shaderSets.UniformBaseColorLocation = gl.GetUniformLocation(shaderSets.ShaderProgram, "u_baseColor");
-        shaderSets.UniformMultiplyColorLocation = gl.GetUniformLocation(shaderSets.ShaderProgram, "u_multiplyColor");
-        shaderSets.UniformScreenColorLocation = gl.GetUniformLocation(shaderSets.ShaderProgram, "u_screenColor");
+        shaderSets.UniformMatrixLocation = gl.GetUniformLocation(
+            shaderSets.ShaderProgram,
+            "u_matrix"
+        );
+        shaderSets.UniformBaseColorLocation = gl.GetUniformLocation(
+            shaderSets.ShaderProgram,
+            "u_baseColor"
+        );
+        shaderSets.UniformMultiplyColorLocation = gl.GetUniformLocation(
+            shaderSets.ShaderProgram,
+            "u_multiplyColor"
+        );
+        shaderSets.UniformScreenColorLocation = gl.GetUniformLocation(
+            shaderSets.ShaderProgram,
+            "u_screenColor"
+        );
 
         switch (maskType)
         {
@@ -1228,9 +1307,18 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
             case MaskType.MaskedInverted: // Clipping, 反相
             case MaskType.MaskedPremultipliedAlpha: // Clipping, 预乘 Alpha
             case MaskType.MaskedInvertedPremultipliedAlpha: // Clipping, 反相, 预乘 Alpha
-                shaderSets.SamplerTexture1Location = gl.GetUniformLocation(shaderSets.ShaderProgram, "s_texture1");
-                shaderSets.UniformClipMatrixLocation = gl.GetUniformLocation(shaderSets.ShaderProgram, "u_clipMatrix");
-                shaderSets.UnifromChannelFlagLocation = gl.GetUniformLocation(shaderSets.ShaderProgram, "u_channelFlag");
+                shaderSets.SamplerTexture1Location = gl.GetUniformLocation(
+                    shaderSets.ShaderProgram,
+                    "s_texture1"
+                );
+                shaderSets.UniformClipMatrixLocation = gl.GetUniformLocation(
+                    shaderSets.ShaderProgram,
+                    "u_clipMatrix"
+                );
+                shaderSets.UnifromChannelFlagLocation = gl.GetUniformLocation(
+                    shaderSets.ShaderProgram,
+                    "u_channelFlag"
+                );
                 break;
             case MaskType.PremultipliedAlpha: // 预乘 Alpha
             default:
@@ -1240,9 +1328,13 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
     /// <summary>
     /// 执行绘制用 Shader 程序的一系列设置
-    /// (官方 SetupShaderProgramForDrawable .cpp:544-664). 
+    /// (官方 SetupShaderProgramForDrawable .cpp:544-664).
     /// </summary>
-    internal void SetupShaderProgramForDrawable(CubismRenderer_OpenGLES2 renderer, CubismModel model, int index)
+    internal void SetupShaderProgramForDrawable(
+        CubismRenderer_OpenGLES2 renderer,
+        CubismModel model,
+        int index
+    )
     {
         // _shaderSets 用的 offset 计算
         bool masked = renderer.ClippingContextBufferForDrawable != null; // 该绘制对象是否为 Mask 对象
@@ -1250,7 +1342,9 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         bool isPremultipliedAlpha = renderer.IsPremultipliedAlpha;
         int offset = (masked ? (invertedMask ? 2 : 1) : 0) + (isPremultipliedAlpha ? 3 : 0);
 
-        int shaderNameBegin = ShaderNames.GetShaderNamesBegin(model.GetDrawableBlendModeType(index));
+        int shaderNameBegin = ShaderNames.GetShaderNamesBegin(
+            model.GetDrawableBlendModeType(index)
+        );
         CubismShaderSet shaderSet = GetShaderSet(shaderNameBegin + offset);
         bool isBlendMode = shaderNameBegin >= ShaderNames.NormalAtop;
 
@@ -1270,9 +1364,13 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
             // 获取之前的 Offscreen 纹理
             var currentOffscreen = renderer.GetCurrentOffscreen();
-            blendTexture = currentOffscreen != null
-                ? renderer.CopyRenderTarget(currentOffscreen.GetRenderTarget()!)?.GetColorBuffer() ?? 0
-                : renderer.CopyOffscreenRenderTarget()?.GetColorBuffer() ?? 0;
+            blendTexture =
+                currentOffscreen != null
+                    ? renderer
+                        .CopyRenderTarget(currentOffscreen.GetRenderTarget()!)
+                        ?.GetColorBuffer()
+                        ?? 0
+                    : renderer.CopyOffscreenRenderTarget()?.GetColorBuffer() ?? 0;
         }
         else
         {
@@ -1323,7 +1421,12 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
             gl.Uniform1i(shaderSet.SamplerTexture1Location, 1);
 
             // 设置用于将 View 坐标转换为 ClippingContext 坐标的矩阵
-            gl.UniformMatrix4fv(shaderSet.UniformClipMatrixLocation, 1, false, draw.MatrixForDraw.Tr);
+            gl.UniformMatrix4fv(
+                shaderSet.UniformClipMatrixLocation,
+                1,
+                false,
+                draw.MatrixForDraw.Tr
+            );
 
             // 设置使用的颜色通道
             SetColorChannelUniformVariables(shaderSet, draw);
@@ -1361,8 +1464,12 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         }
 
         var overrideMultiplyAndScreenColor = model.GetOverrideMultiplyAndScreenColor();
-        CubismTextureColor multiplyColor = overrideMultiplyAndScreenColor.GetDrawableMultiplyColor(index);
-        CubismTextureColor screenColor = overrideMultiplyAndScreenColor.GetDrawableScreenColor(index);
+        CubismTextureColor multiplyColor = overrideMultiplyAndScreenColor.GetDrawableMultiplyColor(
+            index
+        );
+        CubismTextureColor screenColor = overrideMultiplyAndScreenColor.GetDrawableScreenColor(
+            index
+        );
         SetColorUniformVariables(shaderSet, baseColor, multiplyColor, screenColor);
 
         gl.BlendFuncSeparate(SRC_COLOR, DST_COLOR, SRC_ALPHA, DST_ALPHA);
@@ -1370,10 +1477,14 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
     /// <summary>
     /// 执行 Mask 用 Shader 程序的一系列设置
-    /// (官方 SetupShaderProgramForMask .cpp:666-694). 
-    /// 与官方 R5 相同, 遮罩绘制时不设置相乘色和屏幕色. 
+    /// (官方 SetupShaderProgramForMask .cpp:666-694).
+    /// 与官方 R5 相同, 遮罩绘制时不设置相乘色和屏幕色.
     /// </summary>
-    internal void SetupShaderProgramForMask(CubismRenderer_OpenGLES2 renderer, CubismModel model, int index)
+    internal void SetupShaderProgramForMask(
+        CubismRenderer_OpenGLES2 renderer,
+        CubismModel model,
+        int index
+    )
     {
         int SRC_COLOR = gl.GL_ZERO;
         int DST_COLOR = gl.GL_ONE_MINUS_SRC_COLOR;
@@ -1398,15 +1509,20 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
         // 设置 uniform 变量(仅 baseColor, 不设置乘算色和屏幕色).
         RectF rect = draw.LayoutBounds;
-        gl.Uniform4f(shaderSet.UniformBaseColorLocation,
-            rect.X * 2.0f - 1.0f, rect.Y * 2.0f - 1.0f, rect.GetRight() * 2.0f - 1.0f, rect.GetBottom() * 2.0f - 1.0f);
+        gl.Uniform4f(
+            shaderSet.UniformBaseColorLocation,
+            rect.X * 2.0f - 1.0f,
+            rect.Y * 2.0f - 1.0f,
+            rect.GetRight() * 2.0f - 1.0f,
+            rect.GetBottom() * 2.0f - 1.0f
+        );
 
         gl.BlendFuncSeparate(SRC_COLOR, DST_COLOR, SRC_ALPHA, DST_ALPHA);
     }
 
     /// <summary>
     /// 执行来自 Offscreen 的 Shader 程序的一系列设置
-    /// (官方 SetupShaderProgramForOffscreenRenderTarget .cpp:696-705). 
+    /// (官方 SetupShaderProgramForOffscreenRenderTarget .cpp:696-705).
     /// </summary>
     internal void SetupShaderProgramForOffscreenRenderTarget(CubismRenderer_OpenGLES2 renderer)
     {
@@ -1418,15 +1534,26 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         baseColor.R *= baseColor.A;
         baseColor.G *= baseColor.A;
         baseColor.B *= baseColor.A;
-        CopyTexture(renderer, texture, gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA, gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA, baseColor);
+        CopyTexture(
+            renderer,
+            texture,
+            gl.GL_ONE,
+            gl.GL_ONE_MINUS_SRC_ALPHA,
+            gl.GL_ONE,
+            gl.GL_ONE_MINUS_SRC_ALPHA,
+            baseColor
+        );
     }
 
     /// <summary>
     /// 执行 Offscreen 绘制用 Shader 程序的一系列设置
-    /// (官方 SetupShaderProgramForOffscreen .cpp:731-844). 
+    /// (官方 SetupShaderProgramForOffscreen .cpp:731-844).
     /// </summary>
-    internal void SetupShaderProgramForOffscreen(CubismRenderer_OpenGLES2 renderer, CubismModel model,
-        CubismOffscreenRenderTarget_OpenGLES2 offscreen)
+    internal void SetupShaderProgramForOffscreen(
+        CubismRenderer_OpenGLES2 renderer,
+        CubismModel model,
+        CubismOffscreenRenderTarget_OpenGLES2 offscreen
+    )
     {
         int SRC_COLOR;
         int DST_COLOR;
@@ -1441,7 +1568,9 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         const int usePremultipliedAlphaOffset = 3;
         int offset = (masked ? (invertedMask ? 2 : 1) : 0) + usePremultipliedAlphaOffset;
 
-        int shaderNameBegin = ShaderNames.GetShaderNamesBegin(model.GetOffscreenBlendModeType(offscreenIndex));
+        int shaderNameBegin = ShaderNames.GetShaderNamesBegin(
+            model.GetOffscreenBlendModeType(offscreenIndex)
+        );
         CubismShaderSet shaderSet = GetShaderSet(shaderNameBegin + offset);
         bool isBlendMode = shaderNameBegin >= ShaderNames.NormalAtop;
         int blendTexture = 0;
@@ -1456,9 +1585,11 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
             // 获取之前的 Offscreen 纹理
             var oldOffscreen = offscreen.GetOldOffscreen();
-            blendTexture = oldOffscreen != null
-                ? renderer.CopyRenderTarget(oldOffscreen.GetRenderTarget()!)?.GetColorBuffer() ?? 0
-                : renderer.CopyOffscreenRenderTarget()?.GetColorBuffer() ?? 0;
+            blendTexture =
+                oldOffscreen != null
+                    ? renderer.CopyRenderTarget(oldOffscreen.GetRenderTarget()!)?.GetColorBuffer()
+                        ?? 0
+                    : renderer.CopyOffscreenRenderTarget()?.GetColorBuffer() ?? 0;
         }
         else
         {
@@ -1506,7 +1637,12 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
             gl.BindTexture(gl.GL_TEXTURE_2D, maskTex);
             gl.Uniform1i(shaderSet.SamplerTexture1Location, 1);
 
-            gl.UniformMatrix4fv(shaderSet.UniformClipMatrixLocation, 1, false, ctx.MatrixForDraw.Tr);
+            gl.UniformMatrix4fv(
+                shaderSet.UniformClipMatrixLocation,
+                1,
+                false,
+                ctx.MatrixForDraw.Tr
+            );
 
             SetColorChannelUniformVariables(shaderSet, ctx);
         }
@@ -1524,20 +1660,36 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         // Uniform 变量设置
         float offscreenOpacity = model.GetOffscreenOpacity(offscreenIndex);
         // 已是 PMA, 且只想修改不透明度, 因此全部用 Opacity 初始化
-        CubismTextureColor baseColor = new(offscreenOpacity, offscreenOpacity, offscreenOpacity, offscreenOpacity);
+        CubismTextureColor baseColor = new(
+            offscreenOpacity,
+            offscreenOpacity,
+            offscreenOpacity,
+            offscreenOpacity
+        );
         var overrideMultiplyAndScreenColor = model.GetOverrideMultiplyAndScreenColor();
-        CubismTextureColor multiplyColor = overrideMultiplyAndScreenColor.GetOffscreenMultiplyColor(offscreenIndex);
-        CubismTextureColor screenColor = overrideMultiplyAndScreenColor.GetOffscreenScreenColor(offscreenIndex);
+        CubismTextureColor multiplyColor = overrideMultiplyAndScreenColor.GetOffscreenMultiplyColor(
+            offscreenIndex
+        );
+        CubismTextureColor screenColor = overrideMultiplyAndScreenColor.GetOffscreenScreenColor(
+            offscreenIndex
+        );
         SetColorUniformVariables(shaderSet, baseColor, multiplyColor, screenColor);
 
         gl.BlendFuncSeparate(SRC_COLOR, DST_COLOR, SRC_ALPHA, DST_ALPHA);
     }
 
     /// <summary>
-    /// 使用 Shader 复制绘制对象 (官方 CopyTexture .cpp:707-729). 
+    /// 使用 Shader 复制绘制对象 (官方 CopyTexture .cpp:707-729).
     /// </summary>
-    internal void CopyTexture(CubismRenderer_OpenGLES2 renderer, int texture, int srcColor, int dstColor,
-        int srcAlpha, int dstAlpha, CubismTextureColor baseColor)
+    internal void CopyTexture(
+        CubismRenderer_OpenGLES2 renderer,
+        int texture,
+        int srcColor,
+        int dstColor,
+        int srcAlpha,
+        int dstAlpha,
+        CubismTextureColor baseColor
+    )
     {
         CubismShaderSet shaderSet = GetShaderSet(ShaderNames.Copy);
         gl.UseProgram(shaderSet.ShaderProgram);
@@ -1551,7 +1703,13 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
         renderer.SetRenderTargetVertexAttributes(shaderSet, false);
 
         // 基色设置
-        gl.Uniform4f(shaderSet.UniformBaseColorLocation, baseColor.R, baseColor.G, baseColor.B, baseColor.A);
+        gl.Uniform4f(
+            shaderSet.UniformBaseColorLocation,
+            baseColor.R,
+            baseColor.G,
+            baseColor.B,
+            baseColor.A
+        );
 
         gl.BlendFuncSeparate(srcColor, dstColor, srcAlpha, dstAlpha);
     }
@@ -1583,7 +1741,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 加载 Shader 程序并返回地址. 
+    /// 加载 Shader 程序并返回地址.
     /// </summary>
     /// <param name="vertShaderSrc">顶点 Shader 的源码</param>
     /// <param name="fragShaderSrc">片元 Shader 的源码</param>
@@ -1650,7 +1808,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 获取 Shader 的 info-log (GL_INFO_LOG_LENGTH 为 0 时返回空字符串). 
+    /// 获取 Shader 的 info-log (GL_INFO_LOG_LENGTH 为 0 时返回空字符串).
     /// info-log 是驱动输出的消息, 并不代表编译是否成功,
     /// 编译成功时也可能包含警告(例如 ANGLE 的 "unexpected end of file found in directive").
     /// </summary>
@@ -1668,7 +1826,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 获取程序 (program) 的 info-log (GL_INFO_LOG_LENGTH 为 0 时返回空字符串). 
+    /// 获取程序 (program) 的 info-log (GL_INFO_LOG_LENGTH 为 0 时返回空字符串).
     /// </summary>
     private unsafe string ReadProgramInfoLog(int shaderProgram)
     {
@@ -1684,11 +1842,11 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 编译 Shader. 
+    /// 编译 Shader.
     /// 成功与否只按 GL_COMPILE_STATUS 判定.
-    /// glGetShaderiv(GL_COMPILE_STATUS) 返回 "最近一次编译成功则为 GL_TRUE", 
-    /// 而 GL_INFO_LOG_LENGTH 只返回 "信息日志的字符数", 并不表示成败 (Khronos glGetShaderiv 规格). 
-    /// 因此在编译成功时即使 info-log 非空也降级为警告输出, 而不抛出异常. 
+    /// glGetShaderiv(GL_COMPILE_STATUS) 返回 "最近一次编译成功则为 GL_TRUE",
+    /// 而 GL_INFO_LOG_LENGTH 只返回 "信息日志的字符数", 并不表示成败 (Khronos glGetShaderiv 规格).
+    /// 因此在编译成功时即使 info-log 非空也降级为警告输出, 而不抛出异常.
     /// </summary>
     internal unsafe bool CompileShaderSource(out int outShader, int shaderType, string shaderSource)
     {
@@ -1711,16 +1869,20 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
         if (!string.IsNullOrWhiteSpace(log))
         {
-            CubismLog.Warning("[Live2D OpenGL]{0} shader compile warning (GL_COMPILE_STATUS=OK): {1}", typeName, log);
+            CubismLog.Warning(
+                "[Live2D OpenGL]{0} shader compile warning (GL_COMPILE_STATUS=OK): {1}",
+                typeName,
+                log
+            );
         }
 
         return true;
     }
 
     /// <summary>
-    /// 链接 Shader 程序. 
+    /// 链接 Shader 程序.
     /// 成功与否只按 GL_LINK_STATUS 判定(glGetProgramiv 规格).
-    /// 即使 GL_INFO_LOG 非空, 只要链接成功就降级为警告. 
+    /// 即使 GL_INFO_LOG 非空, 只要链接成功就降级为警告.
     /// </summary>
     internal unsafe bool LinkProgram(int shaderProgram)
     {
@@ -1745,7 +1907,7 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     }
 
     /// <summary>
-    /// 校验 Shader 程序. 
+    /// 校验 Shader 程序.
     /// 成功与否只按 GL_VALIDATE_STATUS 判定(与链接相同的误判修正).
     /// </summary>
     internal unsafe bool ValidateProgram(int shaderProgram)
@@ -1765,7 +1927,10 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
 
         if (!string.IsNullOrWhiteSpace(log))
         {
-            CubismLog.Warning("[Live2D OpenGL]Validate program warning (GL_VALIDATE_STATUS=OK): {0}", log);
+            CubismLog.Warning(
+                "[Live2D OpenGL]Validate program warning (GL_VALIDATE_STATUS=OK): {0}",
+                log
+            );
         }
 
         return true;
@@ -1787,17 +1952,36 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     {
         // 顶点位置属性的设置
         gl.EnableVertexAttribArray(shaderSet.AttributePositionLocation);
-        gl.VertexAttribPointer(shaderSet.AttributePositionLocation, 2, gl.GL_FLOAT, false, 4 * sizeof(float), 0);
+        gl.VertexAttribPointer(
+            shaderSet.AttributePositionLocation,
+            2,
+            gl.GL_FLOAT,
+            false,
+            4 * sizeof(float),
+            0
+        );
 
         // 纹理坐标属性的设置
         gl.EnableVertexAttribArray(shaderSet.AttributeTexCoordLocation);
-        gl.VertexAttribPointer(shaderSet.AttributeTexCoordLocation, 2, gl.GL_FLOAT, false, 4 * sizeof(float), 2 * sizeof(float));
+        gl.VertexAttribPointer(
+            shaderSet.AttributeTexCoordLocation,
+            2,
+            gl.GL_FLOAT,
+            false,
+            4 * sizeof(float),
+            2 * sizeof(float)
+        );
     }
 
     /// <summary>
     /// 进行纹理的设置
     /// </summary>
-    internal void SetupTexture(CubismRenderer_OpenGLES2 renderer, CubismModel model, int index, CubismShaderSet shaderSet)
+    internal void SetupTexture(
+        CubismRenderer_OpenGLES2 renderer,
+        CubismModel model,
+        int index,
+        CubismShaderSet shaderSet
+    )
     {
         int textureIndex = model.GetDrawableTextureIndex(index);
         int textureId = renderer.GetBindedTextureId(textureIndex);
@@ -1809,22 +1993,52 @@ vec4 AlphaBlend(vec3 color, vec4 colorSource, vec4 colorDestination)
     /// <summary>
     /// 进行颜色相关 Uniform 变量的设置
     /// </summary>
-    internal void SetColorUniformVariables(CubismShaderSet shaderSet,
-        CubismTextureColor baseColor, CubismTextureColor multiplyColor, CubismTextureColor screenColor)
+    internal void SetColorUniformVariables(
+        CubismShaderSet shaderSet,
+        CubismTextureColor baseColor,
+        CubismTextureColor multiplyColor,
+        CubismTextureColor screenColor
+    )
     {
-        gl.Uniform4f(shaderSet.UniformBaseColorLocation, baseColor.R, baseColor.G, baseColor.B, baseColor.A);
-        gl.Uniform4f(shaderSet.UniformMultiplyColorLocation, multiplyColor.R, multiplyColor.G, multiplyColor.B, multiplyColor.A);
-        gl.Uniform4f(shaderSet.UniformScreenColorLocation, screenColor.R, screenColor.G, screenColor.B, screenColor.A);
+        gl.Uniform4f(
+            shaderSet.UniformBaseColorLocation,
+            baseColor.R,
+            baseColor.G,
+            baseColor.B,
+            baseColor.A
+        );
+        gl.Uniform4f(
+            shaderSet.UniformMultiplyColorLocation,
+            multiplyColor.R,
+            multiplyColor.G,
+            multiplyColor.B,
+            multiplyColor.A
+        );
+        gl.Uniform4f(
+            shaderSet.UniformScreenColorLocation,
+            screenColor.R,
+            screenColor.G,
+            screenColor.B,
+            screenColor.A
+        );
     }
 
     /// <summary>
     /// 进行颜色通道相关 Uniform 变量的设置
     /// </summary>
-    internal void SetColorChannelUniformVariables(CubismShaderSet shaderSet, CubismClippingContext contextBuffer)
+    internal void SetColorChannelUniformVariables(
+        CubismShaderSet shaderSet,
+        CubismClippingContext contextBuffer
+    )
     {
         int channelIndex = contextBuffer.LayoutChannelIndex;
         CubismTextureColor colorChannel = contextBuffer.Manager.GetChannelFlagAsColor(channelIndex);
-        gl.Uniform4f(shaderSet.UnifromChannelFlagLocation, colorChannel.R, colorChannel.G, colorChannel.B, colorChannel.A);
+        gl.Uniform4f(
+            shaderSet.UnifromChannelFlagLocation,
+            colorChannel.R,
+            colorChannel.G,
+            colorChannel.B,
+            colorChannel.A
+        );
     }
 }
-

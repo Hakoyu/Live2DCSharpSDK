@@ -7,26 +7,62 @@ public record CubismMatrix44
 {
     private readonly float[] Ident =
     [
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
     ];
 
     private readonly float[] _mpt1 =
     [
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
     ];
 
     private readonly float[] _mpt2 =
     [
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
     ];
 
     /// <summary>
@@ -257,9 +293,10 @@ public record CubismMatrix44
         float ty = _tr[13];
         float tz = _tr[14];
 
-        float det = (r00 * ((r11 * r22) - (r12 * r21)))
-                    - (r01 * ((r10 * r22) - (r12 * r20)))
-                    + (r02 * ((r10 * r21) - (r11 * r20)));
+        float det =
+            (r00 * ((r11 * r22) - (r12 * r21)))
+            - (r01 * ((r10 * r22) - (r12 * r20)))
+            + (r02 * ((r10 * r21) - (r11 * r20)));
 
         var dst = new CubismMatrix44();
 

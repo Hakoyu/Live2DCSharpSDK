@@ -49,12 +49,14 @@ public static class ModelResourceLocator
     /// <summary>
     /// SDK 包内示例模型的存放位置(相对路径)
     /// </summary>
-    public static string SdkSamplesRelativePath => Path.Combine(SdkPackageDirectoryName, "Samples", "Resources");
+    public static string SdkSamplesRelativePath =>
+        Path.Combine(SdkPackageDirectoryName, "Samples", "Resources");
 
     /// <summary>
     /// 可执行文件旁边的 <c>Resources</c> 目录(面向发布包)
     /// </summary>
-    public static string LocalResourcesDirectory => Path.Combine(AppContext.BaseDirectory, "Resources");
+    public static string LocalResourcesDirectory =>
+        Path.Combine(AppContext.BaseDirectory, "Resources");
 
     /// <summary>
     /// 从指定目录向父方向查找官方 SDK 包中的 <c>Samples/Resources</c>.
@@ -63,8 +65,8 @@ public static class ModelResourceLocator
     /// 搜索起始目录. 为 null 或空白时使用 <see cref="AppContext.BaseDirectory"/>.
     /// </param>
     /// <returns>找到的绝对路径. 未找到时为 null.</returns>
-    public static string? FindSdkSamplesResources(string? startDirectory = null)
-        => FindSdkSamplesResourcesCore(startDirectory, null);
+    public static string? FindSdkSamplesResources(string? startDirectory = null) =>
+        FindSdkSamplesResourcesCore(startDirectory, null);
 
     /// <summary>
     /// 解析模型的位置. 找不到时也不抛出异常(false + Warning).
@@ -90,7 +92,9 @@ public static class ModelResourceLocator
                 return true;
             }
 
-            CubismLog.Warning($"[Live2D App]{ModelDirEnvName}=\"{envDir}\" 下找不到模型 '{name}', 改试相对搜索.");
+            CubismLog.Warning(
+                $"[Live2D App]{ModelDirEnvName}=\"{envDir}\" 下找不到模型 '{name}', 改试相对搜索."
+            );
         }
 
         // 2. 从 BaseDirectory 向父方向的 SDK 相对搜索
@@ -98,7 +102,9 @@ public static class ModelResourceLocator
         if (sdkSamples is not null && IsModelPresent(sdkSamples, name))
         {
             dir = sdkSamples;
-            CubismLog.Info($"[Live2D App]已通过 SDK 相对搜索解析模型: dir=\"{dir}\", name=\"{name}\"");
+            CubismLog.Info(
+                $"[Live2D App]已通过 SDK 相对搜索解析模型: dir=\"{dir}\", name=\"{name}\""
+            );
             return true;
         }
 
@@ -108,14 +114,17 @@ public static class ModelResourceLocator
         if (IsModelPresent(localResources, name))
         {
             dir = localResources;
-            CubismLog.Info($"[Live2D App]已从可执行文件旁边的 Resources 解析模型: dir=\"{dir}\", name=\"{name}\"");
+            CubismLog.Info(
+                $"[Live2D App]已从可执行文件旁边的 Resources 解析模型: dir=\"{dir}\", name=\"{name}\""
+            );
             return true;
         }
 
         dir = attempted[^1];
         CubismLog.Warning(
-            $"[Live2D App]模型 '{name}' 未找到. 已尝试的路径: [{string.Join(" | ", attempted)}]." +
-            "将以空场景启动.");
+            $"[Live2D App]模型 '{name}' 未找到. 已尝试的路径: [{string.Join(" | ", attempted)}]."
+                + "将以空场景启动."
+        );
         return false;
     }
 
@@ -138,7 +147,10 @@ public static class ModelResourceLocator
     /// <summary>
     /// 相对搜索的主体实现. 传入 <paramref name="attempted"/> 时会依次追加尝试过的候选路径.
     /// </summary>
-    private static string? FindSdkSamplesResourcesCore(string? startDirectory, List<string>? attempted)
+    private static string? FindSdkSamplesResourcesCore(
+        string? startDirectory,
+        List<string>? attempted
+    )
     {
         string? current = NormalizeDirectory(startDirectory);
         if (current is null)
@@ -146,7 +158,11 @@ public static class ModelResourceLocator
             return null;
         }
 
-        for (int depth = 0; depth <= MaxParentSearchDepth && !string.IsNullOrEmpty(current); depth++)
+        for (
+            int depth = 0;
+            depth <= MaxParentSearchDepth && !string.IsNullOrEmpty(current);
+            depth++
+        )
         {
             string candidate = Path.Combine(current, SdkSamplesRelativePath);
             attempted?.Add(candidate);
@@ -176,9 +192,17 @@ public static class ModelResourceLocator
             // 根路径(C:\ / \\server\share)会被 TrimEndingDirectorySeparator 原样保留.
             return Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         }
-        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or System.Security.SecurityException)
+        catch (Exception ex)
+            when (ex
+                    is ArgumentException
+                        or NotSupportedException
+                        or PathTooLongException
+                        or System.Security.SecurityException
+            )
         {
-            CubismLog.Warning($"[Live2D App]模型搜索起点 \"{path}\" 不合法: {ex.GetType().Name}: {ex.Message}");
+            CubismLog.Warning(
+                $"[Live2D App]模型搜索起点 \"{path}\" 不合法: {ex.GetType().Name}: {ex.Message}"
+            );
             return null;
         }
     }
@@ -193,9 +217,19 @@ public static class ModelResourceLocator
             // 即使路径不存在也按文本返回父目录. 根路径(C:\ / \\server\share)返回 null.
             return Directory.GetParent(directory)?.FullName;
         }
-        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException or PathTooLongException or System.Security.SecurityException)
+        catch (Exception ex)
+            when (ex
+                    is ArgumentException
+                        or IOException
+                        or UnauthorizedAccessException
+                        or NotSupportedException
+                        or PathTooLongException
+                        or System.Security.SecurityException
+            )
         {
-            CubismLog.Warning($"[Live2D App]获取父目录失败 \"{directory}\": {ex.GetType().Name}: {ex.Message}");
+            CubismLog.Warning(
+                $"[Live2D App]获取父目录失败 \"{directory}\": {ex.GetType().Name}: {ex.Message}"
+            );
             return null;
         }
     }

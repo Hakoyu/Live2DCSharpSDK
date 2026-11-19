@@ -179,7 +179,12 @@ public sealed class CubismMathTests
     [DataRow(1.0f, 2.0f, 2.0f, 1.0f)]
     [DataRow(-1.0f, -2.0f, -1.0f, -2.0f)]
     [DataRow(3.0f, 3.0f, 3.0f, 3.0f)]
-    public void MaxAndMinReturnBoundValues(float left, float right, float expectedMax, float expectedMin)
+    public void MaxAndMinReturnBoundValues(
+        float left,
+        float right,
+        float expectedMax,
+        float expectedMin
+    )
     {
         Assert.AreEqual(expectedMax, CubismMath.Max(left, right), 0.0f);
         Assert.AreEqual(expectedMin, CubismMath.Min(left, right), 0.0f);
@@ -231,7 +236,13 @@ public sealed class CubismMathTests
     [DataRow(1.0f, 0.0f, 1.0f, 1.0f, 0.7853982f)]
     [DataRow(1.0f, 0.0f, 1.0f, 0.0f, 0.0f)]
     [DataRow(0.0f, 1.0f, 1.0f, 0.0f, -1.5707964f)]
-    public void DirectionToRadianReturnsAngleBetweenVectors(float fromX, float fromY, float toX, float toY, float expected)
+    public void DirectionToRadianReturnsAngleBetweenVectors(
+        float fromX,
+        float fromY,
+        float toX,
+        float toY,
+        float expected
+    )
     {
         var from = new Vector2(fromX, fromY);
         var to = new Vector2(toX, toY);
@@ -252,7 +263,10 @@ public sealed class CubismMathTests
         float radian = CubismMath.DirectionToRadian(from, to);
 
         Assert.AreEqual(-0.0002f, radian, 1e-4f);
-        Assert.IsTrue(radian >= -CubismMath.Pi && radian <= CubismMath.Pi, "DirectionToRadian must return an angle within [-Pi, Pi].");
+        Assert.IsTrue(
+            radian >= -CubismMath.Pi && radian <= CubismMath.Pi,
+            "DirectionToRadian must return an angle within [-Pi, Pi]."
+        );
     }
 
     /// <summary>
@@ -274,7 +288,13 @@ public sealed class CubismMathTests
     [DataRow(0.0f, 0.0f, 0.0f, 1.0f, 90.0f)]
     [DataRow(0.0f, 0.0f, 0.0f, -1.0f, -90.0f)]
     [DataRow(0.0f, 0.0f, -1.0f, -1.0f, -135.0f)]
-    public void DirectionToDegreesGolden(float fromX, float fromY, float toX, float toY, float expected)
+    public void DirectionToDegreesGolden(
+        float fromX,
+        float fromY,
+        float toX,
+        float toY,
+        float expected
+    )
     {
         var from = new Vector2(fromX, fromY);
         var to = new Vector2(toX, toY);
@@ -328,7 +348,10 @@ public sealed class CubismMathTests
     {
         float root = CubismMath.QuadraticEquation(1.0f, 1.0f, 1.0f);
 
-        Assert.IsTrue(float.IsNaN(root), "QuadraticEquation must return NaN when the discriminant is negative.");
+        Assert.IsTrue(
+            float.IsNaN(root),
+            "QuadraticEquation must return NaN when the discriminant is negative."
+        );
     }
 
     /// <summary>
@@ -348,12 +371,21 @@ public sealed class CubismMathTests
     [DataRow(1.0f, 0.0f, 0.0f, 8.0f, 0.0f)]
     [DataRow(1.0f, -1.5f, 0.75f, -0.125f, 0.5f)]
     [DataRow(1.0f, -1.5f, -1.5f, 1.0f, 0.5f)]
-    public void CardanoAlgorithmForBezierPicksRootNearHalf(float a, float b, float c, float d, float expected)
+    public void CardanoAlgorithmForBezierPicksRootNearHalf(
+        float a,
+        float b,
+        float c,
+        float d,
+        float expected
+    )
     {
         float root = CubismMath.CardanoAlgorithmForBezier(a, b, c, d);
 
         Assert.AreEqual(expected, root, 1e-4f);
-        Assert.IsTrue(root >= 0.0f && root <= 1.0f, $"CardanoAlgorithmForBezier must clamp its result into [0, 1], got {root}.");
+        Assert.IsTrue(
+            root >= 0.0f && root <= 1.0f,
+            $"CardanoAlgorithmForBezier must clamp its result into [0, 1], got {root}."
+        );
     }
 
     /// <summary>
@@ -372,7 +404,11 @@ public sealed class CubismMathTests
     [DataRow(-1.5f, 1.0f, -0.5f)]
     [DataRow(0.0f, 3.0f, 0.0f)]
     [DataRow(5.5f, -2.0f, 1.5f)]
-    public void ModFReturnsRemainderSignedLikeDividend(float dividend, float divisor, float expected)
+    public void ModFReturnsRemainderSignedLikeDividend(
+        float dividend,
+        float divisor,
+        float expected
+    )
     {
         Assert.AreEqual(expected, CubismMath.ModF(dividend, divisor), Tolerance);
     }
@@ -401,7 +437,10 @@ public sealed class CubismMathTests
 
             float remainder = CubismMath.ModF(dividend, divisor);
 
-            Assert.IsTrue(float.IsNaN(remainder), "ModF must return NaN for non-finite input or a zero divisor.");
+            Assert.IsTrue(
+                float.IsNaN(remainder),
+                "ModF must return NaN for non-finite input or a zero divisor."
+            );
         }
         finally
         {

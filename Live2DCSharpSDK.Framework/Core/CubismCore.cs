@@ -11,6 +11,7 @@ public static class CsmEnum
     /// Necessary alignment for mocs (in bytes).
     /// </summary>
     public const int csmAlignofMoc = 64;
+
     /// <summary>
     /// Necessary alignment for models (in bytes).
     /// </summary>
@@ -22,14 +23,17 @@ public static class CsmEnum
     /// Additive blend mode mask.
     /// </summary>
     public const byte CsmBlendAdditive = 1 << 0;
+
     /// <summary>
     /// Multiplicative blend mode mask.
     /// </summary>
     public const byte CsmBlendMultiplicative = 1 << 1;
+
     /// <summary>
     /// Double-sidedness mask.
     /// </summary>
     public const byte CsmIsDoubleSided = 1 << 2;
+
     /// <summary>
     /// Clipping mask inversion mode mask.
     /// </summary>
@@ -41,26 +45,32 @@ public static class CsmEnum
     /// Flag set when visible.
     /// </summary>
     public const byte CsmIsVisible = 1 << 0;
+
     /// <summary>
     /// Flag set when visibility did change.
     /// </summary>
     public const byte CsmVisibilityDidChange = 1 << 1;
+
     /// <summary>
     /// Flag set when opacity did change.
     /// </summary>
     public const byte CsmOpacityDidChange = 1 << 2;
+
     /// <summary>
     /// Flag set when draw order did change.
     /// </summary>
     public const byte CsmDrawOrderDidChange = 1 << 3;
+
     /// <summary>
     /// Flag set when render order did change.
     /// </summary>
     public const byte CsmRenderOrderDidChange = 1 << 4;
+
     /// <summary>
     /// Flag set when vertex positions did change.
     /// </summary>
     public const byte CsmVertexPositionsDidChange = 1 << 5;
+
     /// <summary>
     /// Flag set when blend color did change.
     /// </summary>
@@ -72,26 +82,32 @@ public static class CsmEnum
     /// unknown
     /// </summary>
     public const int CsmMocVersion_Unknown = 0;
+
     /// <summary>
     /// moc3 file version 3.0.00 - 3.2.07
     /// </summary>
     public const int CsmMocVersion_30 = 1;
+
     /// <summary>
     /// moc3 file version 3.3.00 - 3.3.03
     /// </summary>
     public const int CsmMocVersion_33 = 2;
+
     /// <summary>
     /// moc3 file version 4.0.00 - 4.1.05
     /// </summary>
     public const int CsmMocVersion_40 = 3;
+
     /// <summary>
     /// moc3 file version 4.2.00 - 4.2.04
     /// </summary>
     public const int CsmMocVersion_42 = 4;
+
     /// <summary>
     /// moc3 file version 5.0.00 - 5.2.03
     /// </summary>
     public const int CsmMocVersion_50 = 5;
+
     /// <summary>
     /// moc3 file version 5.3.00 -
     /// </summary>
@@ -103,6 +119,7 @@ public static class CsmEnum
     /// Normal parameter.
     /// </summary>
     public const int CsmParameterType_Normal = 0;
+
     /// <summary>
     /// Parameter for blend shape.
     /// </summary>
@@ -114,70 +131,87 @@ public static class CsmEnum
     /// Normal blend.
     /// </summary>
     public const int CsmColorBlendType_Normal = 0;
+
     /// <summary>
     /// Add compatible blend. For version 5.2 and earlier.
     /// </summary>
     public const int CsmColorBlendType_AddCompatible = 1;
+
     /// <summary>
     /// Multiply compatible blend. For version 5.2 and earlier.
     /// </summary>
     public const int CsmColorBlendType_MultiplyCompatible = 2;
+
     /// <summary>
     /// Add blend.
     /// </summary>
     public const int CsmColorBlendType_Add = 3;
+
     /// <summary>
     /// AddGlow blend.
     /// </summary>
     public const int CsmColorBlendType_AddGlow = 4;
+
     /// <summary>
     /// Darken blend.
     /// </summary>
     public const int CsmColorBlendType_Darken = 5;
+
     /// <summary>
     /// Multiply blend.
     /// </summary>
     public const int CsmColorBlendType_Multiply = 6;
+
     /// <summary>
     /// ColorBurn blend.
     /// </summary>
     public const int CsmColorBlendType_ColorBurn = 7;
+
     /// <summary>
     /// LinearBurn blend.
     /// </summary>
     public const int CsmColorBlendType_LinearBurn = 8;
+
     /// <summary>
     /// Lighten blend.
     /// </summary>
     public const int CsmColorBlendType_Lighten = 9;
+
     /// <summary>
     /// Screen blend.
     /// </summary>
     public const int CsmColorBlendType_Screen = 10;
+
     /// <summary>
     /// ColorDodge blend.
     /// </summary>
     public const int CsmColorBlendType_ColorDodge = 11;
+
     /// <summary>
     /// Overlay blend.
     /// </summary>
     public const int CsmColorBlendType_Overlay = 12;
+
     /// <summary>
     /// SoftLight blend.
     /// </summary>
     public const int CsmColorBlendType_SoftLight = 13;
+
     /// <summary>
     /// HardLight blend.
     /// </summary>
     public const int CsmColorBlendType_HardLight = 14;
+
     /// <summary>
     /// LinearLight blend.
     /// </summary>
     public const int CsmColorBlendType_LinearLight = 15;
+
     /// <summary>
     /// Hue blend.
     /// </summary>
     public const int CsmColorBlendType_Hue = 16;
+
     /// <summary>
     /// Color blend.
     /// </summary>
@@ -189,18 +223,22 @@ public static class CsmEnum
     /// Over blend.
     /// </summary>
     public const int CsmAlphaBlendType_Over = 0;
+
     /// <summary>
     /// Atop blend.
     /// </summary>
     public const int CsmAlphaBlendType_Atop = 1;
+
     /// <summary>
     /// Out blend.
     /// </summary>
     public const int CsmAlphaBlendType_Out = 2;
+
     /// <summary>
     /// ConjointOver blend.
     /// </summary>
     public const int CsmAlphaBlendType_ConjointOver = 3;
+
     /// <summary>
     /// DisjointOver blend.
     /// </summary>
@@ -219,10 +257,11 @@ public static class CsmEnum
         /// Drawable object.
         /// </summary>
         Drawable = 0,
+
         /// <summary>
         /// Offscreen object.
         /// </summary>
-        Offscreen = 2
+        Offscreen = 2,
     }
 }
 
@@ -341,9 +380,13 @@ public static partial class CubismCore
     /// <param name="outPixelsPerUnit">Aspect used for scaling pixels to units.</param>
     [DllImport("Live2DCubismCore", EntryPoint = "csmReadCanvasInfo")]
 #pragma warning disable SYSLIB1054 // 使用 “LibraryImportAttribute” 而不是 “DllImportAttribute” 在编译时生成 P/Invoke 封送代码
-    internal extern static void ReadCanvasInfo(IntPtr model, out Vector2 outSizeInPixels,
+    internal extern static void ReadCanvasInfo(
+        IntPtr model,
+        out Vector2 outSizeInPixels,
 #pragma warning restore SYSLIB1054 // 使用 “LibraryImportAttribute” 而不是 “DllImportAttribute” 在编译时生成 P/Invoke 封送代码
-        out Vector2 outOriginInPixels, out float outPixelsPerUnit);
+        out Vector2 outOriginInPixels,
+        out float outPixelsPerUnit
+    );
 
     //PARAMETERS
 

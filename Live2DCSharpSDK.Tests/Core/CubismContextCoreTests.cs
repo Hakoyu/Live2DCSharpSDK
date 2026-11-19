@@ -34,80 +34,167 @@ public sealed class CubismContextCoreTests
         {
             Assert.IsFalse(first.IsStarted, "A newly created context must not be started.");
             Assert.IsFalse(second.IsStarted, "A newly created context must not be started.");
-            Assert.AreNotSame(previousCurrent, first, "Create must not install the context as Current.");
+            Assert.AreNotSame(
+                previousCurrent,
+                first,
+                "Create must not install the context as Current."
+            );
 
             first.StartUp();
             Assert.IsTrue(first.IsStarted, "StartUp must mark the first context as started.");
-            Assert.AreSame(first, CubismContext.Current, "StartUp must install the context as Current.");
-            Assert.IsFalse(second.IsStarted, "Starting the first context must not start the second one.");
+            Assert.AreSame(
+                first,
+                CubismContext.Current,
+                "StartUp must install the context as Current."
+            );
+            Assert.IsFalse(
+                second.IsStarted,
+                "Starting the first context must not start the second one."
+            );
 
             // StartUp 是幂等的: 再次调用不会抛异常, Current 仍然是本上下文.
             first.StartUp();
             Assert.IsTrue(first.IsStarted, "A repeated StartUp must keep the context started.");
-            Assert.AreSame(first, CubismContext.Current, "A repeated StartUp must keep the context current.");
+            Assert.AreSame(
+                first,
+                CubismContext.Current,
+                "A repeated StartUp must keep the context current."
+            );
 
             second.StartUp();
             Assert.IsTrue(second.IsStarted, "StartUp must mark the second context as started.");
-            Assert.AreSame(second, CubismContext.Current, "The second StartUp must install the second context.");
-            Assert.IsTrue(first.IsStarted, "Starting the second context must not dispose the first one.");
+            Assert.AreSame(
+                second,
+                CubismContext.Current,
+                "The second StartUp must install the second context."
+            );
+            Assert.IsTrue(
+                first.IsStarted,
+                "Starting the second context must not dispose the first one."
+            );
 
             // Allocator / IdManager / LogLevel 属于各自上下文, 不共享.
-            Assert.AreNotSame(first.Allocator, second.Allocator, "Each context must keep its own allocator.");
-            Assert.AreNotSame(first.IdManager, second.IdManager, "Each context must keep its own id manager.");
+            Assert.AreNotSame(
+                first.Allocator,
+                second.Allocator,
+                "Each context must keep its own allocator."
+            );
+            Assert.AreNotSame(
+                first.IdManager,
+                second.IdManager,
+                "Each context must keep its own id manager."
+            );
 
             first.IdManager.GetId("ParamAngleX");
-            Assert.AreEqual(1, CubismIdManagerProbe.GetRegisteredCount(first.IdManager),
-                "The first id manager must see its own registration.");
-            Assert.AreEqual(0, CubismIdManagerProbe.GetRegisteredCount(second.IdManager),
-                "The second id manager must not see the first registration.");
+            Assert.AreEqual(
+                1,
+                CubismIdManagerProbe.GetRegisteredCount(first.IdManager),
+                "The first id manager must see its own registration."
+            );
+            Assert.AreEqual(
+                0,
+                CubismIdManagerProbe.GetRegisteredCount(second.IdManager),
+                "The second id manager must not see the first registration."
+            );
 
             second.IdManager.GetId("ParamAngleY");
-            Assert.AreEqual(1, CubismIdManagerProbe.GetRegisteredCount(second.IdManager),
-                "The second id manager must see its own registration.");
-            Assert.AreEqual(1, CubismIdManagerProbe.GetRegisteredCount(first.IdManager),
-                "The first id manager must not see the second registration.");
+            Assert.AreEqual(
+                1,
+                CubismIdManagerProbe.GetRegisteredCount(second.IdManager),
+                "The second id manager must see its own registration."
+            );
+            Assert.AreEqual(
+                1,
+                CubismIdManagerProbe.GetRegisteredCount(first.IdManager),
+                "The first id manager must not see the second registration."
+            );
 
             first.LogLevel = LogLevel.Warning;
             second.LogLevel = LogLevel.Verbose;
-            Assert.AreEqual(LogLevel.Warning, first.LogLevel, "The first context must keep its own log level.");
-            Assert.AreEqual(LogLevel.Verbose, second.LogLevel, "The second context must keep its own log level.");
+            Assert.AreEqual(
+                LogLevel.Warning,
+                first.LogLevel,
+                "The first context must keep its own log level."
+            );
+            Assert.AreEqual(
+                LogLevel.Verbose,
+                second.LogLevel,
+                "The second context must keep its own log level."
+            );
 
             // Dispose 第二个上下文: 第一个仍然可用, Current 恢复为第一个.
             second.Dispose();
             Assert.IsFalse(second.IsStarted, "Dispose must clear the started flag.");
-            Assert.IsTrue(first.IsStarted, "Disposing the second context must not stop the first one.");
-            Assert.AreSame(first, CubismContext.Current, "Disposing the current context must restore the previous one.");
-            Assert.ThrowsExactly<InvalidOperationException>(() => _ = second.Allocator,
-                "A disposed context must not expose an allocator.");
-            Assert.ThrowsExactly<InvalidOperationException>(() => _ = second.Option,
-                "A disposed context must not expose an option.");
-            Assert.ThrowsExactly<ObjectDisposedException>(() => second.StartUp(),
-                "StartUp on a disposed context must throw ObjectDisposedException.");
+            Assert.IsTrue(
+                first.IsStarted,
+                "Disposing the second context must not stop the first one."
+            );
+            Assert.AreSame(
+                first,
+                CubismContext.Current,
+                "Disposing the current context must restore the previous one."
+            );
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => _ = second.Allocator,
+                "A disposed context must not expose an allocator."
+            );
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => _ = second.Option,
+                "A disposed context must not expose an option."
+            );
+            Assert.ThrowsExactly<ObjectDisposedException>(
+                () => second.StartUp(),
+                "StartUp on a disposed context must throw ObjectDisposedException."
+            );
 
             // 第一个上下文仍能与 Core 工作: 解析 Haru 并正常释放.
             ModelFixtureEntry fixture = ModelFixtures.Require(ModelFixtures.HaruRelativePath);
             using (CubismMoc moc = new(first, ModelFixtures.ReadBytes(fixture)))
             {
-                Assert.AreSame(first, moc.Model.Context,
-                    "The surviving context must stay bound to the model it revives.");
-                Assert.AreEqual(fixture.DrawableCount, moc.Model.GetDrawableCount(),
-                    "The surviving context must still revive the fixture model.");
-                Assert.AreEqual(2, firstAllocator.LiveBlockCount,
-                    "The surviving context must allocate the moc buffer and the model memory.");
+                Assert.AreSame(
+                    first,
+                    moc.Model.Context,
+                    "The surviving context must stay bound to the model it revives."
+                );
+                Assert.AreEqual(
+                    fixture.DrawableCount,
+                    moc.Model.GetDrawableCount(),
+                    "The surviving context must still revive the fixture model."
+                );
+                Assert.AreEqual(
+                    2,
+                    firstAllocator.LiveBlockCount,
+                    "The surviving context must allocate the moc buffer and the model memory."
+                );
             }
 
-            Assert.AreEqual(0, firstAllocator.LiveBlockCount,
-                "The surviving context must release the moc blocks.");
-            Assert.AreEqual(0, firstAllocator.DoubleFreeCount,
-                "The surviving context must not free any block twice.");
-            Assert.AreEqual(0, secondAllocator.LiveBlockCount,
-                "The disposed context never allocated any block.");
+            Assert.AreEqual(
+                0,
+                firstAllocator.LiveBlockCount,
+                "The surviving context must release the moc blocks."
+            );
+            Assert.AreEqual(
+                0,
+                firstAllocator.DoubleFreeCount,
+                "The surviving context must not free any block twice."
+            );
+            Assert.AreEqual(
+                0,
+                secondAllocator.LiveBlockCount,
+                "The disposed context never allocated any block."
+            );
 
             // Dispose 第一个: Current 恢复到进入用例前的值.
             first.Dispose();
-            Assert.IsFalse(first.IsStarted, "Dispose must clear the started flag of the first context.");
-            Assert.AreSame(previousCurrent, CubismContext.Current,
-                "Disposing the last started context must restore the previous Current value.");
+            Assert.IsFalse(
+                first.IsStarted,
+                "Dispose must clear the started flag of the first context."
+            );
+            Assert.AreSame(
+                previousCurrent,
+                CubismContext.Current,
+                "Disposing the last started context must restore the previous Current value."
+            );
         }
         finally
         {

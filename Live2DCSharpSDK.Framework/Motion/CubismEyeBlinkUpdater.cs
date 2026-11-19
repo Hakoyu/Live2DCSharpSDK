@@ -41,7 +41,11 @@ public class CubismEyeBlinkUpdater : ICubismUpdater
     /// <param name="motionUpdated">返回动作是否更新了参数的函数</param>
     /// <param name="eyeBlink">自动眨眼</param>
     /// <param name="executionOrder">执行顺序</param>
-    public CubismEyeBlinkUpdater(Func<bool> motionUpdated, CubismEyeBlink eyeBlink, int executionOrder)
+    public CubismEyeBlinkUpdater(
+        Func<bool> motionUpdated,
+        CubismEyeBlink eyeBlink,
+        int executionOrder
+    )
         : base(executionOrder)
     {
         _motionUpdated = motionUpdated;

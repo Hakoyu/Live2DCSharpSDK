@@ -9,38 +9,47 @@ public record CubismViewMatrix : CubismMatrix44
     /// 与设备对应的逻辑坐标上的范围 (左边缘 X 轴位置)
     /// </summary>
     public float ScreenLeft { get; private set; }
+
     /// <summary>
     /// 与设备对应的逻辑坐标上的范围 (右边缘 X 轴位置)
     /// </summary>
     public float ScreenRight { get; private set; }
+
     /// <summary>
     /// 与设备对应的逻辑坐标上的范围 (下边缘 Y 轴位置)
     /// </summary>
     public float ScreenTop { get; private set; }
+
     /// <summary>
     /// 与设备对应的逻辑坐标上的范围 (上边缘 Y 轴位置)
     /// </summary>
     public float ScreenBottom { get; private set; }
+
     /// <summary>
     /// 逻辑坐标上的可移动范围 (左边缘 X 轴位置)
     /// </summary>
     public float MaxLeft { get; private set; }
+
     /// <summary>
     /// 逻辑坐标上的可移动范围 (右边缘 X 轴位置)
     /// </summary>
     public float MaxRight { get; private set; }
+
     /// <summary>
     /// 逻辑坐标上的可移动范围 (下边缘 Y 轴位置)
     /// </summary>
     public float MaxTop { get; private set; }
+
     /// <summary>
     /// 逻辑坐标上的可移动范围 (上边缘 Y 轴位置)
     /// </summary>
     public float MaxBottom { get; private set; }
+
     /// <summary>
     /// 缩放率的最大值
     /// </summary>
     public float MaxScale { get; set; }
+
     /// <summary>
     /// 缩放率的最小值
     /// </summary>
@@ -63,7 +72,6 @@ public record CubismViewMatrix : CubismMatrix44
             x = ScreenRight - _tr[0] * MaxRight - _tr[12];
         }
 
-
         if (_tr[5] * MaxTop + (_tr[13] + y) < ScreenTop)
         {
             y = ScreenTop - _tr[5] * MaxTop - _tr[13];
@@ -74,10 +82,25 @@ public record CubismViewMatrix : CubismMatrix44
             y = ScreenBottom - _tr[5] * MaxBottom - _tr[13];
         }
 
-        float[] tr1 = [ 1.0f,   0.0f,   0.0f, 0.0f,
-                        0.0f,   1.0f,   0.0f, 0.0f,
-                        0.0f,   0.0f,   1.0f, 0.0f,
-                        x,      y,      0.0f, 1.0f ];
+        float[] tr1 =
+        [
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            x,
+            y,
+            0.0f,
+            1.0f,
+        ];
         MultiplyByMatrix(tr1);
     }
 
@@ -109,18 +132,60 @@ public record CubismViewMatrix : CubismMatrix44
             }
         }
 
-        MultiplyByMatrix([1.0f, 0.0f, 0.0f, 0.0f,
-                            0.0f, 1.0f, 0.0f, 0.0f,
-                            0.0f, 0.0f, 1.0f, 0.0f,
-                            -cx,  -cy,  0.0f, 1.0f]);
-        MultiplyByMatrix([scale, 0.0f,  0.0f, 0.0f,
-                            0.0f,  scale, 0.0f, 0.0f,
-                            0.0f,  0.0f,  1.0f, 0.0f,
-                            0.0f,  0.0f,  0.0f, 1.0f]);
-        MultiplyByMatrix([1.0f, 0.0f, 0.0f, 0.0f,
-                            0.0f, 1.0f, 0.0f, 0.0f,
-                            0.0f, 0.0f, 1.0f, 0.0f,
-                            cx,   cy,   0.0f, 1.0f]);
+        MultiplyByMatrix([
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            -cx,
+            -cy,
+            0.0f,
+            1.0f,
+        ]);
+        MultiplyByMatrix([
+            scale,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            scale,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+        ]);
+        MultiplyByMatrix([
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            0.0f,
+            cx,
+            cy,
+            0.0f,
+            1.0f,
+        ]);
     }
 
     /// <summary>

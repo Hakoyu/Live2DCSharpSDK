@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
@@ -31,5 +30,4 @@
      并经 ProjectReference 传递到本工程输出目录）。
     C4 清理：此处原有重复的 None Update="Live2DCubismCore.dll" 项，已删除。
   -->
-
 </Project>

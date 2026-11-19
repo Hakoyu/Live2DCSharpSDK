@@ -64,10 +64,16 @@ public sealed class LAppAllocatorTests
             // 若不归一化, NativeMemory.AlignedAlloc 会对非 2 的幂抛 ArgumentOutOfRangeException.
             block = allocator.AllocateAligned(BlockSize, alignment);
 
-            Assert.AreNotEqual(IntPtr.Zero, block,
-                $"The fallback alignment must still return a block (alignment={alignment}).");
-            Assert.AreEqual(0UL, (ulong)block.ToInt64() % 16UL,
-                $"The fallback alignment must be 16 bytes (alignment={alignment}).");
+            Assert.AreNotEqual(
+                IntPtr.Zero,
+                block,
+                $"The fallback alignment must still return a block (alignment={alignment})."
+            );
+            Assert.AreEqual(
+                0UL,
+                (ulong)block.ToInt64() % 16UL,
+                $"The fallback alignment must be 16 bytes (alignment={alignment})."
+            );
         }
         finally
         {
@@ -144,7 +150,11 @@ public sealed class LAppAllocatorTests
             for (int index = 0; index < AllocationCount; index++)
             {
                 IntPtr block = allocator.AllocateAligned(BlockSize, alignment);
-                Assert.AreNotEqual(IntPtr.Zero, block, $"AllocateAligned returned a null block at index {index}.");
+                Assert.AreNotEqual(
+                    IntPtr.Zero,
+                    block,
+                    $"AllocateAligned returned a null block at index {index}."
+                );
                 blocks.Add(block);
             }
 
@@ -153,12 +163,19 @@ public sealed class LAppAllocatorTests
             for (int index = 0; index < blocks.Count; index++)
             {
                 ulong address = (ulong)blocks[index].ToInt64();
-                Assert.AreEqual(0UL, address % (ulong)alignment, $"Block {index} is not aligned to {alignment} bytes.");
+                Assert.AreEqual(
+                    0UL,
+                    address % (ulong)alignment,
+                    $"Block {index} is not aligned to {alignment} bytes."
+                );
             }
 
             int distinct = blocks.Distinct().Count();
-            Assert.AreEqual(AllocationCount, distinct,
-                "Aligned allocations must not return the same address twice while the blocks are alive.");
+            Assert.AreEqual(
+                AllocationCount,
+                distinct,
+                "Aligned allocations must not return the same address twice while the blocks are alive."
+            );
         }
         finally
         {

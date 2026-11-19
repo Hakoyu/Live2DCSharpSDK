@@ -2,7 +2,6 @@
 
 namespace Live2DCSharpSDK.Framework.Effect;
 
-
 /// <summary>
 /// 管理部件相关的各类数据.
 /// </summary>
@@ -12,14 +11,17 @@ public record PartData
     /// 部件 ID
     /// </summary>
     public required string PartId { get; set; }
+
     /// <summary>
     /// 参数的索引
     /// </summary>
     public int ParameterIndex { get; set; }
+
     /// <summary>
     ///  部件的索引
     /// </summary>
     public int PartIndex { get; set; }
+
     /// <summary>
     ///  联动的参数
     /// </summary>

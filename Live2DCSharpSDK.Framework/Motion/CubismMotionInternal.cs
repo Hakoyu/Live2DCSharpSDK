@@ -25,7 +25,11 @@ public delegate void CubismMotionEventFunction(CubismUserModel? customData, stri
 /// </summary>
 /// <param name="points">动作曲线的控制点列表</param>
 /// <param name="time">求值的时间[秒]</param>
-public delegate float csmMotionSegmentEvaluationFunction(CubismMotionPoint[] points, int start, float time);
+public delegate float csmMotionSegmentEvaluationFunction(
+    CubismMotionPoint[] points,
+    int start,
+    float time
+);
 
 /// <summary>
 /// 动作的优先级常量
@@ -35,7 +39,7 @@ public enum MotionPriority : int
     PriorityNone = 0,
     PriorityIdle = 1,
     PriorityNormal = 2,
-    PriorityForce = 3
+    PriorityForce = 3,
 }
 
 /// <summary>
@@ -47,14 +51,16 @@ public enum ExpressionBlendType
     /// 加算
     /// </summary>
     Add = 0,
+
     /// <summary>
     /// 乘算
     /// </summary>
     Multiply = 1,
+
     /// <summary>
     /// 覆盖
     /// </summary>
-    Overwrite = 2
+    Overwrite = 2,
 };
 
 /// <summary>
@@ -66,16 +72,17 @@ public record ExpressionParameter
     /// 参数 ID
     /// </summary>
     public required string ParameterId { get; set; }
+
     /// <summary>
     /// 参数的运算种类
     /// </summary>
     public ExpressionBlendType BlendType { get; set; }
+
     /// <summary>
     /// 值
     /// </summary>
     public float Value { get; set; }
 }
-
 
 /// <summary>
 /// 动作曲线的种类.
@@ -86,14 +93,16 @@ public enum CubismMotionCurveTarget
     /// 针对模型
     /// </summary>
     Model,
+
     /// <summary>
     /// 针对参数
     /// </summary>
     Parameter,
+
     /// <summary>
     /// 针对部件的不透明度
     /// </summary>
-    PartOpacity
+    PartOpacity,
 };
 
 /// <summary>
@@ -105,18 +114,21 @@ public enum CubismMotionSegmentType : int
     /// 线性
     /// </summary>
     Linear = 0,
+
     /// <summary>
     /// 贝塞尔曲线
     /// </summary>
     Bezier = 1,
+
     /// <summary>
     /// 阶梯
     /// </summary>
     Stepped = 2,
+
     /// <summary>
     /// 反向阶梯
     /// </summary>
-    InverseStepped = 3
+    InverseStepped = 3,
 };
 
 /// <summary>
@@ -128,6 +140,7 @@ public struct CubismMotionPoint
     /// 时间[秒]
     /// </summary>
     public float Time;
+
     /// <summary>
     /// 值
     /// </summary>
@@ -143,10 +156,12 @@ public record CubismMotionSegment
     /// 使用的求值函数
     /// </summary>
     public csmMotionSegmentEvaluationFunction Evaluate;
+
     /// <summary>
     /// 指向第一个段的索引
     /// </summary>
     public int BasePointIndex;
+
     /// <summary>
     /// 段的种类
     /// </summary>
@@ -162,22 +177,27 @@ public record CubismMotionCurve
     /// 曲线的种类
     /// </summary>
     public CubismMotionCurveTarget Type;
+
     /// <summary>
     /// 曲线的 ID
     /// </summary>
     public string Id;
+
     /// <summary>
     /// 段的个数
     /// </summary>
     public int SegmentCount;
+
     /// <summary>
     /// 第一个段的索引
     /// </summary>
     public int BaseSegmentIndex;
+
     /// <summary>
     /// 淡入所需的时间[秒]
     /// </summary>
     public float FadeInTime;
+
     /// <summary>
     /// 淡出所需的时间[秒]
     /// </summary>
@@ -202,34 +222,42 @@ public record CubismMotionData
     /// 动作的长度[秒]
     /// </summary>
     public float Duration;
+
     /// <summary>
     /// 是否循环
     /// </summary>
     public bool Loop;
+
     /// <summary>
     /// 曲线的个数
     /// </summary>
     public int CurveCount;
+
     /// <summary>
     /// UserData 的个数
     /// </summary>
     public int EventCount;
+
     /// <summary>
     /// 帧率
     /// </summary>
     public float Fps;
+
     /// <summary>
     /// 曲线的列表
     /// </summary>
     public CubismMotionCurve[] Curves;
+
     /// <summary>
     /// 段的列表
     /// </summary>
     public CubismMotionSegment[] Segments;
+
     /// <summary>
     /// 点的列表
     /// </summary>
     public CubismMotionPoint[] Points;
+
     /// <summary>
     /// 事件的列表
     /// </summary>

@@ -11,6 +11,7 @@ public class CubismMotionManager : CubismMotionQueueManager
     /// 当前播放中的动作的优先级
     /// </summary>
     public MotionPriority CurrentPriority { get; private set; }
+
     /// <summary>
     /// 预定播放的动作的优先级. 播放期间为 0. 用于在其他线程中读取动作文件.
     /// </summary>
@@ -27,10 +28,10 @@ public class CubismMotionManager : CubismMotionQueueManager
     {
         if (priority == ReservePriority)
         {
-            ReservePriority = 0;           // 解除预约
+            ReservePriority = 0; // 解除预约
         }
 
-        CurrentPriority = priority;        // 设置播放中动作的优先级
+        CurrentPriority = priority; // 设置播放中动作的优先级
 
         return StartMotion(motion);
     }
@@ -50,7 +51,7 @@ public class CubismMotionManager : CubismMotionQueueManager
 
         if (IsFinished())
         {
-            CurrentPriority = 0;           // 解除播放中动作的优先级
+            CurrentPriority = 0; // 解除播放中动作的优先级
         }
 
         return updated;

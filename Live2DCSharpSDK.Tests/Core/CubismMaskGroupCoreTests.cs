@@ -27,7 +27,10 @@ public sealed class CubismMaskGroupCoreTests
     [TestMethod]
     [DataRow(ModelFixtures.HaruRelativePath, 3)]
     [DataRow(ModelFixtures.RenRelativePath, 4)]
-    public void CountDrawableMaskGroups_MatchesRecordedGroupCount(string relativePath, int expectedGroups)
+    public void CountDrawableMaskGroups_MatchesRecordedGroupCount(
+        string relativePath,
+        int expectedGroups
+    )
     {
         ModelFixtureEntry fixture = ModelFixtures.Require(relativePath);
         byte[] mocBytes = ModelFixtures.ReadBytes(fixture);
@@ -41,21 +44,34 @@ public sealed class CubismMaskGroupCoreTests
 
             int groups = CubismMaskGroupUtility.CountDrawableMaskGroups(model);
 
-            Assert.AreEqual(expectedGroups, groups,
-                $"The unique mask group count must match the recorded render gate value for '{relativePath}'.");
-            Assert.IsTrue(groups > 0,
-                $"A model that ships mask data must report at least one group for '{relativePath}'.");
-            Assert.IsTrue(groups <= model.GetDrawableCount(),
-                $"The group count cannot exceed the drawable count for '{relativePath}'.");
+            Assert.AreEqual(
+                expectedGroups,
+                groups,
+                $"The unique mask group count must match the recorded render gate value for '{relativePath}'."
+            );
+            Assert.IsTrue(
+                groups > 0,
+                $"A model that ships mask data must report at least one group for '{relativePath}'."
+            );
+            Assert.IsTrue(
+                groups <= model.GetDrawableCount(),
+                $"The group count cannot exceed the drawable count for '{relativePath}'."
+            );
         }
         finally
         {
             context.Dispose();
         }
 
-        Assert.AreEqual(0, allocator.LiveBlockCount,
-            $"Reading the mask groups must not leak native blocks for '{relativePath}'.");
-        Assert.AreEqual(0, allocator.DoubleFreeCount,
-            $"Reading the mask groups must not free a block twice for '{relativePath}'.");
+        Assert.AreEqual(
+            0,
+            allocator.LiveBlockCount,
+            $"Reading the mask groups must not leak native blocks for '{relativePath}'."
+        );
+        Assert.AreEqual(
+            0,
+            allocator.DoubleFreeCount,
+            $"Reading the mask groups must not free a block twice for '{relativePath}'."
+        );
     }
 }

@@ -6,54 +6,67 @@ public class TouchManager
     /// 触摸开始时的 x 值
     /// </summary>
     private float _startY;
+
     /// <summary>
     /// 触摸开始时的 y 值
     /// </summary>
     private float _startX;
+
     /// <summary>
     /// 单点触摸时的 x 值
     /// </summary>
     private float _lastX;
+
     /// <summary>
     /// 单点触摸时的 y 值
     /// </summary>
     private float _lastY;
+
     /// <summary>
     /// 双点触摸时第一个点的 x 值
     /// </summary>
     private float _lastX1;
+
     /// <summary>
     /// 双点触摸时第一个点的 y 值
     /// </summary>
     private float _lastY1;
+
     /// <summary>
     /// 双点触摸时第二个点的 x 值
     /// </summary>
     private float _lastX2;
+
     /// <summary>
     /// 双点触摸时第二个点的 y 值
     /// </summary>
     private float _lastY2;
+
     /// <summary>
     /// 两指以上触摸时的指间距离
     /// </summary>
     private float _lastTouchDistance;
+
     /// <summary>
     /// 从上次值到本次值的 x 移动距离.
     /// </summary>
     private float _deltaX;
+
     /// <summary>
     /// 从上次值到本次值的 y 移动距离.
     /// </summary>
     private float _deltaY;
+
     /// <summary>
     /// 本帧要乘上的缩放倍率. 非缩放操作期间为 1.
     /// </summary>
     private float _scale;
+
     /// <summary>
     /// 单点触摸时为 true
     /// </summary>
     private bool _touchSingle;
+
     /// <summary>
     /// 是否启用翻转
     /// </summary>
@@ -64,22 +77,85 @@ public class TouchManager
         _scale = 1.0f;
     }
 
-    public float GetCenterX() { return _lastX; }
-    public float GetCenterY() { return _lastY; }
-    public float GetDeltaX() { return _deltaX; }
-    public float GetDeltaY() { return _deltaY; }
-    public float GetStartX() { return _startX; }
-    public float GetStartY() { return _startY; }
-    public float GetScale() { return _scale; }
-    public float GetX() { return _lastX; }
-    public float GetY() { return _lastY; }
-    public float GetX1() { return _lastX1; }
-    public float GetY1() { return _lastY1; }
-    public float GetX2() { return _lastX2; }
-    public float GetY2() { return _lastY2; }
-    public bool IsSingleTouch() { return _touchSingle; }
-    public bool IsFlickAvailable() { return _flipAvailable; }
-    public void DisableFlick() { _flipAvailable = false; }
+    public float GetCenterX()
+    {
+        return _lastX;
+    }
+
+    public float GetCenterY()
+    {
+        return _lastY;
+    }
+
+    public float GetDeltaX()
+    {
+        return _deltaX;
+    }
+
+    public float GetDeltaY()
+    {
+        return _deltaY;
+    }
+
+    public float GetStartX()
+    {
+        return _startX;
+    }
+
+    public float GetStartY()
+    {
+        return _startY;
+    }
+
+    public float GetScale()
+    {
+        return _scale;
+    }
+
+    public float GetX()
+    {
+        return _lastX;
+    }
+
+    public float GetY()
+    {
+        return _lastY;
+    }
+
+    public float GetX1()
+    {
+        return _lastX1;
+    }
+
+    public float GetY1()
+    {
+        return _lastY1;
+    }
+
+    public float GetX2()
+    {
+        return _lastX2;
+    }
+
+    public float GetY2()
+    {
+        return _lastY2;
+    }
+
+    public bool IsSingleTouch()
+    {
+        return _touchSingle;
+    }
+
+    public bool IsFlickAvailable()
+    {
+        return _flipAvailable;
+    }
+
+    public void DisableFlick()
+    {
+        _flipAvailable = false;
+    }
 
     /// <summary>
     /// 触摸开始事件

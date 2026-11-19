@@ -14,24 +14,24 @@ public struct CsmBlendMode
     /// </summary>
     private static readonly string[] ColorBlendTypeStrings =
     [
-        "Normal",             // CsmColorBlendType_Normal (0)
-        "AddCompatible",      // CsmColorBlendType_AddCompatible (1)
+        "Normal", // CsmColorBlendType_Normal (0)
+        "AddCompatible", // CsmColorBlendType_AddCompatible (1)
         "MultiplyCompatible", // CsmColorBlendType_MultiplyCompatible (2)
-        "Add",                // CsmColorBlendType_Add (3)
-        "AddGlow",            // CsmColorBlendType_AddGlow (4)
-        "Darken",             // CsmColorBlendType_Darken (5)
-        "Multiply",           // CsmColorBlendType_Multiply (6)
-        "ColorBurn",          // CsmColorBlendType_ColorBurn (7)
-        "LinearBurn",         // CsmColorBlendType_LinearBurn (8)
-        "Lighten",            // CsmColorBlendType_Lighten (9)
-        "Screen",             // CsmColorBlendType_Screen (10)
-        "ColorDodge",         // CsmColorBlendType_ColorDodge (11)
-        "Overlay",            // CsmColorBlendType_Overlay (12)
-        "SoftLight",          // CsmColorBlendType_SoftLight (13)
-        "HardLight",          // CsmColorBlendType_HardLight (14)
-        "LinearLight",        // CsmColorBlendType_LinearLight (15)
-        "Hue",                // CsmColorBlendType_Hue (16)
-        "Color",              // CsmColorBlendType_Color (17)
+        "Add", // CsmColorBlendType_Add (3)
+        "AddGlow", // CsmColorBlendType_AddGlow (4)
+        "Darken", // CsmColorBlendType_Darken (5)
+        "Multiply", // CsmColorBlendType_Multiply (6)
+        "ColorBurn", // CsmColorBlendType_ColorBurn (7)
+        "LinearBurn", // CsmColorBlendType_LinearBurn (8)
+        "Lighten", // CsmColorBlendType_Lighten (9)
+        "Screen", // CsmColorBlendType_Screen (10)
+        "ColorDodge", // CsmColorBlendType_ColorDodge (11)
+        "Overlay", // CsmColorBlendType_Overlay (12)
+        "SoftLight", // CsmColorBlendType_SoftLight (13)
+        "HardLight", // CsmColorBlendType_HardLight (14)
+        "LinearLight", // CsmColorBlendType_LinearLight (15)
+        "Hue", // CsmColorBlendType_Hue (16)
+        "Color", // CsmColorBlendType_Color (17)
     ];
 
     /// <summary>
@@ -39,9 +39,9 @@ public struct CsmBlendMode
     /// </summary>
     private static readonly string[] AlphaBlendTypeStrings =
     [
-        "Over",         // CsmAlphaBlendType_Over (0)
-        "Atop",         // CsmAlphaBlendType_Atop (1)
-        "Out",          // CsmAlphaBlendType_Out (2)
+        "Over", // CsmAlphaBlendType_Over (0)
+        "Atop", // CsmAlphaBlendType_Atop (1)
+        "Out", // CsmAlphaBlendType_Out (2)
         "ConjointOver", // CsmAlphaBlendType_ConjointOver (3)
         "DisjointOver", // CsmAlphaBlendType_DisjointOver (4)
     ];
@@ -50,6 +50,7 @@ public struct CsmBlendMode
     /// 颜色混合种类
     /// </summary>
     private int _colorBlendType;
+
     /// <summary>
     /// Alpha 混合种类
     /// </summary>
@@ -68,7 +69,8 @@ public struct CsmBlendMode
     /// 从 blendMode 值生成 (低 8 bit = 颜色, 接下来的 8 bit = Alpha)
     /// </summary>
     /// <param name="blendMode">blendMode 値</param>
-    public CsmBlendMode(int blendMode) : this()
+    public CsmBlendMode(int blendMode)
+        : this()
     {
         SetBlendMode(blendMode);
     }
@@ -80,7 +82,9 @@ public struct CsmBlendMode
     /// <returns>混合名. 未知的值返回空字符串</returns>
     public static string ColorBlendModeToString(int type)
     {
-        return (uint)type < (uint)ColorBlendTypeStrings.Length ? ColorBlendTypeStrings[type] : string.Empty;
+        return (uint)type < (uint)ColorBlendTypeStrings.Length
+            ? ColorBlendTypeStrings[type]
+            : string.Empty;
     }
 
     /// <summary>
@@ -90,7 +94,9 @@ public struct CsmBlendMode
     /// <returns>混合名. 未知的值返回空字符串</returns>
     public static string AlphaBlendModeToString(int type)
     {
-        return (uint)type < (uint)AlphaBlendTypeStrings.Length ? AlphaBlendTypeStrings[type] : string.Empty;
+        return (uint)type < (uint)AlphaBlendTypeStrings.Length
+            ? AlphaBlendTypeStrings[type]
+            : string.Empty;
     }
 
     /// <summary>

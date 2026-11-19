@@ -31,7 +31,7 @@ public sealed class CsmBlendModeTests
         "HardLight",
         "LinearLight",
         "Hue",
-        "Color"
+        "Color",
     ];
 
     private static readonly string[] ExpectedAlphaNames =
@@ -40,7 +40,7 @@ public sealed class CsmBlendModeTests
         "Atop",
         "Out",
         "ConjointOver",
-        "DisjointOver"
+        "DisjointOver",
     ];
 
     /// <summary>

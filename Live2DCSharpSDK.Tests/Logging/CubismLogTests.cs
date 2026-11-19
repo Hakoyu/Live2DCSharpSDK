@@ -210,11 +210,7 @@ public sealed class CubismLogTests
     /// <returns>尚未启动的上下文实例</returns>
     private static CubismContext CreateContext(LogLevel level, LogFunction logFunction)
     {
-        CubismOption option = new()
-        {
-            LogFunction = logFunction,
-            LoggingLevel = level
-        };
+        CubismOption option = new() { LogFunction = logFunction, LoggingLevel = level };
 
         return CubismContext.Create(new TestAllocator(), option);
     }

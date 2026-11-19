@@ -40,10 +40,12 @@ public class CubismImageVulkan(Vk vk)
     /// 当前的 image 布局
     /// </summary>
     public ImageLayout CurrentLayout { get; private set; }
+
     /// <summary>
     /// image 的宽度
     /// </summary>
     public uint Width { get; private set; }
+
     /// <summary>
     /// image 的高度
     /// </summary>
@@ -61,13 +63,20 @@ public class CubismImageVulkan(Vk vk)
     /// <param name="typeFilter">存在内存类型时被设置的位掩码</param>
     /// <param name="properties">内存访问设备时的类型</param>
     /// <returns>内存类型索引, 找不到兼容类型时返回 -1</returns>
-    public unsafe int FindMemoryType(PhysicalDevice physicalDevice, uint typeFilter, MemoryPropertyFlags properties)
+    public unsafe int FindMemoryType(
+        PhysicalDevice physicalDevice,
+        uint typeFilter,
+        MemoryPropertyFlags properties
+    )
     {
         vk.GetPhysicalDeviceMemoryProperties(physicalDevice, out var memProperties);
 
         for (int i = 0; i < memProperties.MemoryTypeCount; i++)
         {
-            if ((typeFilter & (1 << i)) != 0 && (memProperties.MemoryTypes[i].PropertyFlags & properties) == properties)
+            if (
+                (typeFilter & (1 << i)) != 0
+                && (memProperties.MemoryTypes[i].PropertyFlags & properties) == properties
+            )
             {
                 return i;
             }
@@ -90,8 +99,16 @@ public class CubismImageVulkan(Vk vk)
     /// <param name="tiling">tiling 布局设置</param>
     /// <param name="usage">指定 image 用途的位掩码</param>
     /// <returns>成功返回 true, 失败时已回收部分资源并返回 false</returns>
-    public unsafe bool CreateImage(Device device, PhysicalDevice physicalDevice, uint w, uint h,
-                     uint mipLevel, Format format, ImageTiling tiling, ImageUsageFlags usage)
+    public unsafe bool CreateImage(
+        Device device,
+        PhysicalDevice physicalDevice,
+        uint w,
+        uint h,
+        uint mipLevel,
+        Format format,
+        ImageTiling tiling,
+        ImageUsageFlags usage
+    )
     {
         Destroy(device);
 
@@ -117,8 +134,8 @@ public class CubismImageVulkan(Vk vk)
             {
                 Width = w,
                 Height = h,
-                Depth = 1
-            }
+                Depth = 1,
+            },
         };
 
         if (vk.CreateImage(device, ref imageInfo, null, out _image) != Result.Success)
@@ -130,8 +147,11 @@ public class CubismImageVulkan(Vk vk)
 
         vk.GetImageMemoryRequirements(device, _image, out var memRequirements);
 
-        int memoryTypeIndex = FindMemoryType(physicalDevice, memRequirements.MemoryTypeBits,
-            MemoryPropertyFlags.DeviceLocalBit);
+        int memoryTypeIndex = FindMemoryType(
+            physicalDevice,
+            memRequirements.MemoryTypeBits,
+            MemoryPropertyFlags.DeviceLocalBit
+        );
         if (memoryTypeIndex < 0)
         {
             // 找不到兼容内存类型: 先回收已创建的 image, 避免句柄泄漏.
@@ -143,13 +163,17 @@ public class CubismImageVulkan(Vk vk)
         {
             SType = StructureType.MemoryAllocateInfo,
             AllocationSize = memRequirements.Size,
-            MemoryTypeIndex = (uint)memoryTypeIndex
+            MemoryTypeIndex = (uint)memoryTypeIndex,
         };
 
         if (vk.AllocateMemory(device, ref allocInfo, null, out _memory) != Result.Success)
         {
-            CubismLog.Warning("[Live2D Vulkan]failed to allocate image memory ({0}x{1}, {2} bytes).",
-                w, h, memRequirements.Size);
+            CubismLog.Warning(
+                "[Live2D Vulkan]failed to allocate image memory ({0}x{1}, {2} bytes).",
+                w,
+                h,
+                memRequirements.Size
+            );
             _memory = default;
             ReleaseImage(device);
             return false;
@@ -175,7 +199,12 @@ public class CubismImageVulkan(Vk vk)
     /// <param name="aspectFlags">指定视图包含哪些 aspect mask 的位掩码</param>
     /// <param name="mipLevel">mipmap 的层级</param>
     /// <returns>成功返回 true, 失败时 view 句柄保持为空并返回 false</returns>
-    public unsafe bool CreateView(Device device, Format format, ImageAspectFlags aspectFlags, uint mipLevel)
+    public unsafe bool CreateView(
+        Device device,
+        Format format,
+        ImageAspectFlags aspectFlags,
+        uint mipLevel
+    )
     {
         if (_image.Handle == 0)
         {
@@ -189,7 +218,7 @@ public class CubismImageVulkan(Vk vk)
             Image = Image,
             ViewType = ImageViewType.Type2D,
             Format = format,
-            SubresourceRange = new(aspectFlags, 0, mipLevel, 0, 1)
+            SubresourceRange = new(aspectFlags, 0, mipLevel, 0, 1),
         };
 
         if (vk.CreateImageView(device, ref viewInfo, null, out _view) != Result.Success)
@@ -228,7 +257,7 @@ public class CubismImageVulkan(Vk vk)
             MipmapMode = SamplerMipmapMode.Linear,
             MinLod = 0.0f,
             MaxLod = mipLevel,
-            MipLodBias = 0.0f
+            MipLodBias = 0.0f,
         };
 
         if (vk.CreateSampler(device, ref samplerInfo, null, out _sampler) != Result.Success)
@@ -248,7 +277,12 @@ public class CubismImageVulkan(Vk vk)
     /// <param name="newLayout">新的布局</param>
     /// <param name="mipLevels">mipmap 的层级</param>
     /// <param name="aspectMask"></param>
-    public unsafe void SetImageLayout(CommandBuffer commandBuffer, ImageLayout newLayout, uint mipLevels, ImageAspectFlags aspectMask)
+    public unsafe void SetImageLayout(
+        CommandBuffer commandBuffer,
+        ImageLayout newLayout,
+        uint mipLevels,
+        ImageAspectFlags aspectMask
+    )
     {
         var barrier = new ImageMemoryBarrier()
         {
@@ -256,7 +290,7 @@ public class CubismImageVulkan(Vk vk)
             OldLayout = CurrentLayout,
             NewLayout = newLayout,
             Image = Image,
-            SubresourceRange = new(aspectMask, 0, mipLevels, 0, 1)
+            SubresourceRange = new(aspectMask, 0, mipLevels, 0, 1),
         };
 
         var sourceStage = PipelineStageFlags.AllCommandsBit;

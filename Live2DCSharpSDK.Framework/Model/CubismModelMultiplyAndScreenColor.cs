@@ -20,6 +20,7 @@ public class CubismModelMultiplyAndScreenColor
         /// 是否用 SDK 侧的颜色覆盖
         /// </summary>
         public bool IsOverridden;
+
         /// <summary>
         /// 色
         /// </summary>
@@ -39,14 +40,17 @@ public class CubismModelMultiplyAndScreenColor
     /// 模型 (用于获取部件层级与颜色数量)
     /// </summary>
     private readonly CubismModel _model;
+
     /// <summary>
     /// 部件层级(引用 CubismModel 持有的 List, 不要重新赋值).
     /// </summary>
     private readonly List<CubismModelPartInfo> _partsHierarchy;
+
     /// <summary>
     /// 是否覆盖全部乘算色?
     /// </summary>
     private bool _isOverriddenModelMultiplyColors;
+
     /// <summary>
     /// 是否覆盖全部屏幕色?
     /// </summary>
@@ -66,7 +70,10 @@ public class CubismModelMultiplyAndScreenColor
     /// </summary>
     /// <param name="model">Cubism 模型</param>
     /// <param name="partsHierarchy">部件层级 (CubismModel 持有的 List 本身)</param>
-    public CubismModelMultiplyAndScreenColor(CubismModel model, List<CubismModelPartInfo> partsHierarchy)
+    public CubismModelMultiplyAndScreenColor(
+        CubismModel model,
+        List<CubismModelPartInfo> partsHierarchy
+    )
     {
         _model = model;
         _partsHierarchy = partsHierarchy;
@@ -83,7 +90,10 @@ public class CubismModelMultiplyAndScreenColor
     public void Initialize(int partCount, int drawableCount, int offscreenCount)
     {
         // 乗算色
-        var userMultiplyColor = new ColorData(false, new CubismTextureColor(1.0f, 1.0f, 1.0f, 1.0f));
+        var userMultiplyColor = new ColorData(
+            false,
+            new CubismTextureColor(1.0f, 1.0f, 1.0f, 1.0f)
+        );
 
         // 屏幕色
         var userScreenColor = new ColorData(false, new CubismTextureColor(0.0f, 0.0f, 0.0f, 1.0f));
@@ -157,11 +167,21 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (partIndex < 0 || _model.GetPartCount() <= partIndex)
         {
-            WarnIndexOutOfRange(nameof(SetPartMultiplyColorEnabled), partIndex, _model.GetPartCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetPartMultiplyColorEnabled),
+                partIndex,
+                _model.GetPartCount() - 1
+            );
             return;
         }
 
-        SetPartColorEnabled(partIndex, value, _userPartMultiplyColors, _userDrawableMultiplyColors, _userOffscreenMultiplyColors);
+        SetPartColorEnabled(
+            partIndex,
+            value,
+            _userPartMultiplyColors,
+            _userDrawableMultiplyColors,
+            _userOffscreenMultiplyColors
+        );
     }
 
     /// <summary>
@@ -171,7 +191,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (partIndex < 0 || _model.GetPartCount() <= partIndex)
         {
-            WarnIndexOutOfRange(nameof(GetPartMultiplyColorEnabled), partIndex, _model.GetPartCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetPartMultiplyColorEnabled),
+                partIndex,
+                _model.GetPartCount() - 1
+            );
             return false;
         }
 
@@ -185,11 +209,21 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (partIndex < 0 || _model.GetPartCount() <= partIndex)
         {
-            WarnIndexOutOfRange(nameof(SetPartScreenColorEnabled), partIndex, _model.GetPartCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetPartScreenColorEnabled),
+                partIndex,
+                _model.GetPartCount() - 1
+            );
             return;
         }
 
-        SetPartColorEnabled(partIndex, value, _userPartScreenColors, _userDrawableScreenColors, _userOffscreenScreenColors);
+        SetPartColorEnabled(
+            partIndex,
+            value,
+            _userPartScreenColors,
+            _userDrawableScreenColors,
+            _userOffscreenScreenColors
+        );
     }
 
     /// <summary>
@@ -199,7 +233,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (partIndex < 0 || _model.GetPartCount() <= partIndex)
         {
-            WarnIndexOutOfRange(nameof(GetPartScreenColorEnabled), partIndex, _model.GetPartCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetPartScreenColorEnabled),
+                partIndex,
+                _model.GetPartCount() - 1
+            );
             return false;
         }
 
@@ -225,7 +263,16 @@ public class CubismModelMultiplyAndScreenColor
             return;
         }
 
-        SetPartColor(partIndex, r, g, b, a, _userPartMultiplyColors, _userDrawableMultiplyColors, _userOffscreenMultiplyColors);
+        SetPartColor(
+            partIndex,
+            r,
+            g,
+            b,
+            a,
+            _userPartMultiplyColors,
+            _userDrawableMultiplyColors,
+            _userOffscreenMultiplyColors
+        );
     }
 
     /// <summary>
@@ -261,7 +308,16 @@ public class CubismModelMultiplyAndScreenColor
             return;
         }
 
-        SetPartColor(partIndex, r, g, b, a, _userPartScreenColors, _userDrawableScreenColors, _userOffscreenScreenColors);
+        SetPartColor(
+            partIndex,
+            r,
+            g,
+            b,
+            a,
+            _userPartScreenColors,
+            _userDrawableScreenColors,
+            _userOffscreenScreenColors
+        );
     }
 
     /// <summary>
@@ -285,7 +341,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (drawableIndex < 0 || _model.GetDrawableCount() <= drawableIndex)
         {
-            WarnIndexOutOfRange(nameof(SetDrawableMultiplyColorEnabled), drawableIndex, _model.GetDrawableCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetDrawableMultiplyColorEnabled),
+                drawableIndex,
+                _model.GetDrawableCount() - 1
+            );
             return;
         }
 
@@ -299,7 +359,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (drawableIndex < 0 || _model.GetDrawableCount() <= drawableIndex)
         {
-            WarnIndexOutOfRange(nameof(GetDrawableMultiplyColorEnabled), drawableIndex, _model.GetDrawableCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetDrawableMultiplyColorEnabled),
+                drawableIndex,
+                _model.GetDrawableCount() - 1
+            );
             return false;
         }
 
@@ -313,7 +377,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (drawableIndex < 0 || _model.GetDrawableCount() <= drawableIndex)
         {
-            WarnIndexOutOfRange(nameof(SetDrawableScreenColorEnabled), drawableIndex, _model.GetDrawableCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetDrawableScreenColorEnabled),
+                drawableIndex,
+                _model.GetDrawableCount() - 1
+            );
             return;
         }
 
@@ -327,7 +395,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (drawableIndex < 0 || _model.GetDrawableCount() <= drawableIndex)
         {
-            WarnIndexOutOfRange(nameof(GetDrawableScreenColorEnabled), drawableIndex, _model.GetDrawableCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetDrawableScreenColorEnabled),
+                drawableIndex,
+                _model.GetDrawableCount() - 1
+            );
             return false;
         }
 
@@ -345,11 +417,21 @@ public class CubismModelMultiplyAndScreenColor
     /// <summary>
     /// 设置 Drawable 的乘算色.
     /// </summary>
-    public void SetDrawableMultiplyColor(int drawableIndex, float r, float g, float b, float a = 1.0f)
+    public void SetDrawableMultiplyColor(
+        int drawableIndex,
+        float r,
+        float g,
+        float b,
+        float a = 1.0f
+    )
     {
         if (drawableIndex < 0 || _model.GetDrawableCount() <= drawableIndex)
         {
-            WarnIndexOutOfRange(nameof(SetDrawableMultiplyColor), drawableIndex, _model.GetDrawableCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetDrawableMultiplyColor),
+                drawableIndex,
+                _model.GetDrawableCount() - 1
+            );
             return;
         }
 
@@ -367,7 +449,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (drawableIndex < 0 || _model.GetDrawableCount() <= drawableIndex)
         {
-            WarnIndexOutOfRange(nameof(GetDrawableMultiplyColor), drawableIndex, _model.GetDrawableCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetDrawableMultiplyColor),
+                drawableIndex,
+                _model.GetDrawableCount() - 1
+            );
             return new CubismTextureColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
 
@@ -396,7 +482,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (drawableIndex < 0 || _model.GetDrawableCount() <= drawableIndex)
         {
-            WarnIndexOutOfRange(nameof(SetDrawableScreenColor), drawableIndex, _model.GetDrawableCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetDrawableScreenColor),
+                drawableIndex,
+                _model.GetDrawableCount() - 1
+            );
             return;
         }
 
@@ -414,7 +504,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (drawableIndex < 0 || _model.GetDrawableCount() <= drawableIndex)
         {
-            WarnIndexOutOfRange(nameof(GetDrawableScreenColor), drawableIndex, _model.GetDrawableCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetDrawableScreenColor),
+                drawableIndex,
+                _model.GetDrawableCount() - 1
+            );
             return new CubismTextureColor(0.0f, 0.0f, 0.0f, 1.0f);
         }
 
@@ -435,7 +529,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (offscreenIndex < 0 || _model.GetOffscreenCount() <= offscreenIndex)
         {
-            WarnIndexOutOfRange(nameof(SetOffscreenMultiplyColorEnabled), offscreenIndex, _model.GetOffscreenCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetOffscreenMultiplyColorEnabled),
+                offscreenIndex,
+                _model.GetOffscreenCount() - 1
+            );
             return;
         }
 
@@ -449,7 +547,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (offscreenIndex < 0 || _model.GetOffscreenCount() <= offscreenIndex)
         {
-            WarnIndexOutOfRange(nameof(GetOffscreenMultiplyColorEnabled), offscreenIndex, _model.GetOffscreenCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetOffscreenMultiplyColorEnabled),
+                offscreenIndex,
+                _model.GetOffscreenCount() - 1
+            );
             return false;
         }
 
@@ -463,7 +565,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (offscreenIndex < 0 || _model.GetOffscreenCount() <= offscreenIndex)
         {
-            WarnIndexOutOfRange(nameof(SetOffscreenScreenColorEnabled), offscreenIndex, _model.GetOffscreenCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetOffscreenScreenColorEnabled),
+                offscreenIndex,
+                _model.GetOffscreenCount() - 1
+            );
             return;
         }
 
@@ -477,7 +583,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (offscreenIndex < 0 || _model.GetOffscreenCount() <= offscreenIndex)
         {
-            WarnIndexOutOfRange(nameof(GetOffscreenScreenColorEnabled), offscreenIndex, _model.GetOffscreenCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetOffscreenScreenColorEnabled),
+                offscreenIndex,
+                _model.GetOffscreenCount() - 1
+            );
             return false;
         }
 
@@ -495,11 +605,21 @@ public class CubismModelMultiplyAndScreenColor
     /// <summary>
     /// 设置 Offscreen 的乘算色.
     /// </summary>
-    public void SetOffscreenMultiplyColor(int offscreenIndex, float r, float g, float b, float a = 1.0f)
+    public void SetOffscreenMultiplyColor(
+        int offscreenIndex,
+        float r,
+        float g,
+        float b,
+        float a = 1.0f
+    )
     {
         if (offscreenIndex < 0 || _model.GetOffscreenCount() <= offscreenIndex)
         {
-            WarnIndexOutOfRange(nameof(SetOffscreenMultiplyColor), offscreenIndex, _model.GetOffscreenCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetOffscreenMultiplyColor),
+                offscreenIndex,
+                _model.GetOffscreenCount() - 1
+            );
             return;
         }
 
@@ -516,7 +636,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (offscreenIndex < 0 || _model.GetOffscreenCount() <= offscreenIndex)
         {
-            WarnIndexOutOfRange(nameof(GetOffscreenMultiplyColor), offscreenIndex, _model.GetOffscreenCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetOffscreenMultiplyColor),
+                offscreenIndex,
+                _model.GetOffscreenCount() - 1
+            );
             return new CubismTextureColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
 
@@ -541,11 +665,21 @@ public class CubismModelMultiplyAndScreenColor
     /// <summary>
     /// 设置 Offscreen 的屏幕色.
     /// </summary>
-    public void SetOffscreenScreenColor(int offscreenIndex, float r, float g, float b, float a = 1.0f)
+    public void SetOffscreenScreenColor(
+        int offscreenIndex,
+        float r,
+        float g,
+        float b,
+        float a = 1.0f
+    )
     {
         if (offscreenIndex < 0 || _model.GetOffscreenCount() <= offscreenIndex)
         {
-            WarnIndexOutOfRange(nameof(SetOffscreenScreenColor), offscreenIndex, _model.GetOffscreenCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(SetOffscreenScreenColor),
+                offscreenIndex,
+                _model.GetOffscreenCount() - 1
+            );
             return;
         }
 
@@ -562,7 +696,11 @@ public class CubismModelMultiplyAndScreenColor
     {
         if (offscreenIndex < 0 || _model.GetOffscreenCount() <= offscreenIndex)
         {
-            WarnIndexOutOfRange(nameof(GetOffscreenScreenColor), offscreenIndex, _model.GetOffscreenCount() - 1);
+            WarnIndexOutOfRange(
+                nameof(GetOffscreenScreenColor),
+                offscreenIndex,
+                _model.GetOffscreenCount() - 1
+            );
             return new CubismTextureColor(0.0f, 0.0f, 0.0f, 1.0f);
         }
 
@@ -580,10 +718,16 @@ public class CubismModelMultiplyAndScreenColor
     /// 设置部件的颜色 (官方 SetPartColor).
     /// 没有 Offscreen 的部件递归到子级, 有 Offscreen 的部件只反映到该 Offscreen.
     /// </summary>
-    private void SetPartColor(int partIndex, float r, float g, float b, float a,
+    private void SetPartColor(
+        int partIndex,
+        float r,
+        float g,
+        float b,
+        float a,
         ColorData[] partColors,
         ColorData[] drawableColors,
-        ColorData[] offscreenColors)
+        ColorData[] offscreenColors
+    )
     {
         partColors[partIndex].Color.R = r;
         partColors[partIndex].Color.G = g;
@@ -612,7 +756,16 @@ public class CubismModelMultiplyAndScreenColor
                         else
                         {
                             var childPartIndex = objects[i].ObjectIndex;
-                            SetPartColor(childPartIndex, r, g, b, a, partColors, drawableColors, offscreenColors);
+                            SetPartColor(
+                                childPartIndex,
+                                r,
+                                g,
+                                b,
+                                a,
+                                partColors,
+                                drawableColors,
+                                offscreenColors
+                            );
                         }
                     }
                 }
@@ -631,10 +784,13 @@ public class CubismModelMultiplyAndScreenColor
     /// <summary>
     /// 设置部件颜色的覆盖标志 (官方 SetPartColorEnabled).
     /// </summary>
-    private void SetPartColorEnabled(int partIndex, bool value,
+    private void SetPartColorEnabled(
+        int partIndex,
+        bool value,
         ColorData[] partColors,
         ColorData[] drawableColors,
-        ColorData[] offscreenColors)
+        ColorData[] offscreenColors
+    )
     {
         partColors[partIndex].IsOverridden = value;
 
@@ -669,7 +825,13 @@ public class CubismModelMultiplyAndScreenColor
                             partColors[childPartIndex].Color.B = partColors[partIndex].Color.B;
                             partColors[childPartIndex].Color.A = partColors[partIndex].Color.A;
                         }
-                        SetPartColorEnabled(childPartIndex, value, partColors, drawableColors, offscreenColors);
+                        SetPartColorEnabled(
+                            childPartIndex,
+                            value,
+                            partColors,
+                            drawableColors,
+                            offscreenColors
+                        );
                     }
                 }
             }
@@ -693,6 +855,8 @@ public class CubismModelMultiplyAndScreenColor
     /// </summary>
     private static void WarnIndexOutOfRange(string funcName, int index, int range)
     {
-        CubismLog.Warning($"{funcName}() : index is out of range. index = {index}, valid range = [0, {range}].");
+        CubismLog.Warning(
+            $"{funcName}() : index is out of range. index = {index}, valid range = [0, {range}]."
+        );
     }
 }

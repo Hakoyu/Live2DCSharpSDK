@@ -43,7 +43,7 @@ public class FpsTimer
             }
         })
         {
-            Name = "ColorMC_Render_Timer"
+            Name = "ColorMC_Render_Timer",
         }.Start();
     }
 

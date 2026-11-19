@@ -77,9 +77,7 @@ public sealed class CubismContext : IDisposable
     /// <summary>
     /// 构造实例, 不做任何 Core 注册.
     /// </summary>
-    private CubismContext()
-    {
-    }
+    private CubismContext() { }
 
     /// <summary>
     /// 使用指定的内存分配器与配置创建上下文.
@@ -93,19 +91,25 @@ public sealed class CubismContext : IDisposable
     {
         if (allocator is null)
         {
-            throw new ArgumentNullException(nameof(allocator), "CubismContext requires an allocator instance.");
+            throw new ArgumentNullException(
+                nameof(allocator),
+                "CubismContext requires an allocator instance."
+            );
         }
 
         if (option is null)
         {
-            throw new ArgumentNullException(nameof(option), "CubismContext requires an option instance.");
+            throw new ArgumentNullException(
+                nameof(option),
+                "CubismContext requires an option instance."
+            );
         }
 
         return new CubismContext
         {
             _allocator = allocator,
             _option = option,
-            _logLevel = option.LoggingLevel
+            _logLevel = option.LoggingLevel,
         };
     }
 
@@ -113,17 +117,21 @@ public sealed class CubismContext : IDisposable
     /// 当前上下文的内存分配器.
     /// </summary>
     /// <exception cref="InvalidOperationException">上下文没有绑定分配器(未用 Create 创建)或已 Dispose 时抛出</exception>
-    public ICubismAllocator Allocator
-        => _allocator ?? throw new InvalidOperationException(
-            "CubismContext has no allocator. Create the context with CubismContext.Create(allocator, option).");
+    public ICubismAllocator Allocator =>
+        _allocator
+        ?? throw new InvalidOperationException(
+            "CubismContext has no allocator. Create the context with CubismContext.Create(allocator, option)."
+        );
 
     /// <summary>
     /// 当前上下文的配置.
     /// </summary>
     /// <exception cref="InvalidOperationException">上下文没有绑定配置(未用 Create 创建)或已 Dispose 时抛出</exception>
-    public CubismOption Option
-        => _option ?? throw new InvalidOperationException(
-            "CubismContext has no option. Create the context with CubismContext.Create(allocator, option).");
+    public CubismOption Option =>
+        _option
+        ?? throw new InvalidOperationException(
+            "CubismContext has no option. Create the context with CubismContext.Create(allocator, option)."
+        );
 
     /// <summary>
     /// 当前上下文的日志输出级别.
@@ -180,7 +188,9 @@ public sealed class CubismContext : IDisposable
 
         if (_allocator is null)
         {
-            CubismLog.Warning("[Live2D SDK]CubismContext.StartUp() failed, need allocator instance.");
+            CubismLog.Warning(
+                "[Live2D SDK]CubismContext.StartUp() failed, need allocator instance."
+            );
             return;
         }
 
@@ -194,7 +204,9 @@ public sealed class CubismContext : IDisposable
         uint patch = version & 0x0000FFFF;
         uint versionNumber = version;
 
-        CubismLog.Info($"[Live2D SDK]Cubism Core version: {major:#0}.{minor:0}.{patch:0000} ({versionNumber})");
+        CubismLog.Info(
+            $"[Live2D SDK]Cubism Core version: {major:#0}.{minor:0}.{patch:0000} ({versionNumber})"
+        );
         CubismLog.Info("[Live2D SDK]CubismContext.StartUp() is complete.");
     }
 

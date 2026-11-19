@@ -1,6 +1,5 @@
 ﻿using Live2DCSharpSDK.Framework;
 using Silk.NET.Vulkan;
-
 using Buffer = Silk.NET.Vulkan.Buffer;
 
 namespace Live2DCSharpSDK.Vulkan;
@@ -24,14 +23,17 @@ public class CubismBufferVulkan(Vk vk)
     /// 内存
     /// </summary>
     private DeviceMemory _memory;
+
     /// <summary>
     /// 映射区域的地址
     /// </summary>
     private unsafe void* _mapped;
+
     /// <summary>
     /// 已映射的字节数, 0 表示未映射
     /// </summary>
     private ulong _mappedSize;
+
     /// <summary>
     /// buffer 的分配容量, 用于 MemCpy 越界检查
     /// </summary>
@@ -59,14 +61,20 @@ public class CubismBufferVulkan(Vk vk)
     /// <param name="typeFilter">存在内存类型时被设置的位掩码</param>
     /// <param name="properties">内存访问设备时的类型</param>
     /// <returns>内存类型索引, 找不到兼容类型时返回 -1</returns>
-    public unsafe int FindMemoryType(PhysicalDevice physicalDevice, uint typeFilter, MemoryPropertyFlags properties)
+    public unsafe int FindMemoryType(
+        PhysicalDevice physicalDevice,
+        uint typeFilter,
+        MemoryPropertyFlags properties
+    )
     {
         vk.GetPhysicalDeviceMemoryProperties(physicalDevice, out var memProperties);
 
         for (int i = 0; i < memProperties.MemoryTypeCount; i++)
         {
-            if ((typeFilter & (1 << i)) != 0
-                && (memProperties.MemoryTypes[i].PropertyFlags & properties) == properties)
+            if (
+                (typeFilter & (1 << i)) != 0
+                && (memProperties.MemoryTypes[i].PropertyFlags & properties) == properties
+            )
             {
                 return i;
             }
@@ -86,8 +94,13 @@ public class CubismBufferVulkan(Vk vk)
     /// <param name="usage">指定 buffer 用途的位掩码</param>
     /// <param name="properties">内存访问设备时的类型</param>
     /// <returns>成功返回 true, 失败时已回收部分资源并返回 false</returns>
-    public unsafe bool CreateBuffer(Device device, PhysicalDevice physicalDevice, ulong size, BufferUsageFlags usage,
-                      MemoryPropertyFlags properties)
+    public unsafe bool CreateBuffer(
+        Device device,
+        PhysicalDevice physicalDevice,
+        ulong size,
+        BufferUsageFlags usage,
+        MemoryPropertyFlags properties
+    )
     {
         Destroy(device);
 
@@ -102,7 +115,7 @@ public class CubismBufferVulkan(Vk vk)
             SType = StructureType.BufferCreateInfo,
             Size = size,
             Usage = usage,
-            SharingMode = SharingMode.Exclusive
+            SharingMode = SharingMode.Exclusive,
         };
 
         if (vk.CreateBuffer(device, ref bufferInfo, null, out _buffer) != Result.Success)
@@ -114,7 +127,11 @@ public class CubismBufferVulkan(Vk vk)
 
         vk.GetBufferMemoryRequirements(device, _buffer, out var memRequirements);
 
-        int memoryTypeIndex = FindMemoryType(physicalDevice, memRequirements.MemoryTypeBits, properties);
+        int memoryTypeIndex = FindMemoryType(
+            physicalDevice,
+            memRequirements.MemoryTypeBits,
+            properties
+        );
         if (memoryTypeIndex < 0)
         {
             // 找不到兼容内存类型: 先回收已创建的 buffer, 避免句柄泄漏.
@@ -126,12 +143,15 @@ public class CubismBufferVulkan(Vk vk)
         {
             SType = StructureType.MemoryAllocateInfo,
             AllocationSize = memRequirements.Size,
-            MemoryTypeIndex = (uint)memoryTypeIndex
+            MemoryTypeIndex = (uint)memoryTypeIndex,
         };
 
         if (vk.AllocateMemory(device, ref allocInfo, null, out _memory) != Result.Success)
         {
-            CubismLog.Warning("[Live2D Vulkan]failed to allocate buffer memory ({0} bytes).", memRequirements.Size);
+            CubismLog.Warning(
+                "[Live2D Vulkan]failed to allocate buffer memory ({0} bytes).",
+                memRequirements.Size
+            );
             _memory = default;
             ReleaseBuffer(device);
             return false;
@@ -169,17 +189,27 @@ public class CubismBufferVulkan(Vk vk)
 
         if (size != ulong.MaxValue && size > _capacity)
         {
-            CubismLog.Warning("[Live2D Vulkan]map size {0} exceeds buffer capacity {1}.", size, _capacity);
+            CubismLog.Warning(
+                "[Live2D Vulkan]map size {0} exceeds buffer capacity {1}.",
+                size,
+                _capacity
+            );
             return false;
         }
 
         ulong mappedSize = size == ulong.MaxValue ? _capacity : size;
 
-        if (vk.MapMemory(device, _memory, 0, size, 0, ref _mapped) != Result.Success || _mapped is null)
+        if (
+            vk.MapMemory(device, _memory, 0, size, 0, ref _mapped) != Result.Success
+            || _mapped is null
+        )
         {
             // 映射失败时必须让指针保持为空, 否则后续 MemCpy 会写入非法地址.
             _mapped = null;
-            CubismLog.Warning("[Live2D Vulkan]failed to map buffer memory ({0} bytes).", mappedSize);
+            CubismLog.Warning(
+                "[Live2D Vulkan]failed to map buffer memory ({0} bytes).",
+                mappedSize
+            );
             return false;
         }
 
@@ -203,7 +233,11 @@ public class CubismBufferVulkan(Vk vk)
 
         if (size > _mappedSize)
         {
-            CubismLog.Warning("[Live2D Vulkan]memcpy size {0} exceeds mapped size {1}.", size, _mappedSize);
+            CubismLog.Warning(
+                "[Live2D Vulkan]memcpy size {0} exceeds mapped size {1}.",
+                size,
+                _mappedSize
+            );
             return false;
         }
 

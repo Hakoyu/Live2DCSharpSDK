@@ -33,11 +33,15 @@ public class LAppDelegateVulkan : LAppDelegate
         var swapchainManager = VulkanManager.SwapchainManager;
         // 向渲染器传递 vulkanManager 的变量
         CubismRenderer_Vulkan.SetConstantSettings(
-            VulkanManager.Device, VulkanManager.PhysicalDevice,
-            VulkanManager.CommandPool, VulkanManager.GraphicQueue,
-            swapchainManager.Extent, swapchainManager.SwapchainFormat,
+            VulkanManager.Device,
+            VulkanManager.PhysicalDevice,
+            VulkanManager.CommandPool,
+            VulkanManager.GraphicQueue,
+            swapchainManager.Extent,
+            swapchainManager.SwapchainFormat,
             VulkanManager.SurfaceFormat,
-            VulkanManager.GetSwapchainImage(), VulkanManager.GetSwapchainImageView(),
+            VulkanManager.GetSwapchainImage(),
+            VulkanManager.GetSwapchainImageView(),
             VulkanManager.DepthFormat
         );
 
@@ -75,30 +79,55 @@ public class LAppDelegateVulkan : LAppDelegate
 
         if (groups > CubismClippingManager.ClippingMaskMaxCountOnDefault)
         {
-            maskBufferCount = (groups + CubismClippingManager.ClippingMaskMaxCountOnMultiRenderTexture - 1)
+            maskBufferCount =
+                (groups + CubismClippingManager.ClippingMaskMaxCountOnMultiRenderTexture - 1)
                 / CubismClippingManager.ClippingMaskMaxCountOnMultiRenderTexture;
 
             if (maskBufferCount > MaxMaskBufferCount)
             {
-                CubismLog.Warning("[Live2D Vulkan]mask groups ({0}) exceed the supported limit of {1} render textures; fallback to {1}.",
-                    groups, MaxMaskBufferCount);
+                CubismLog.Warning(
+                    "[Live2D Vulkan]mask groups ({0}) exceed the supported limit of {1} render textures; fallback to {1}.",
+                    groups,
+                    MaxMaskBufferCount
+                );
                 maskBufferCount = MaxMaskBufferCount;
             }
         }
 
-        CubismLog.Info("[Live2D Vulkan]maskBufferCount={0} maskGroups={1} drawables={2} offscreens={3}",
-            maskBufferCount, groups, model.GetDrawableCount(), model.GetOffscreenCount());
+        CubismLog.Info(
+            "[Live2D Vulkan]maskBufferCount={0} maskGroups={1} drawables={2} offscreens={3}",
+            maskBufferCount,
+            groups,
+            model.GetDrawableCount(),
+            model.GetOffscreenCount()
+        );
 
         return maskBufferCount;
     }
 
-    public override TextureInfo CreateTexture(LAppModel model, int index, int width, int height, nint data)
+    public override TextureInfo CreateTexture(
+        LAppModel model,
+        int index,
+        int width,
+        int height,
+        nint data
+    )
     {
         _vk.DeviceWaitIdle(VulkanManager.Device);
 
-        return new TextureInfoVulkan(_vk, this, model, VulkanManager.SurfaceFormat, ImageTiling.Optimal,
-                   ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit | ImageUsageFlags.SampledBit,
-                    (uint)width, (uint)height, data);
+        return new TextureInfoVulkan(
+            _vk,
+            this,
+            model,
+            VulkanManager.SurfaceFormat,
+            ImageTiling.Optimal,
+            ImageUsageFlags.TransferSrcBit
+                | ImageUsageFlags.TransferDstBit
+                | ImageUsageFlags.SampledBit,
+            (uint)width,
+            (uint)height,
+            data
+        );
     }
 
     public override void GetWindowSize(out int width, out int height)
@@ -113,7 +142,8 @@ public class LAppDelegateVulkan : LAppDelegate
         CubismRenderer_Vulkan.UpdateSwapchainVariable(
             VulkanManager.SwapchainManager.Extent,
             VulkanManager.GetSwapchainImage(),
-            VulkanManager.GetSwapchainImageView());
+            VulkanManager.GetSwapchainImageView()
+        );
     }
 
     public override void RunPost()

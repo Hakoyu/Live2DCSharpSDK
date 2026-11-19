@@ -43,7 +43,7 @@ public partial class MainWindow : Window
         var cubismOption = new CubismOption()
         {
             LogFunction = Log,
-            LoggingLevel = LAppDefine.CubismLoggingLevel
+            LoggingLevel = LAppDefine.CubismLoggingLevel,
         };
         // 上下文在模型加载前创建并 StartUp, 生命周期交给 delegate(关闭时统一释放).
         _context = CubismContext.Create(cubismAllocator, cubismOption);
@@ -55,14 +55,14 @@ public partial class MainWindow : Window
             MinorVersion = 3,
             // 按设备像素渲染: 高 DPI 下 framebuffer 尺寸 = 控件逻辑尺寸 x 缩放率,
             // 与 Avalonia 宿主的 RenderScaling 口径一致, 避免整幅画面被 WPF 放大而发虚.
-            UseDeviceDpi = true
+            UseDeviceDpi = true,
         };
         GLControl.Start(settings);
         lapp = new LAppDelegateOpenGL(new OpenTKWPFApi(GLControl))
         {
             BGColor = new(0, 1, 0, 1),
             // 上下文交给 delegate 管理, 关闭时由 delegate 统一释放.
-            Context = _context
+            Context = _context,
         };
         // 模型路径不硬编码, 由 App 层的 ModelResourceLocator 解析
         // (上游 sample 直接写死 "F:\\live2d\\Resources", 本仓库改为参数化).
@@ -90,7 +90,9 @@ public partial class MainWindow : Window
     /// 实测: 模型加载完成后, WinExe 宿主进程的 stdout 句柄会失效(Console.WriteLine 抛 "句柄无效"),
     /// 无控制台场景下后续日志全部丢失; 需要排障时用这个文件兜底.
     /// </summary>
-    private static readonly string? LogFilePath = Environment.GetEnvironmentVariable("LIVE2D_LOG_FILE");
+    private static readonly string? LogFilePath = Environment.GetEnvironmentVariable(
+        "LIVE2D_LOG_FILE"
+    );
 
     /// <summary>
     /// 日志输出. 以 WinExe(无控制台)启动时, Console.WriteLine 可能因
@@ -108,7 +110,9 @@ public partial class MainWindow : Window
         {
             // 控制台句柄无效的环境中(例如未重定向启动 WinExe),
             // 会同时出现 IOException / UnauthorizedAccessException, 因此在此吞掉.
-            System.Diagnostics.Debug.WriteLine($"{message} (console write failed: {e.GetType().Name})");
+            System.Diagnostics.Debug.WriteLine(
+                $"{message} (console write failed: {e.GetType().Name})"
+            );
         }
 
         if (LogFilePath is null)
@@ -133,7 +137,9 @@ public partial class MainWindow : Window
         if (_loggedSize is false && GLControl.FrameBufferWidth > 0)
         {
             _loggedSize = true;
-            Log($"[Live2D App]window: logical={GLControl.ActualWidth}x{GLControl.ActualHeight}, framebuffer={GLControl.FrameBufferWidth}x{GLControl.FrameBufferHeight}");
+            Log(
+                $"[Live2D App]window: logical={GLControl.ActualWidth}x{GLControl.ActualHeight}, framebuffer={GLControl.FrameBufferWidth}x{GLControl.FrameBufferHeight}"
+            );
         }
 
         GL.ClearColor(Color4.Blue);
@@ -200,7 +206,9 @@ public partial class MainWindow : Window
                 Thread.Sleep(5);
             }
 
-            Log($"[Live2D App]GLWpfControl framebuffer released: {GLControl.FrameBufferWidth == 0}");
+            Log(
+                $"[Live2D App]GLWpfControl framebuffer released: {GLControl.FrameBufferWidth == 0}"
+            );
 
             context?.MakeNoneCurrent();
 

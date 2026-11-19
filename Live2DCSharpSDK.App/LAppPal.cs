@@ -12,7 +12,9 @@ public static class LAppPal
     /// 多个 delegate 并存时转发目标为最后创建的那个; 该实例释放后不再转发, 读取返回 0, 写入为空操作.
     /// 新代码请直接读取所属 delegate 的 <see cref="LAppDelegate.DeltaTime"/>.
     /// </summary>
-    [Obsolete("LAppPal.DeltaTime is deprecated. Use LAppDelegate.DeltaTime on the owning delegate instance instead.")]
+    [Obsolete(
+        "LAppPal.DeltaTime is deprecated. Use LAppDelegate.DeltaTime on the owning delegate instance instead."
+    )]
     public static float DeltaTime
     {
         get => LAppDelegate.Latest?.DeltaTime ?? 0.0f;

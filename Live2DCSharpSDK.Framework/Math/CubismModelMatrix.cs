@@ -20,6 +20,7 @@ public record CubismModelMatrix : CubismMatrix44
     /// 宽度
     /// </summary>
     private readonly float _width;
+
     /// <summary>
     /// 高度
     /// </summary>

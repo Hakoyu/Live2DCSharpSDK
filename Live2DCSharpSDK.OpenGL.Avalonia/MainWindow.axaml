@@ -1,57 +1,62 @@
 <Window
-    x:Class="Live2DCSharpSDK.Avalonia.MainWindow"
-    xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:pages="using:Live2DCSharpSDK.Avalonia"
-    Title="Live2DCSharpSDK.Avalonia"
-    Width="600"
-    Height="600"
-    d:DesignHeight="600"
-    d:DesignWidth="600"
-    mc:Ignorable="d">
-    <DockPanel>
-        <TextBlock DockPanel.Dock="Top" Text="{Binding #GL.Info}" />
-        <TextBlock DockPanel.Dock="Top" Text="{Binding #GL.Status}" />
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="4">
-            <Button
-                Name="Button1"
-                Width="80"
-                Height="30"
-                Padding="0"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="刷新" />
-            <Button
-                Name="MotionButton"
-                Width="80"
-                Height="30"
-                Padding="0"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="动作" />
-            <Button
-                Name="ExpressionButton"
-                Width="80"
-                Height="30"
-                Padding="0"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="表情" />
-            <Button
-                Name="PhysicsButton"
-                Width="80"
-                Height="30"
-                Padding="0"
-                HorizontalContentAlignment="Center"
-                VerticalContentAlignment="Center"
-                Content="物理 ON" />
-        </StackPanel>
-        <Panel>
-            <pages:OpenGlPageControl Name="GL" />
-            <!-- 输入的接收层. Background 为 null 时不会被命中测试, 因此指定 Transparent -->
-            <Panel Name="GLTop" Background="Transparent" />
-        </Panel>
-    </DockPanel>
+  x:Class="Live2DCSharpSDK.Avalonia.MainWindow"
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:pages="using:Live2DCSharpSDK.Avalonia"
+  Title="Live2DCSharpSDK.Avalonia"
+  Width="600"
+  Height="600"
+  d:DesignHeight="600"
+  d:DesignWidth="600"
+  mc:Ignorable="d"
+>
+  <DockPanel>
+    <TextBlock DockPanel.Dock="Top" Text="{Binding #GL.Info}" />
+    <TextBlock DockPanel.Dock="Top" Text="{Binding #GL.Status}" />
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="4">
+      <Button
+        Name="Button1"
+        Width="80"
+        Height="30"
+        Padding="0"
+        HorizontalContentAlignment="Center"
+        VerticalContentAlignment="Center"
+        Content="刷新"
+      />
+      <Button
+        Name="MotionButton"
+        Width="80"
+        Height="30"
+        Padding="0"
+        HorizontalContentAlignment="Center"
+        VerticalContentAlignment="Center"
+        Content="动作"
+      />
+      <Button
+        Name="ExpressionButton"
+        Width="80"
+        Height="30"
+        Padding="0"
+        HorizontalContentAlignment="Center"
+        VerticalContentAlignment="Center"
+        Content="表情"
+      />
+      <Button
+        Name="PhysicsButton"
+        Width="80"
+        Height="30"
+        Padding="0"
+        HorizontalContentAlignment="Center"
+        VerticalContentAlignment="Center"
+        Content="物理 ON"
+      />
+    </StackPanel>
+    <Panel>
+      <pages:OpenGlPageControl Name="GL" />
+      <!-- 输入的接收层. Background 为 null 时不会被命中测试, 因此指定 Transparent -->
+      <Panel Name="GLTop" Background="Transparent" />
+    </Panel>
+  </DockPanel>
 </Window>

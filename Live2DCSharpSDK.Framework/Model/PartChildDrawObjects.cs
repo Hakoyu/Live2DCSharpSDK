@@ -10,6 +10,7 @@ public class PartChildDrawObjects
     /// 子 Drawable 的索引列表
     /// </summary>
     public List<int> DrawableIndices { get; } = [];
+
     /// <summary>
     /// 子 Offscreen 的索引列表
     /// </summary>

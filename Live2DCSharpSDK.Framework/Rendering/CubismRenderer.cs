@@ -13,18 +13,22 @@ public abstract class CubismRenderer
     /// 纹理各向异性过滤的参数
     /// </summary>
     public float Anisotropy { get; set; }
+
     /// <summary>
     /// 渲染目标的模型
     /// </summary>
     public CubismModel Model { get; private set; }
+
     /// <summary>
     /// 如果已预乘 α 则为 true
     /// </summary>
     public bool IsPremultipliedAlpha { get; set; }
+
     /// <summary>
     /// 如果剔除有效则为 true
     /// </summary>
     public bool IsCulling { get; set; }
+
     /// <summary>
     /// 为 false 时, 汇总绘制遮罩; 为 true 时, 每次绘制部件都重写遮罩
     /// </summary>
@@ -39,6 +43,7 @@ public abstract class CubismRenderer
     /// Offscreen 的宽度 (官方 _modelRenderTargetWidth, 由 SetRenderTargetSize 更新)
     /// </summary>
     protected uint _modelRenderTargetWidth;
+
     /// <summary>
     /// Offscreen 的高度 (官方 _modelRenderTargetHeight, 由 SetRenderTargetSize 更新)
     /// </summary>
@@ -130,17 +135,25 @@ public abstract class CubismRenderer
     /// <param name="alpha">α 通道的值</param>
     public void SetModelColor(float red, float green, float blue, float alpha)
     {
-        if (red < 0.0f) red = 0.0f;
-        else if (red > 1.0f) red = 1.0f;
+        if (red < 0.0f)
+            red = 0.0f;
+        else if (red > 1.0f)
+            red = 1.0f;
 
-        if (green < 0.0f) green = 0.0f;
-        else if (green > 1.0f) green = 1.0f;
+        if (green < 0.0f)
+            green = 0.0f;
+        else if (green > 1.0f)
+            green = 1.0f;
 
-        if (blue < 0.0f) blue = 0.0f;
-        else if (blue > 1.0f) blue = 1.0f;
+        if (blue < 0.0f)
+            blue = 0.0f;
+        else if (blue > 1.0f)
+            blue = 1.0f;
 
-        if (alpha < 0.0f) alpha = 0.0f;
-        else if (alpha > 1.0f) alpha = 1.0f;
+        if (alpha < 0.0f)
+            alpha = 0.0f;
+        else if (alpha > 1.0f)
+            alpha = 1.0f;
 
         ModelColor.R = red;
         ModelColor.G = green;
@@ -176,7 +189,9 @@ public abstract class CubismRenderer
         }
 
         UseHighPrecisionMask = true;
-        CubismLog.Info("[Live2D SDK]This model uses a high-resolution mask because it operates in blend mode.");
+        CubismLog.Info(
+            "[Live2D SDK]This model uses a high-resolution mask because it operates in blend mode."
+        );
     }
 
     /// <summary>

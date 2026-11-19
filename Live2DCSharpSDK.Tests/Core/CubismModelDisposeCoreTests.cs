@@ -37,32 +37,54 @@ public sealed class CubismModelDisposeCoreTests
         {
             moc = new CubismMoc(context, ModelFixtures.ReadBytes(fixture));
             CubismModel model = moc.Model;
-            Assert.AreNotEqual(IntPtr.Zero, model.Model, "The revived model handle must not be null.");
-            Assert.AreEqual(fixture.DrawableCount, model.GetDrawableCount(),
-                $"The live model must report the recorded drawable count for '{relativePath}'.");
+            Assert.AreNotEqual(
+                IntPtr.Zero,
+                model.Model,
+                "The revived model handle must not be null."
+            );
+            Assert.AreEqual(
+                fixture.DrawableCount,
+                model.GetDrawableCount(),
+                $"The live model must report the recorded drawable count for '{relativePath}'."
+            );
 
             for (int round = 1; round <= 3; round++)
             {
                 // 修复前: 第 2 次 Dispose 会对同一块 model 内存再次 DeallocateAligned (double-free).
                 model.Dispose();
 
-                Assert.AreEqual(IntPtr.Zero, model.Model,
-                    $"Dispose #{round} must reset the model handle to zero for '{relativePath}'.");
-                Assert.AreEqual(0, allocator.DoubleFreeCount,
-                    $"Dispose #{round} must not free the model memory twice for '{relativePath}'.");
+                Assert.AreEqual(
+                    IntPtr.Zero,
+                    model.Model,
+                    $"Dispose #{round} must reset the model handle to zero for '{relativePath}'."
+                );
+                Assert.AreEqual(
+                    0,
+                    allocator.DoubleFreeCount,
+                    $"Dispose #{round} must not free the model memory twice for '{relativePath}'."
+                );
 
                 // 此时只应剩下 moc 缓冲区 (moc 尚未 Dispose).
-                Assert.AreEqual(1, allocator.LiveBlockCount,
-                    $"Dispose #{round} must release exactly the model memory for '{relativePath}'.");
+                Assert.AreEqual(
+                    1,
+                    allocator.LiveBlockCount,
+                    $"Dispose #{round} must release exactly the model memory for '{relativePath}'."
+                );
             }
 
             moc.Dispose();
             moc.Dispose();
 
-            Assert.AreEqual(0, allocator.DoubleFreeCount,
-                $"Disposing the moc twice must not free the moc buffer twice for '{relativePath}'.");
-            Assert.AreEqual(0, allocator.LiveBlockCount,
-                $"Disposing the moc must release the moc buffer for '{relativePath}'.");
+            Assert.AreEqual(
+                0,
+                allocator.DoubleFreeCount,
+                $"Disposing the moc twice must not free the moc buffer twice for '{relativePath}'."
+            );
+            Assert.AreEqual(
+                0,
+                allocator.LiveBlockCount,
+                $"Disposing the moc must release the moc buffer for '{relativePath}'."
+            );
         }
         finally
         {
@@ -93,10 +115,16 @@ public sealed class CubismModelDisposeCoreTests
             model.Dispose();
 
             AssertSafeAccessors(model, fixture, drawableId);
-            Assert.AreEqual(0, allocator.DoubleFreeCount,
-                $"Disposing the model must not free any block twice for '{relativePath}'.");
-            Assert.AreEqual(1, allocator.LiveBlockCount,
-                $"Only the moc buffer may stay alive after disposing the model for '{relativePath}'.");
+            Assert.AreEqual(
+                0,
+                allocator.DoubleFreeCount,
+                $"Disposing the model must not free any block twice for '{relativePath}'."
+            );
+            Assert.AreEqual(
+                1,
+                allocator.LiveBlockCount,
+                $"Only the moc buffer may stay alive after disposing the model for '{relativePath}'."
+            );
         }
         finally
         {
@@ -112,84 +140,234 @@ public sealed class CubismModelDisposeCoreTests
     /// <param name="model">已 Dispose 的模型</param>
     /// <param name="fixture">夹具元数据, 仅用于错误消息</param>
     /// <param name="drawableId">Dispose 前记录的第一个 Drawable ID</param>
-    private static void AssertSafeAccessors(CubismModel model, ModelFixtureEntry fixture, string drawableId)
+    private static void AssertSafeAccessors(
+        CubismModel model,
+        ModelFixtureEntry fixture,
+        string drawableId
+    )
     {
         string label = fixture.RelativePath;
-        Assert.AreEqual(IntPtr.Zero, model.Model, $"The disposed model handle must be zero for '{label}'.");
+        Assert.AreEqual(
+            IntPtr.Zero,
+            model.Model,
+            $"The disposed model handle must be zero for '{label}'."
+        );
 
-        Assert.AreEqual(0, model.GetDrawableCount(), $"GetDrawableCount must be safe for '{label}'.");
+        Assert.AreEqual(
+            0,
+            model.GetDrawableCount(),
+            $"GetDrawableCount must be safe for '{label}'."
+        );
         Assert.AreEqual(0, model.GetPartCount(), $"GetPartCount must be safe for '{label}'.");
-        Assert.AreEqual(0, model.GetParameterCount(), $"GetParameterCount must be safe for '{label}'.");
-        Assert.AreEqual(0, model.GetOffscreenCount(), $"GetOffscreenCount must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetCanvasWidthPixel(), $"GetCanvasWidthPixel must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetCanvasHeightPixel(), $"GetCanvasHeightPixel must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetPixelsPerUnit(), $"GetPixelsPerUnit must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetCanvasWidth(), $"GetCanvasWidth must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetCanvasHeight(), $"GetCanvasHeight must be safe for '{label}'.");
+        Assert.AreEqual(
+            0,
+            model.GetParameterCount(),
+            $"GetParameterCount must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0,
+            model.GetOffscreenCount(),
+            $"GetOffscreenCount must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetCanvasWidthPixel(),
+            $"GetCanvasWidthPixel must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetCanvasHeightPixel(),
+            $"GetCanvasHeightPixel must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetPixelsPerUnit(),
+            $"GetPixelsPerUnit must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetCanvasWidth(),
+            $"GetCanvasWidth must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetCanvasHeight(),
+            $"GetCanvasHeight must be safe for '{label}'."
+        );
 
-        Assert.AreEqual(0, model.GetDrawableVertexCount(0), $"GetDrawableVertexCount must be safe for '{label}'.");
-        Assert.AreEqual(0, model.GetDrawableVertexIndexCount(0), $"GetDrawableVertexIndexCount must be safe for '{label}'.");
-        Assert.AreEqual(0, model.GetDrawableTextureIndex(0), $"GetDrawableTextureIndex must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetDrawableOpacity(0), $"GetDrawableOpacity must be safe for '{label}'.");
-        Assert.AreEqual(default(Vector4), model.GetDrawableMultiplyColor(0),
-            $"GetDrawableMultiplyColor must be safe for '{label}'.");
-        Assert.AreEqual(default(Vector4), model.GetDrawableScreenColor(0),
-            $"GetDrawableScreenColor must be safe for '{label}'.");
-        Assert.AreEqual(CubismModel.CubismNoIndex_Parent, model.GetDrawableParentPartIndex(0),
-            $"GetDrawableParentPartIndex must be safe for '{label}'.");
-        Assert.AreEqual(0, model.GetDrawableCulling(0), $"GetDrawableCulling must be safe for '{label}'.");
-        Assert.AreEqual(0, model.GetOffscreenCulling(0), $"GetOffscreenCulling must be safe for '{label}'.");
-        Assert.IsFalse(model.GetDrawableInvertedMask(0), $"GetDrawableInvertedMask must be safe for '{label}'.");
-        Assert.IsFalse(model.GetDrawableDynamicFlagIsVisible(0),
-            $"GetDrawableDynamicFlagIsVisible must be safe for '{label}'.");
-        Assert.IsFalse(model.GetDrawableDynamicFlagVisibilityDidChange(0),
-            $"GetDrawableDynamicFlagVisibilityDidChange must be safe for '{label}'.");
-        Assert.IsFalse(model.GetDrawableDynamicFlagOpacityDidChange(0),
-            $"GetDrawableDynamicFlagOpacityDidChange must be safe for '{label}'.");
-        Assert.IsFalse(model.GetDrawableDynamicFlagDrawOrderDidChange(0),
-            $"GetDrawableDynamicFlagDrawOrderDidChange must be safe for '{label}'.");
-        Assert.IsFalse(model.GetDrawableDynamicFlagRenderOrderDidChange(0),
-            $"GetDrawableDynamicFlagRenderOrderDidChange must be safe for '{label}'.");
-        Assert.IsFalse(model.GetDrawableDynamicFlagVertexPositionsDidChange(0),
-            $"GetDrawableDynamicFlagVertexPositionsDidChange must be safe for '{label}'.");
-        Assert.IsFalse(model.GetDrawableDynamicFlagBlendColorDidChange(0),
-            $"GetDrawableDynamicFlagBlendColorDidChange must be safe for '{label}'.");
-        Assert.AreEqual(1.0f, model.GetOffscreenOpacity(0),
-            $"GetOffscreenOpacity must be safe for '{label}'.");
-        Assert.AreEqual(string.Empty, model.GetOffscreenOwnerId(0),
-            $"GetOffscreenOwnerId must be safe for '{label}'.");
-        Assert.AreEqual(default(Vector4), model.GetOffscreenMultiplyColor(0),
-            $"GetOffscreenMultiplyColor must be safe for '{label}'.");
-        Assert.AreEqual(default(Vector4), model.GetOffscreenScreenColor(0),
-            $"GetOffscreenScreenColor must be safe for '{label}'.");
-        Assert.AreEqual(0, model.GetDrawableBlendModeType(0).GetColorBlendType(),
-            $"GetDrawableBlendModeType must be safe for '{label}'.");
-        Assert.AreEqual(0, model.GetOffscreenBlendModeType(0).GetColorBlendType(),
-            $"GetOffscreenBlendModeType must be safe for '{label}'.");
+        Assert.AreEqual(
+            0,
+            model.GetDrawableVertexCount(0),
+            $"GetDrawableVertexCount must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0,
+            model.GetDrawableVertexIndexCount(0),
+            $"GetDrawableVertexIndexCount must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0,
+            model.GetDrawableTextureIndex(0),
+            $"GetDrawableTextureIndex must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetDrawableOpacity(0),
+            $"GetDrawableOpacity must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            default(Vector4),
+            model.GetDrawableMultiplyColor(0),
+            $"GetDrawableMultiplyColor must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            default(Vector4),
+            model.GetDrawableScreenColor(0),
+            $"GetDrawableScreenColor must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            CubismModel.CubismNoIndex_Parent,
+            model.GetDrawableParentPartIndex(0),
+            $"GetDrawableParentPartIndex must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0,
+            model.GetDrawableCulling(0),
+            $"GetDrawableCulling must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0,
+            model.GetOffscreenCulling(0),
+            $"GetOffscreenCulling must be safe for '{label}'."
+        );
+        Assert.IsFalse(
+            model.GetDrawableInvertedMask(0),
+            $"GetDrawableInvertedMask must be safe for '{label}'."
+        );
+        Assert.IsFalse(
+            model.GetDrawableDynamicFlagIsVisible(0),
+            $"GetDrawableDynamicFlagIsVisible must be safe for '{label}'."
+        );
+        Assert.IsFalse(
+            model.GetDrawableDynamicFlagVisibilityDidChange(0),
+            $"GetDrawableDynamicFlagVisibilityDidChange must be safe for '{label}'."
+        );
+        Assert.IsFalse(
+            model.GetDrawableDynamicFlagOpacityDidChange(0),
+            $"GetDrawableDynamicFlagOpacityDidChange must be safe for '{label}'."
+        );
+        Assert.IsFalse(
+            model.GetDrawableDynamicFlagDrawOrderDidChange(0),
+            $"GetDrawableDynamicFlagDrawOrderDidChange must be safe for '{label}'."
+        );
+        Assert.IsFalse(
+            model.GetDrawableDynamicFlagRenderOrderDidChange(0),
+            $"GetDrawableDynamicFlagRenderOrderDidChange must be safe for '{label}'."
+        );
+        Assert.IsFalse(
+            model.GetDrawableDynamicFlagVertexPositionsDidChange(0),
+            $"GetDrawableDynamicFlagVertexPositionsDidChange must be safe for '{label}'."
+        );
+        Assert.IsFalse(
+            model.GetDrawableDynamicFlagBlendColorDidChange(0),
+            $"GetDrawableDynamicFlagBlendColorDidChange must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            1.0f,
+            model.GetOffscreenOpacity(0),
+            $"GetOffscreenOpacity must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            string.Empty,
+            model.GetOffscreenOwnerId(0),
+            $"GetOffscreenOwnerId must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            default(Vector4),
+            model.GetOffscreenMultiplyColor(0),
+            $"GetOffscreenMultiplyColor must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            default(Vector4),
+            model.GetOffscreenScreenColor(0),
+            $"GetOffscreenScreenColor must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0,
+            model.GetDrawableBlendModeType(0).GetColorBlendType(),
+            $"GetDrawableBlendModeType must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0,
+            model.GetOffscreenBlendModeType(0).GetColorBlendType(),
+            $"GetOffscreenBlendModeType must be safe for '{label}'."
+        );
 
-        Assert.AreEqual(-1, model.GetPartIndex("NoSuchPartV1"), $"GetPartIndex must be safe for '{label}'.");
-        Assert.AreEqual(-1, model.GetParameterIndex("NoSuchParameterV1"),
-            $"GetParameterIndex must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetPartOpacity(0), $"GetPartOpacity must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetParameterValue(0), $"GetParameterValue must be safe for '{label}'.");
-        Assert.AreEqual(0, model.GetParameterType(0), $"GetParameterType must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetParameterMaximumValue(0),
-            $"GetParameterMaximumValue must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetParameterMinimumValue(0),
-            $"GetParameterMinimumValue must be safe for '{label}'.");
-        Assert.AreEqual(0.0f, model.GetParameterDefaultValue(0),
-            $"GetParameterDefaultValue must be safe for '{label}'.");
+        Assert.AreEqual(
+            -1,
+            model.GetPartIndex("NoSuchPartV1"),
+            $"GetPartIndex must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            -1,
+            model.GetParameterIndex("NoSuchParameterV1"),
+            $"GetParameterIndex must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetPartOpacity(0),
+            $"GetPartOpacity must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetParameterValue(0),
+            $"GetParameterValue must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0,
+            model.GetParameterType(0),
+            $"GetParameterType must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetParameterMaximumValue(0),
+            $"GetParameterMaximumValue must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetParameterMinimumValue(0),
+            $"GetParameterMinimumValue must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            0.0f,
+            model.GetParameterDefaultValue(0),
+            $"GetParameterDefaultValue must be safe for '{label}'."
+        );
         Assert.IsFalse(model.IsRepeat(0), $"IsRepeat must be safe for '{label}'.");
-        Assert.IsFalse(model.GetParameterRepeats(0), $"GetParameterRepeats must be safe for '{label}'.");
-        Assert.AreEqual(3.0f, model.GetParameterRepeatValue(0, 3.0f),
-            $"GetParameterRepeatValue must be safe for '{label}'.");
-        Assert.AreEqual(3.0f, model.GetParameterClampValue(0, 3.0f),
-            $"GetParameterClampValue must be safe for '{label}'.");
+        Assert.IsFalse(
+            model.GetParameterRepeats(0),
+            $"GetParameterRepeats must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            3.0f,
+            model.GetParameterRepeatValue(0, 3.0f),
+            $"GetParameterRepeatValue must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            3.0f,
+            model.GetParameterClampValue(0, 3.0f),
+            $"GetParameterClampValue must be safe for '{label}'."
+        );
         Assert.IsFalse(model.IsUsingMasking(), $"IsUsingMasking must be safe for '{label}'.");
-        Assert.IsFalse(model.IsUsingMaskingForOffscreen(),
-            $"IsUsingMaskingForOffscreen must be safe for '{label}'.");
-        Assert.AreEqual(CubismModel.CubismNoIndex_Parent, model.GetPartParentPartIndex(0),
-            $"GetPartParentPartIndex must be safe for '{label}'.");
+        Assert.IsFalse(
+            model.IsUsingMaskingForOffscreen(),
+            $"IsUsingMaskingForOffscreen must be safe for '{label}'."
+        );
+        Assert.AreEqual(
+            CubismModel.CubismNoIndex_Parent,
+            model.GetPartParentPartIndex(0),
+            $"GetPartParentPartIndex must be safe for '{label}'."
+        );
 
         // 指针返回值无法在未启用 unsafe 的测试工程里直接比较; 这些访问器同样有 Model 守卫,
         // 这里至少要求调用不抛异常 (守卫缺失时会读取已释放的 Core 内存).
@@ -206,35 +384,65 @@ public sealed class CubismModelDisposeCoreTests
         model.SetModelOpacity(0.5f);
         model.GetPartChildDrawObjects(0);
 
-        Assert.AreEqual(IntPtr.Zero, model.Model,
-            $"The write accessors must not revive the disposed model for '{label}'.");
-        Assert.AreEqual(0.5f, model.GetModelOpacity(),
-            $"SetModelOpacity must only change managed state after Dispose for '{label}'.");
+        Assert.AreEqual(
+            IntPtr.Zero,
+            model.Model,
+            $"The write accessors must not revive the disposed model for '{label}'."
+        );
+        Assert.AreEqual(
+            0.5f,
+            model.GetModelOpacity(),
+            $"SetModelOpacity must only change managed state after Dispose for '{label}'."
+        );
 
         CubismModelMultiplyAndScreenColor colors = model.GetOverrideMultiplyAndScreenColor();
         CubismTextureColor fallbackColor = colors.GetDrawableMultiplyColor(0);
-        Assert.AreEqual(1.0f, fallbackColor.R,
-            $"The multiply color helper must fall back to white after Dispose for '{label}'.");
-        Assert.AreEqual(1.0f, fallbackColor.G,
-            $"The multiply color helper must fall back to white after Dispose for '{label}'.");
-        Assert.AreEqual(1.0f, fallbackColor.B,
-            $"The multiply color helper must fall back to white after Dispose for '{label}'.");
-        Assert.AreEqual(1.0f, fallbackColor.A,
-            $"The multiply color helper must fall back to white after Dispose for '{label}'.");
+        Assert.AreEqual(
+            1.0f,
+            fallbackColor.R,
+            $"The multiply color helper must fall back to white after Dispose for '{label}'."
+        );
+        Assert.AreEqual(
+            1.0f,
+            fallbackColor.G,
+            $"The multiply color helper must fall back to white after Dispose for '{label}'."
+        );
+        Assert.AreEqual(
+            1.0f,
+            fallbackColor.B,
+            $"The multiply color helper must fall back to white after Dispose for '{label}'."
+        );
+        Assert.AreEqual(
+            1.0f,
+            fallbackColor.A,
+            $"The multiply color helper must fall back to white after Dispose for '{label}'."
+        );
 
         colors.SetPartMultiplyColor(0, 1.0f, 1.0f, 1.0f, 1.0f);
         colors.SetPartMultiplyColorEnabled(0, true);
         colors.SetDrawableScreenColor(0, 0.0f, 0.0f, 0.0f, 1.0f);
         colors.SetOffscreenMultiplyColor(0, 1.0f, 1.0f, 1.0f, 1.0f);
-        Assert.AreEqual(1.0f, colors.GetDrawableMultiplyColor(0).A,
-            $"The multiply color write accessors must be no-ops after Dispose for '{label}'.");
-        Assert.AreEqual(IntPtr.Zero, model.Model,
-            $"The multiply color helpers must not revive the disposed model for '{label}'.");
+        Assert.AreEqual(
+            1.0f,
+            colors.GetDrawableMultiplyColor(0).A,
+            $"The multiply color write accessors must be no-ops after Dispose for '{label}'."
+        );
+        Assert.AreEqual(
+            IntPtr.Zero,
+            model.Model,
+            $"The multiply color helpers must not revive the disposed model for '{label}'."
+        );
 
         // Drawable ID 来自托管列表, Dispose 之后仍然可以查询, 且不会触碰 Core.
-        Assert.IsFalse(string.IsNullOrEmpty(drawableId), "The recorded drawable id must not be empty.");
-        Assert.AreEqual(0, model.GetDrawableIndex(drawableId),
-            $"GetDrawableIndex must read the managed id list after Dispose for '{label}'.");
+        Assert.IsFalse(
+            string.IsNullOrEmpty(drawableId),
+            "The recorded drawable id must not be empty."
+        );
+        Assert.AreEqual(
+            0,
+            model.GetDrawableIndex(drawableId),
+            $"GetDrawableIndex must read the managed id list after Dispose for '{label}'."
+        );
     }
 
     /// <summary>
@@ -263,12 +471,18 @@ public sealed class CubismModelDisposeCoreTests
     /// <param name="model">已 Dispose 的模型</param>
     /// <param name="methodName">访问器名称</param>
     /// <param name="arguments">访问器参数</param>
-    private static void InvokePointerAccessor(CubismModel model, string methodName, params object?[] arguments)
+    private static void InvokePointerAccessor(
+        CubismModel model,
+        string methodName,
+        params object?[] arguments
+    )
     {
         MethodInfo method = typeof(CubismModel).GetMethod(methodName)
             ?? throw new InvalidOperationException($"CubismModel.{methodName} does not exist.");
-        Assert.IsTrue(method.ReturnType.IsPointer,
-            $"CubismModel.{methodName} is expected to return a pointer.");
+        Assert.IsTrue(
+            method.ReturnType.IsPointer,
+            $"CubismModel.{methodName} is expected to return a pointer."
+        );
 
         _ = method.Invoke(model, arguments);
     }

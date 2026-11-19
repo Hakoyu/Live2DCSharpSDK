@@ -13,18 +13,22 @@ public class Descriptor
     /// uniform buffer
     /// </summary>
     public CubismBufferVulkan UniformBuffer;
+
     /// <summary>
     /// descriptor set
     /// </summary>
     public DescriptorSet DescriptorSet;
+
     /// <summary>
     /// descriptor set 是否已更新
     /// </summary>
     public bool IsDescriptorSetUpdated;
+
     /// <summary>
     /// 供被遮罩绘制对象使用的 descriptor set
     /// </summary>
     public DescriptorSet DescriptorSetMasked;
+
     /// <summary>
     /// 供被遮罩绘制对象使用的 descriptor set 是否已更新
     /// </summary>

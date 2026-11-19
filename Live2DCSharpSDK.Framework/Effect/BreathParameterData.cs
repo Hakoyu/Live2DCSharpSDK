@@ -9,18 +9,22 @@ public record BreathParameterData
     /// 与呼吸绑定的参数 ID
     /// </summary>
     public required string ParameterId { get; set; }
+
     /// <summary>
     /// 将呼吸视为正弦波时, 波的偏移量
     /// </summary>
     public float Offset { get; set; }
+
     /// <summary>
     /// 将呼吸视为正弦波时, 波的振幅
     /// </summary>
     public float Peak { get; set; }
+
     /// <summary>
     /// 将呼吸视为正弦波时, 波的周期
     /// </summary>
     public float Cycle { get; set; }
+
     /// <summary>
     /// 参数权重
     /// </summary>

@@ -9,10 +9,12 @@ public record CubismModelUserDataNode
     /// 用户数据的目标类型
     /// </summary>
     public required string TargetType { get; set; }
+
     /// <summary>
     /// 用户数据目标的 ID
     /// </summary>
     public required string TargetId { get; set; }
+
     /// <summary>
     /// 用户数据
     /// </summary>

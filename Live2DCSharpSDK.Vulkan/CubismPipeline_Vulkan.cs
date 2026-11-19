@@ -26,7 +26,6 @@ public class CubismPipeline_Vulkan(Vk vk, Device device) : IDisposable
             return;
         }
 
-
         _pipelineResource = new PipelineResource[ShaderCount];
 
         for (int i = 0; i < ShaderCount; i++)
@@ -41,32 +40,88 @@ public class CubismPipeline_Vulkan(Vk vk, Device device) : IDisposable
         }
 
         // Copy / SetupMask
-        CreatePipelineResource(ShaderNames.Copy, "VertShaderSrcCopy.spv", "FragShaderSrcCopy.spv", descriptorSetLayout);
-        CreatePipelineResource(ShaderNames.SetupMask, "VertShaderSrcSetupMask.spv", "FragShaderSrcSetupMask.spv", descriptorSetLayout);
+        CreatePipelineResource(
+            ShaderNames.Copy,
+            "VertShaderSrcCopy.spv",
+            "FragShaderSrcCopy.spv",
+            descriptorSetLayout
+        );
+        CreatePipelineResource(
+            ShaderNames.SetupMask,
+            "VertShaderSrcSetupMask.spv",
+            "FragShaderSrcSetupMask.spv",
+            descriptorSetLayout
+        );
 
         // 常规(normal)
-        CreatePipelineResource(ShaderNames.Normal, "VertShaderSrc.spv", "FragShaderSrc.spv", descriptorSetLayout);
-        CreatePipelineResource(ShaderNames.NormalMasked, "VertShaderSrcMasked.spv", "FragShaderSrcMask.spv", descriptorSetLayout);
-        CreatePipelineResource(ShaderNames.NormalMaskedInverted, "VertShaderSrcMasked.spv", "FragShaderSrcMaskInverted.spv", descriptorSetLayout);
-        CreatePipelineResource(ShaderNames.NormalPremultipliedAlpha, "VertShaderSrc.spv", "FragShaderSrcPremultipliedAlpha.spv", descriptorSetLayout);
-        CreatePipelineResource(ShaderNames.NormalMaskedPremultipliedAlpha, "VertShaderSrcMasked.spv", "FragShaderSrcMaskPremultipliedAlpha.spv", descriptorSetLayout);
-        CreatePipelineResource(ShaderNames.NormalMaskedInvertedPremultipliedAlpha, "VertShaderSrcMasked.spv", "FragShaderSrcMaskInvertedPremultipliedAlpha.spv", descriptorSetLayout);
+        CreatePipelineResource(
+            ShaderNames.Normal,
+            "VertShaderSrc.spv",
+            "FragShaderSrc.spv",
+            descriptorSetLayout
+        );
+        CreatePipelineResource(
+            ShaderNames.NormalMasked,
+            "VertShaderSrcMasked.spv",
+            "FragShaderSrcMask.spv",
+            descriptorSetLayout
+        );
+        CreatePipelineResource(
+            ShaderNames.NormalMaskedInverted,
+            "VertShaderSrcMasked.spv",
+            "FragShaderSrcMaskInverted.spv",
+            descriptorSetLayout
+        );
+        CreatePipelineResource(
+            ShaderNames.NormalPremultipliedAlpha,
+            "VertShaderSrc.spv",
+            "FragShaderSrcPremultipliedAlpha.spv",
+            descriptorSetLayout
+        );
+        CreatePipelineResource(
+            ShaderNames.NormalMaskedPremultipliedAlpha,
+            "VertShaderSrcMasked.spv",
+            "FragShaderSrcMaskPremultipliedAlpha.spv",
+            descriptorSetLayout
+        );
+        CreatePipelineResource(
+            ShaderNames.NormalMaskedInvertedPremultipliedAlpha,
+            "VertShaderSrcMasked.spv",
+            "FragShaderSrcMaskInvertedPremultipliedAlpha.spv",
+            descriptorSetLayout
+        );
 
         // 加法(shader 与 Normal 共用)
         _pipelineResource[ShaderNames.Add] = _pipelineResource[ShaderNames.Normal];
         _pipelineResource[ShaderNames.AddMasked] = _pipelineResource[ShaderNames.NormalMasked];
-        _pipelineResource[ShaderNames.AddMaskedInverted] = _pipelineResource[ShaderNames.NormalMaskedInverted];
-        _pipelineResource[ShaderNames.AddPremultipliedAlpha] = _pipelineResource[ShaderNames.NormalPremultipliedAlpha];
-        _pipelineResource[ShaderNames.AddMaskedPremultipliedAlpha] = _pipelineResource[ShaderNames.NormalMaskedPremultipliedAlpha];
-        _pipelineResource[ShaderNames.AddMaskedInvertedPremultipliedAlpha] = _pipelineResource[ShaderNames.NormalMaskedInvertedPremultipliedAlpha];
+        _pipelineResource[ShaderNames.AddMaskedInverted] = _pipelineResource[
+            ShaderNames.NormalMaskedInverted
+        ];
+        _pipelineResource[ShaderNames.AddPremultipliedAlpha] = _pipelineResource[
+            ShaderNames.NormalPremultipliedAlpha
+        ];
+        _pipelineResource[ShaderNames.AddMaskedPremultipliedAlpha] = _pipelineResource[
+            ShaderNames.NormalMaskedPremultipliedAlpha
+        ];
+        _pipelineResource[ShaderNames.AddMaskedInvertedPremultipliedAlpha] = _pipelineResource[
+            ShaderNames.NormalMaskedInvertedPremultipliedAlpha
+        ];
 
         // 乘法(shader 与 Normal 共用)
         _pipelineResource[ShaderNames.Mult] = _pipelineResource[ShaderNames.Normal];
         _pipelineResource[ShaderNames.MultMasked] = _pipelineResource[ShaderNames.NormalMasked];
-        _pipelineResource[ShaderNames.MultMaskedInverted] = _pipelineResource[ShaderNames.NormalMaskedInverted];
-        _pipelineResource[ShaderNames.MultPremultipliedAlpha] = _pipelineResource[ShaderNames.NormalPremultipliedAlpha];
-        _pipelineResource[ShaderNames.MultMaskedPremultipliedAlpha] = _pipelineResource[ShaderNames.NormalMaskedPremultipliedAlpha];
-        _pipelineResource[ShaderNames.MultMaskedInvertedPremultipliedAlpha] = _pipelineResource[ShaderNames.NormalMaskedInvertedPremultipliedAlpha];
+        _pipelineResource[ShaderNames.MultMaskedInverted] = _pipelineResource[
+            ShaderNames.NormalMaskedInverted
+        ];
+        _pipelineResource[ShaderNames.MultPremultipliedAlpha] = _pipelineResource[
+            ShaderNames.NormalPremultipliedAlpha
+        ];
+        _pipelineResource[ShaderNames.MultMaskedPremultipliedAlpha] = _pipelineResource[
+            ShaderNames.NormalMaskedPremultipliedAlpha
+        ];
+        _pipelineResource[ShaderNames.MultMaskedInvertedPremultipliedAlpha] = _pipelineResource[
+            ShaderNames.NormalMaskedInvertedPremultipliedAlpha
+        ];
 
         // 按混合模式的组合创建(对应官方 .cpp:690-734)
         // 与官方相同, 从 ShaderNames_NormalAtop(=20) 起以 offset++ 填充 474 个.
@@ -87,43 +142,94 @@ public class CubismPipeline_Vulkan(Vk vk, Device device) : IDisposable
             {
                 string alphaName = CsmBlendMode.AlphaBlendModeToString(alphaBlendType);
 
-                CreatePipelineResource(offset++, "VertShaderSrcBlend.spv",
+                CreatePipelineResource(
+                    offset++,
+                    "VertShaderSrcBlend.spv",
                     "FragShaderSrcBlend" + colorName + alphaName + ".spv",
-                    descriptorSetLayout, colorBlendType, alphaBlendType);
+                    descriptorSetLayout,
+                    colorBlendType,
+                    alphaBlendType
+                );
 
-                CreatePipelineResource(offset++, "VertShaderSrcMaskedBlend.spv",
+                CreatePipelineResource(
+                    offset++,
+                    "VertShaderSrcMaskedBlend.spv",
                     "FragShaderSrcMaskBlend" + colorName + alphaName + ".spv",
-                    descriptorSetLayout, colorBlendType, alphaBlendType);
+                    descriptorSetLayout,
+                    colorBlendType,
+                    alphaBlendType
+                );
 
-                CreatePipelineResource(offset++, "VertShaderSrcMaskedBlend.spv",
+                CreatePipelineResource(
+                    offset++,
+                    "VertShaderSrcMaskedBlend.spv",
                     "FragShaderSrcMaskInvertedBlend" + colorName + alphaName + ".spv",
-                    descriptorSetLayout, colorBlendType, alphaBlendType);
+                    descriptorSetLayout,
+                    colorBlendType,
+                    alphaBlendType
+                );
 
-                CreatePipelineResource(offset++, "VertShaderSrcBlend.spv",
+                CreatePipelineResource(
+                    offset++,
+                    "VertShaderSrcBlend.spv",
                     "FragShaderSrcPremultipliedAlphaBlend" + colorName + alphaName + ".spv",
-                    descriptorSetLayout, colorBlendType, alphaBlendType);
+                    descriptorSetLayout,
+                    colorBlendType,
+                    alphaBlendType
+                );
 
-                CreatePipelineResource(offset++, "VertShaderSrcMaskedBlend.spv",
+                CreatePipelineResource(
+                    offset++,
+                    "VertShaderSrcMaskedBlend.spv",
                     "FragShaderSrcMaskPremultipliedAlphaBlend" + colorName + alphaName + ".spv",
-                    descriptorSetLayout, colorBlendType, alphaBlendType);
+                    descriptorSetLayout,
+                    colorBlendType,
+                    alphaBlendType
+                );
 
-                CreatePipelineResource(offset++, "VertShaderSrcMaskedBlend.spv",
-                    "FragShaderSrcMaskInvertedPremultipliedAlphaBlend" + colorName + alphaName + ".spv",
-                    descriptorSetLayout, colorBlendType, alphaBlendType);
+                CreatePipelineResource(
+                    offset++,
+                    "VertShaderSrcMaskedBlend.spv",
+                    "FragShaderSrcMaskInvertedPremultipliedAlphaBlend"
+                        + colorName
+                        + alphaName
+                        + ".spv",
+                    descriptorSetLayout,
+                    colorBlendType,
+                    alphaBlendType
+                );
             }
         }
 
         if (offset != ShaderCount)
         {
-            CubismLog.Warning("[Vulkan] CreatePipelines offset mismatch: {0} != {1}", offset, ShaderCount);
+            CubismLog.Warning(
+                "[Vulkan] CreatePipelines offset mismatch: {0} != {1}",
+                offset,
+                ShaderCount
+            );
         }
     }
 
-    private void CreatePipelineResource(int shaderName, string vertFileName, string fragFileName,
-        DescriptorSetLayout descriptorSetLayout, int colorBlendMode = -1, int alphaBlendMode = -1)
+    private void CreatePipelineResource(
+        int shaderName,
+        string vertFileName,
+        string fragFileName,
+        DescriptorSetLayout descriptorSetLayout,
+        int colorBlendMode = -1,
+        int alphaBlendMode = -1
+    )
     {
-        _pipelineResource![shaderName].CreateGraphicsPipeline(vertFileName, fragFileName,
-            descriptorSetLayout, shaderName, colorBlendMode, alphaBlendMode);
+        _pipelineResource!
+            [shaderName]
+            .CreateGraphicsPipeline(
+                vertFileName,
+                fragFileName,
+                descriptorSetLayout,
+                shaderName,
+                colorBlendMode,
+                alphaBlendMode
+            );
     }
 
     /// <summary>
@@ -137,7 +243,11 @@ public class CubismPipeline_Vulkan(Vk vk, Device device) : IDisposable
         if (_pipelineResource == null || (uint)shaderIndex >= (uint)ShaderCount)
         {
             // 资源索引越界立即检测.
-            CubismLog.Error("[Vulkan] shaderIndex out of range: {0} (ShaderCount={1})", shaderIndex, ShaderCount);
+            CubismLog.Error(
+                "[Vulkan] shaderIndex out of range: {0} (ShaderCount={1})",
+                shaderIndex,
+                ShaderCount
+            );
             return default;
         }
 
@@ -154,7 +264,11 @@ public class CubismPipeline_Vulkan(Vk vk, Device device) : IDisposable
     {
         if (_pipelineResource == null || (uint)shaderIndex >= (uint)ShaderCount)
         {
-            CubismLog.Error("[Vulkan] shaderIndex out of range: {0} (ShaderCount={1})", shaderIndex, ShaderCount);
+            CubismLog.Error(
+                "[Vulkan] shaderIndex out of range: {0} (ShaderCount={1})",
+                shaderIndex,
+                ShaderCount
+            );
             return default;
         }
 

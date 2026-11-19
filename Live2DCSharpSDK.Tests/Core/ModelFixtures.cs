@@ -37,12 +37,18 @@ internal static class ModelFixtures
     {
         if (string.IsNullOrWhiteSpace(relativePath))
         {
-            throw new ArgumentException("The fixture path must not be empty.", nameof(relativePath));
+            throw new ArgumentException(
+                "The fixture path must not be empty.",
+                nameof(relativePath)
+            );
         }
 
         IReadOnlyDictionary<string, ModelFixtureEntry> entries = LoadEntries();
         entries.TryGetValue(relativePath, out ModelFixtureEntry? entry);
-        Assert.IsNotNull(entry, $"The fixture metadata does not contain an entry for '{relativePath}'.");
+        Assert.IsNotNull(
+            entry,
+            $"The fixture metadata does not contain an entry for '{relativePath}'."
+        );
 
         AssertSha256(entry);
         return entry;
@@ -59,8 +65,9 @@ internal static class ModelFixtures
 
         Assert.IsTrue(
             File.Exists(entry.FullPath),
-            $"The model file '{entry.FullPath}' does not exist. " +
-            $"Check that {GlobalStateFixture.ModelsRootVariable} points to the Cubism SDK Samples/Resources directory.");
+            $"The model file '{entry.FullPath}' does not exist. "
+                + $"Check that {GlobalStateFixture.ModelsRootVariable} points to the Cubism SDK Samples/Resources directory."
+        );
 
         return File.ReadAllBytes(entry.FullPath);
     }
@@ -75,15 +82,19 @@ internal static class ModelFixtures
 
         Assert.IsTrue(
             File.Exists(entry.FullPath),
-            $"The model file '{entry.FullPath}' does not exist. " +
-            $"Check that {GlobalStateFixture.ModelsRootVariable} points to the Cubism SDK Samples/Resources directory.");
+            $"The model file '{entry.FullPath}' does not exist. "
+                + $"Check that {GlobalStateFixture.ModelsRootVariable} points to the Cubism SDK Samples/Resources directory."
+        );
 
-        string actual = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(entry.FullPath)));
+        string actual = Convert.ToHexStringLower(
+            SHA256.HashData(File.ReadAllBytes(entry.FullPath))
+        );
         if (string.Equals(entry.Sha256, actual, StringComparison.OrdinalIgnoreCase) is false)
         {
             Assert.Fail(
-                $"SHA-256 mismatch for '{entry.FullPath}': recorded {entry.Sha256}, actual {actual}. " +
-                "The fixture is not the model recorded in TestData/models.sha256.");
+                $"SHA-256 mismatch for '{entry.FullPath}': recorded {entry.Sha256}, actual {actual}. "
+                    + "The fixture is not the model recorded in TestData/models.sha256."
+            );
         }
     }
 
@@ -94,10 +105,15 @@ internal static class ModelFixtures
     private static IReadOnlyDictionary<string, ModelFixtureEntry> LoadEntries()
     {
         string root = RequireModelsRoot();
-        string metadataPath = Path.Combine(AppContext.BaseDirectory, MetadataDirectoryName, MetadataFileName);
+        string metadataPath = Path.Combine(
+            AppContext.BaseDirectory,
+            MetadataDirectoryName,
+            MetadataFileName
+        );
         Assert.IsTrue(
             File.Exists(metadataPath),
-            $"The fixture metadata file '{metadataPath}' does not exist. Build the test project so that TestData is copied to the output directory.");
+            $"The fixture metadata file '{metadataPath}' does not exist. Build the test project so that TestData is copied to the output directory."
+        );
 
         Dictionary<string, ModelFixtureEntry> entries = new(StringComparer.Ordinal);
         int lineNumber = 0;
@@ -113,7 +129,9 @@ internal static class ModelFixtures
             ModelFixtureEntry entry = ParseEntry(line, metadataPath, lineNumber, root);
             if (entries.ContainsKey(entry.RelativePath))
             {
-                Assert.Fail($"Duplicate fixture entry '{entry.RelativePath}' at {metadataPath}:{lineNumber}.");
+                Assert.Fail(
+                    $"Duplicate fixture entry '{entry.RelativePath}' at {metadataPath}:{lineNumber}."
+                );
             }
 
             entries.Add(entry.RelativePath, entry);
@@ -130,10 +148,18 @@ internal static class ModelFixtures
     /// <param name="lineNumber">行号, 仅用于错误消息</param>
     /// <param name="root">夹具根目录</param>
     /// <returns>夹具条目</returns>
-    private static ModelFixtureEntry ParseEntry(string line, string metadataPath, int lineNumber, string root)
+    private static ModelFixtureEntry ParseEntry(
+        string line,
+        string metadataPath,
+        int lineNumber,
+        string root
+    )
     {
         string[] tokens = line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-        Assert.IsTrue(tokens.Length > 1, $"Invalid fixture metadata at {metadataPath}:{lineNumber}: no key=value pairs.");
+        Assert.IsTrue(
+            tokens.Length > 1,
+            $"Invalid fixture metadata at {metadataPath}:{lineNumber}: no key=value pairs."
+        );
 
         Dictionary<string, string> values = new(StringComparer.Ordinal);
         for (int index = 1; index < tokens.Length; index++)
@@ -141,7 +167,9 @@ internal static class ModelFixtures
             int separator = tokens[index].IndexOf('=');
             if (separator <= 0 || separator == tokens[index].Length - 1)
             {
-                Assert.Fail($"Invalid fixture metadata at {metadataPath}:{lineNumber}: '{tokens[index]}' is not a key=value pair.");
+                Assert.Fail(
+                    $"Invalid fixture metadata at {metadataPath}:{lineNumber}: '{tokens[index]}' is not a key=value pair."
+                );
                 continue;
             }
 
@@ -149,7 +177,10 @@ internal static class ModelFixtures
         }
 
         string relativePath = tokens[0];
-        string fullPath = Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        string fullPath = Path.Combine(
+            root,
+            relativePath.Replace('/', Path.DirectorySeparatorChar)
+        );
         string sha256 = RequireValue(values, "sha256", metadataPath, lineNumber);
         uint mocVersion = ParseUInt32(values, "mocVersion", metadataPath, lineNumber);
         int drawableCount = ParseInt32(values, "drawables", metadataPath, lineNumber);
@@ -165,7 +196,8 @@ internal static class ModelFixtures
             drawableCount,
             partCount,
             parameterCount,
-            offscreenCount);
+            offscreenCount
+        );
     }
 
     /// <summary>
@@ -178,8 +210,9 @@ internal static class ModelFixtures
         if (root is null)
         {
             Assert.Fail(
-                $"The environment variable {GlobalStateFixture.ModelsRootVariable} is not set or does not point to an existing directory. " +
-                "The core tier needs the moc3 fixtures from the Cubism SDK Samples/Resources directory (see TestData/README.md).");
+                $"The environment variable {GlobalStateFixture.ModelsRootVariable} is not set or does not point to an existing directory. "
+                    + "The core tier needs the moc3 fixtures from the Cubism SDK Samples/Resources directory (see TestData/README.md)."
+            );
         }
 
         return root!;
@@ -193,10 +226,18 @@ internal static class ModelFixtures
     /// <param name="metadataPath">元数据文件路径, 仅用于错误消息</param>
     /// <param name="lineNumber">行号, 仅用于错误消息</param>
     /// <returns>键对应的值</returns>
-    private static string RequireValue(Dictionary<string, string> values, string key, string metadataPath, int lineNumber)
+    private static string RequireValue(
+        Dictionary<string, string> values,
+        string key,
+        string metadataPath,
+        int lineNumber
+    )
     {
         values.TryGetValue(key, out string? value);
-        Assert.IsNotNull(value, $"Invalid fixture metadata at {metadataPath}:{lineNumber}: missing '{key}'.");
+        Assert.IsNotNull(
+            value,
+            $"Invalid fixture metadata at {metadataPath}:{lineNumber}: missing '{key}'."
+        );
 
         return value;
     }
@@ -209,12 +250,27 @@ internal static class ModelFixtures
     /// <param name="metadataPath">元数据文件路径, 仅用于错误消息</param>
     /// <param name="lineNumber">行号, 仅用于错误消息</param>
     /// <returns>解析结果</returns>
-    private static uint ParseUInt32(Dictionary<string, string> values, string key, string metadataPath, int lineNumber)
+    private static uint ParseUInt32(
+        Dictionary<string, string> values,
+        string key,
+        string metadataPath,
+        int lineNumber
+    )
     {
         string value = RequireValue(values, key, metadataPath, lineNumber);
-        if (uint.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out uint result) is false)
+        if (
+            uint.TryParse(
+                value,
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out uint result
+            )
+            is false
+        )
         {
-            Assert.Fail($"Invalid fixture metadata at {metadataPath}:{lineNumber}: '{key}' must be an unsigned integer, but was '{value}'.");
+            Assert.Fail(
+                $"Invalid fixture metadata at {metadataPath}:{lineNumber}: '{key}' must be an unsigned integer, but was '{value}'."
+            );
         }
 
         return result;
@@ -228,12 +284,22 @@ internal static class ModelFixtures
     /// <param name="metadataPath">元数据文件路径, 仅用于错误消息</param>
     /// <param name="lineNumber">行号, 仅用于错误消息</param>
     /// <returns>解析结果</returns>
-    private static int ParseInt32(Dictionary<string, string> values, string key, string metadataPath, int lineNumber)
+    private static int ParseInt32(
+        Dictionary<string, string> values,
+        string key,
+        string metadataPath,
+        int lineNumber
+    )
     {
         string value = RequireValue(values, key, metadataPath, lineNumber);
-        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result) is false)
+        if (
+            int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result)
+            is false
+        )
         {
-            Assert.Fail($"Invalid fixture metadata at {metadataPath}:{lineNumber}: '{key}' must be an integer, but was '{value}'.");
+            Assert.Fail(
+                $"Invalid fixture metadata at {metadataPath}:{lineNumber}: '{key}' must be an integer, but was '{value}'."
+            );
         }
 
         return result;

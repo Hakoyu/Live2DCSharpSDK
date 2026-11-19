@@ -11,6 +11,7 @@ public struct ModelVertex
     /// Position
     /// </summary>
     public Vector2 Pos;
+
     /// <summary>
     /// UVs
     /// </summary>
@@ -22,11 +23,13 @@ public struct ModelVertex
         {
             Binding = 0,
             Stride = (uint)Marshal.SizeOf<ModelVertex>(),
-            InputRate = VertexInputRate.Vertex
+            InputRate = VertexInputRate.Vertex,
         };
     }
 
-    public static unsafe void GetAttributeDescriptions(VertexInputAttributeDescription* attributeDescriptions)
+    public static unsafe void GetAttributeDescriptions(
+        VertexInputAttributeDescription* attributeDescriptions
+    )
     {
         attributeDescriptions[0].Binding = 0;
         attributeDescriptions[0].Location = 0;

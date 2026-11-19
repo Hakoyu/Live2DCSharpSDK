@@ -9,8 +9,9 @@ public enum CubismModelObjectType
 {
     /// <summary>Drawable</summary>
     ObjectType_Drawable = 0,
+
     /// <summary>Part</summary>
-    ObjectType_Parts = 1
+    ObjectType_Parts = 1,
 }
 
 /// <summary>
@@ -23,6 +24,7 @@ public struct CubismModelObjectInfo
     /// 对象的类别
     /// </summary>
     public CubismModelObjectType ObjectType;
+
     /// <summary>
     /// 对象的索引
     /// </summary>

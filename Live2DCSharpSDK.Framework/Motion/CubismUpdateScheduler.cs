@@ -52,7 +52,9 @@ public class CubismUpdateScheduler : IDisposable
             return;
         }
 
-        var sorted = _cubismUpdatableList.OrderBy(static updater => updater.ExecutionOrder).ToList();
+        var sorted = _cubismUpdatableList
+            .OrderBy(static updater => updater.ExecutionOrder)
+            .ToList();
 
         _cubismUpdatableList.Clear();
         _cubismUpdatableList.AddRange(sorted);

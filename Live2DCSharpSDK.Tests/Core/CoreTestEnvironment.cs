@@ -23,11 +23,7 @@ internal static class CoreTestEnvironment
     {
         ArgumentNullException.ThrowIfNull(allocator);
 
-        CubismOption option = new()
-        {
-            LogFunction = SilentLog,
-            LoggingLevel = LogLevel.Off
-        };
+        CubismOption option = new() { LogFunction = SilentLog, LoggingLevel = LogLevel.Off };
 
         return CubismContext.Create(allocator, option);
     }

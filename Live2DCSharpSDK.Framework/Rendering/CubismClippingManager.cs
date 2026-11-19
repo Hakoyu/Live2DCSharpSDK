@@ -12,6 +12,7 @@ public abstract class CubismClippingManager
     /// 后端的种类 (既有. 为了判别 OpenGL / Vulkan 而原样保留)
     /// </summary>
     public abstract RenderType RenderType { get; }
+
     /// <summary>
     /// 处理的对象类型(用于区分 Drawable / Offscreen 两个体系).
     /// 官方 R5 通过 Initialize 等参数每次传入, 但本地把 manager 分成 2 套
@@ -19,17 +20,23 @@ public abstract class CubismClippingManager
     /// 默认值为 Drawable (值 0). Offscreen 为值 2 (值 1 已在官方中删除).
     /// </summary>
     public CsmEnum.DrawableObjectType Type { get; set; } = CsmEnum.DrawableObjectType.Drawable;
-    public unsafe abstract CubismClippingContext CreateClippingContext(CubismClippingManager manager,
-        CubismModel model, int* clippingDrawableIndices, int clipCount);
+    public abstract unsafe CubismClippingContext CreateClippingContext(
+        CubismClippingManager manager,
+        CubismModel model,
+        int* clippingDrawableIndices,
+        int clipCount
+    );
 
     /// <summary>
     /// 实验时 1 个通道为 1, 只有 RGB 时为 3, 也包含 Alpha 时为 4
     /// </summary>
     public const int ColorChannelCount = 4;
+
     /// <summary>
     /// 通常每张帧缓冲的最大遮罩数
     /// </summary>
     public const int ClippingMaskMaxCountOnDefault = 36;
+
     /// <summary>
     /// 帧缓冲为 2 张以上时每张帧缓冲的最大遮罩数
     /// </summary>
@@ -39,29 +46,35 @@ public abstract class CubismClippingManager
     /// Offscreen 表面的地址 (官方 T_RenderTarget. R5 中改为 CubismRenderTarget)
     /// </summary>
     protected CubismRenderTarget CurrentMaskBuffer = null!;
+
     /// <summary>
     /// 遮罩清除标志的数组
     /// </summary>
     protected List<bool> ClearedMaskBufferFlags = [];
 
     protected List<CubismTextureColor> ChannelColors = [];
+
     /// <summary>
     /// 遮罩用裁剪上下文的列表
     /// </summary>
     protected List<CubismClippingContext> ClippingContextListForMask = [];
+
     /// <summary>
     /// 绘制用裁剪上下文的列表
     /// </summary>
     public List<CubismClippingContext?> ClippingContextListForDraw { get; init; } = [];
+
     /// <summary>
     /// Offscreen 绘制用裁剪上下文的列表
     /// (官方 _clippingContextListForOffscreen / GetClippingContextListForOffscreen)
     /// </summary>
     public List<CubismClippingContext?> ClippingContextListForOffscreen { get; init; } = [];
+
     /// <summary>
     /// 裁剪遮罩的缓冲区尺寸 (初始值:256)
     /// </summary>
     public Vector2 ClippingMaskBufferSize { get; private set; }
+
     /// <summary>
     /// 要生成的渲染纹理张数
     /// </summary>
@@ -71,18 +84,22 @@ public abstract class CubismClippingManager
     /// 遮罩计算用的矩阵
     /// </summary>
     protected CubismMatrix44 TmpMatrix = new();
+
     /// <summary>
     /// 遮罩计算用的矩阵
     /// </summary>
     protected CubismMatrix44 TmpMatrixForMask = new();
+
     /// <summary>
     /// 遮罩计算用的矩阵
     /// </summary>
     protected CubismMatrix44 TmpMatrixForDraw = new();
+
     /// <summary>
     /// 遮罩配置计算用的矩形
     /// </summary>
     protected RectF TmpBoundsOnModel = new();
+
     /// <summary>
     /// 复用的 MVP 逆矩阵缓冲 (渲染为单线程路径, 避免每帧分配)
     /// </summary>
@@ -132,14 +149,16 @@ public abstract class CubismClippingManager
         int[] objectMaskCounts;
         unsafe
         {
-            objectMaskCounts = Type == CsmEnum.DrawableObjectType.Offscreen
-                ? ToArray(model.GetOffscreenMaskCounts(), model.GetOffscreenCount())
-                : ToArray(model.GetDrawableMaskCounts(), model.GetDrawableCount());
+            objectMaskCounts =
+                Type == CsmEnum.DrawableObjectType.Offscreen
+                    ? ToArray(model.GetOffscreenMaskCounts(), model.GetOffscreenCount())
+                    : ToArray(model.GetDrawableMaskCounts(), model.GetDrawableCount());
         }
 
-        List<CubismClippingContext?> objectClippingContextList = Type == CsmEnum.DrawableObjectType.Offscreen
-            ? ClippingContextListForOffscreen
-            : ClippingContextListForDraw;
+        List<CubismClippingContext?> objectClippingContextList =
+            Type == CsmEnum.DrawableObjectType.Offscreen
+                ? ClippingContextListForOffscreen
+                : ClippingContextListForDraw;
 
         objectCount = objectMaskCounts.Length;
 
@@ -158,9 +177,10 @@ public abstract class CubismClippingManager
             CubismClippingContext? cc;
             unsafe
             {
-                int* masks = Type == CsmEnum.DrawableObjectType.Offscreen
-                    ? model.GetOffscreenMasks()[i]
-                    : model.GetDrawableMasks()[i];
+                int* masks =
+                    Type == CsmEnum.DrawableObjectType.Offscreen
+                        ? model.GetOffscreenMasks()[i]
+                        : model.GetDrawableMasks()[i];
                 cc = FindSameClip(masks, objectMaskCounts[i]);
                 if (cc == null)
                 {
@@ -211,7 +231,8 @@ public abstract class CubismClippingManager
         {
             var cc = ClippingContextListForMask[i];
             int count = cc.ClippingIdCount;
-            if (count != drawableMaskCounts) continue; // 个数不同则为不同对象
+            if (count != drawableMaskCounts)
+                continue; // 个数不同则为不同对象
             int samecount = 0;
 
             // 确认是否持有相同的 ID. 由于数组数量相同, 如果一致的个数相同就认为持有相同的对象.
@@ -253,8 +274,12 @@ public abstract class CubismClippingManager
     /// <param name="isRightHanded">处理是否为右手系</param>
     /// <param name="drawableObjectType">要处理的对象类型</param>
     /// <param name="mvp">MVP 矩阵 (Offscreen 用)</param>
-    public void SetupMatrixForHighPrecision(CubismModel model, bool isRightHanded,
-        CsmEnum.DrawableObjectType drawableObjectType, CubismMatrix44? mvp = null)
+    public void SetupMatrixForHighPrecision(
+        CubismModel model,
+        bool isRightHanded,
+        CsmEnum.DrawableObjectType drawableObjectType,
+        CubismMatrix44? mvp = null
+    )
     {
         // 准备所有的裁剪
         // 使用相同裁剪时(多个时合并为一个裁剪)只设置一次
@@ -337,7 +362,6 @@ public abstract class CubismClippingManager
                 scaleY = ppu / physicalMaskHeight;
             }
 
-
             // 求出生成遮罩时使用的矩阵
             CreateMatrixForMask(isRightHanded, layoutBoundsOnTex01, scaleX, scaleY);
 
@@ -394,9 +418,10 @@ public abstract class CubismClippingManager
         float ty = tr[13];
         float tz = tr[14];
 
-        float det = r00 * (r11 * r22 - r12 * r21) -
-                    r01 * (r10 * r22 - r12 * r20) +
-                    r02 * (r10 * r21 - r11 * r20);
+        float det =
+            r00 * (r11 * r22 - r12 * r21)
+            - r01 * (r10 * r22 - r12 * r20)
+            + r02 * (r10 * r21 - r11 * r20);
 
         if (MathF.Abs(det) < CubismMath.Epsilon)
         {
@@ -443,7 +468,12 @@ public abstract class CubismClippingManager
     /// <param name="layoutBoundsOnTex01">容纳遮罩的区域</param>
     /// <param name="scaleX">绘制对象的伸缩率</param>
     /// <param name="scaleY">绘制对象的伸缩率</param>
-    protected void CreateMatrixForMask(bool isRightHanded, RectF layoutBoundsOnTex01, float scaleX, float scaleY)
+    protected void CreateMatrixForMask(
+        bool isRightHanded,
+        RectF layoutBoundsOnTex01,
+        float scaleX,
+        float scaleY
+    )
     {
         TmpMatrix.LoadIdentity();
         {
@@ -462,7 +492,10 @@ public abstract class CubismClippingManager
 
         TmpMatrix.LoadIdentity();
         {
-            TmpMatrix.TranslateRelative(layoutBoundsOnTex01.X, layoutBoundsOnTex01.Y * (isRightHanded ? -1.0f : 1.0f)); //new = [translate]
+            TmpMatrix.TranslateRelative(
+                layoutBoundsOnTex01.X,
+                layoutBoundsOnTex01.Y * (isRightHanded ? -1.0f : 1.0f)
+            ); //new = [translate]
             TmpMatrix.ScaleRelative(scaleX, scaleY * (isRightHanded ? -1.0f : 1.0f)); //new = [translate][scale]
             TmpMatrix.TranslateRelative(-TmpBoundsOnModel.X, -TmpBoundsOnModel.Y); //new = [translate][scale][translate]
         }
@@ -478,9 +511,10 @@ public abstract class CubismClippingManager
     /// <param name="usingClipCount">要配置的裁剪上下文数量</param>
     protected void SetupLayoutBounds(int usingClipCount)
     {
-        int useClippingMaskMaxCount = RenderTextureCount <= 1
-        ? ClippingMaskMaxCountOnDefault
-        : ClippingMaskMaxCountOnMultiRenderTexture * RenderTextureCount;
+        int useClippingMaskMaxCount =
+            RenderTextureCount <= 1
+                ? ClippingMaskMaxCountOnDefault
+                : ClippingMaskMaxCountOnMultiRenderTexture * RenderTextureCount;
 
         if (usingClipCount <= 0 || usingClipCount > useClippingMaskMaxCount)
         {
@@ -490,8 +524,12 @@ public abstract class CubismClippingManager
                 // 官方 release 语义: 仅记录 + 断言 (CSM_ASSERT 在 release 下不生效), 仍继续渲染.
                 // 本地的 CubismLog.Error 会抛异常导致加载中断, 因此这里降级为 Warning.
                 int count = usingClipCount - useClippingMaskMaxCount;
-                CubismLog.Warning("[Live2D SDK]not supported mask count : {0}\n[Details] render texture count: {1}\n, mask count : {2}"
-                    , count, RenderTextureCount, usingClipCount);
+                CubismLog.Warning(
+                    "[Live2D SDK]not supported mask count : {0}\n[Details] render texture count: {1}\n, mask count : {2}",
+                    count,
+                    RenderTextureCount,
+                    usingClipCount
+                );
             }
 
             // 这种情况下每次清除并使用一个遮罩目标
@@ -523,7 +561,11 @@ public abstract class CubismClippingManager
         // 逐个准备 RGBA 的各通道(0:R , 1:G , 2:B, 3:A, )
         int curClipIndex = 0; // 按顺序设置
 
-        for (int renderTextureIndex = 0; renderTextureIndex < RenderTextureCount; renderTextureIndex++)
+        for (
+            int renderTextureIndex = 0;
+            renderTextureIndex < RenderTextureCount;
+            renderTextureIndex++
+        )
         {
             for (int channelIndex = 0; channelIndex < ColorChannelCount; channelIndex++)
             {
@@ -617,7 +659,9 @@ public abstract class CubismClippingManager
                     int count = usingClipCount - useClippingMaskMaxCount;
 
                     // 开发模式下使其停止
-                    throw new Exception($"not supported mask count : {count}\n[Details] render texture count: {RenderTextureCount}\n, mask count : {usingClipCount}");
+                    throw new Exception(
+                        $"not supported mask count : {count}\n[Details] render texture count: {RenderTextureCount}\n, mask count : {usingClipCount}"
+                    );
                 }
             }
         }
@@ -628,7 +672,10 @@ public abstract class CubismClippingManager
     /// </summary>
     /// <param name="model">模型的实例</param>
     /// <param name="clippingContext">裁剪遮罩的上下文</param>
-    protected unsafe void CalcClippedDrawTotalBounds(CubismModel model, CubismClippingContext clippingContext)
+    protected unsafe void CalcClippedDrawTotalBounds(
+        CubismModel model,
+        CubismClippingContext clippingContext
+    )
     {
         CalcClippedTotalBounds(model, clippingContext, CsmEnum.DrawableObjectType.Drawable);
     }
@@ -640,12 +687,17 @@ public abstract class CubismClippingManager
     /// <param name="model">模型的实例</param>
     /// <param name="clippingContext">裁剪遮罩的上下文</param>
     /// <param name="drawableObjectType">要处理的对象类型</param>
-    protected unsafe void CalcClippedTotalBounds(CubismModel model, CubismClippingContext clippingContext,
-        CsmEnum.DrawableObjectType drawableObjectType)
+    protected unsafe void CalcClippedTotalBounds(
+        CubismModel model,
+        CubismClippingContext clippingContext,
+        CsmEnum.DrawableObjectType drawableObjectType
+    )
     {
         // 被裁剪遮罩(被遮罩的绘制对象)整体的矩形
-        float clippedDrawTotalMinX = float.MaxValue, clippedDrawTotalMinY = float.MaxValue;
-        float clippedDrawTotalMaxX = float.MinValue, clippedDrawTotalMaxY = float.MinValue;
+        float clippedDrawTotalMinX = float.MaxValue,
+            clippedDrawTotalMinY = float.MaxValue;
+        float clippedDrawTotalMaxX = float.MinValue,
+            clippedDrawTotalMaxY = float.MinValue;
 
         // 判定此遮罩是否实际需要
         // 只要使用此裁剪的 "绘制对象" 有一个可用, 就需要生成遮罩
@@ -657,11 +709,21 @@ public abstract class CubismClippingManager
         {
             int clippedOffscreenCount = clippingContext.ClippedOffscreenIndexList.Count;
 
-            for (int clippedOffscreenIndex = 0; clippedOffscreenIndex < clippedOffscreenCount; ++clippedOffscreenIndex)
+            for (
+                int clippedOffscreenIndex = 0;
+                clippedOffscreenIndex < clippedOffscreenCount;
+                ++clippedOffscreenIndex
+            )
             {
                 // 求出使用遮罩的绘制对象被绘制的矩形
-                int offscreenIndex = clippingContext.ClippedOffscreenIndexList[clippedOffscreenIndex];
-                CollectOffscreenChildDrawableIndexList(model, offscreenIndex, clippedOffscreenChildDrawableIndexList);
+                int offscreenIndex = clippingContext.ClippedOffscreenIndexList[
+                    clippedOffscreenIndex
+                ];
+                CollectOffscreenChildDrawableIndexList(
+                    model,
+                    offscreenIndex,
+                    clippedOffscreenChildDrawableIndexList
+                );
             }
 
             clippedDrawCount = clippedOffscreenChildDrawableIndexList.Count;
@@ -671,38 +733,54 @@ public abstract class CubismClippingManager
             clippedDrawCount = clippingContext.ClippedDrawableIndexList.Count;
         }
 
-        for (int clippedObjectIndex = 0; clippedObjectIndex < clippedDrawCount; ++clippedObjectIndex)
+        for (
+            int clippedObjectIndex = 0;
+            clippedObjectIndex < clippedDrawCount;
+            ++clippedObjectIndex
+        )
         {
             // 求出使用遮罩的绘制对象被绘制的矩形
-            int drawableIndex = drawableObjectType == CsmEnum.DrawableObjectType.Offscreen
-                ? clippedOffscreenChildDrawableIndexList[clippedObjectIndex]
-                : clippingContext.ClippedDrawableIndexList[clippedObjectIndex];
+            int drawableIndex =
+                drawableObjectType == CsmEnum.DrawableObjectType.Offscreen
+                    ? clippedOffscreenChildDrawableIndexList[clippedObjectIndex]
+                    : clippingContext.ClippedDrawableIndexList[clippedObjectIndex];
 
             int drawableVertexCount = model.GetDrawableVertexCount(drawableIndex);
             var drawableVertexes = model.GetDrawableVertices(drawableIndex);
 
-            float minX = float.MaxValue, minY = float.MaxValue;
-            float maxX = float.MinValue, maxY = float.MinValue;
+            float minX = float.MaxValue,
+                minY = float.MaxValue;
+            float maxX = float.MinValue,
+                maxY = float.MinValue;
 
             int loop = drawableVertexCount * CubismModel.VertexStep;
             for (int pi = CubismModel.VertexOffset; pi < loop; pi += CubismModel.VertexStep)
             {
                 float x = drawableVertexes[pi];
                 float y = drawableVertexes[pi + 1];
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                if (y < minY) minY = y;
-                if (y > maxY) maxY = y;
+                if (x < minX)
+                    minX = x;
+                if (x > maxX)
+                    maxX = x;
+                if (y < minY)
+                    minY = y;
+                if (y > maxY)
+                    maxY = y;
             }
 
             //
-            if (minX == float.MaxValue) continue; // 没有取到任何有效点, 因此跳过
+            if (minX == float.MaxValue)
+                continue; // 没有取到任何有效点, 因此跳过
 
             // 反映到整体矩形
-            if (minX < clippedDrawTotalMinX) clippedDrawTotalMinX = minX;
-            if (minY < clippedDrawTotalMinY) clippedDrawTotalMinY = minY;
-            if (maxX > clippedDrawTotalMaxX) clippedDrawTotalMaxX = maxX;
-            if (maxY > clippedDrawTotalMaxY) clippedDrawTotalMaxY = maxY;
+            if (minX < clippedDrawTotalMinX)
+                clippedDrawTotalMinX = minX;
+            if (minY < clippedDrawTotalMinY)
+                clippedDrawTotalMinY = minY;
+            if (maxX > clippedDrawTotalMaxX)
+                clippedDrawTotalMaxX = maxX;
+            if (maxY > clippedDrawTotalMaxY)
+                clippedDrawTotalMaxY = maxY;
         }
         if (clippedDrawTotalMinX == float.MaxValue)
         {
@@ -731,7 +809,11 @@ public abstract class CubismClippingManager
     /// <param name="model">模型的实例</param>
     /// <param name="offscreenIndex">Offscreen 的索引</param>
     /// <param name="childDrawableIndexList">目标 drawable 的存放容器</param>
-    public unsafe void CollectOffscreenChildDrawableIndexList(CubismModel model, int offscreenIndex, List<int> childDrawableIndexList)
+    public unsafe void CollectOffscreenChildDrawableIndexList(
+        CubismModel model,
+        int offscreenIndex,
+        List<int> childDrawableIndexList
+    )
     {
         // 获取父对象
         int ownerIndex = model.GetOffscreenOwnerIndices()[offscreenIndex];
@@ -744,16 +826,26 @@ public abstract class CubismClippingManager
     /// <param name="model">模型的实例</param>
     /// <param name="partIndex">部件的索引</param>
     /// <param name="childDrawableIndexList">目标 drawable 的存放容器</param>
-    public void CollectPartChildDrawableIndexList(CubismModel model, int partIndex, List<int> childDrawableIndexList)
+    public void CollectPartChildDrawableIndexList(
+        CubismModel model,
+        int partIndex,
+        List<int> childDrawableIndexList
+    )
     {
-        PartChildDrawObjects childDrawObjects = model.GetPartsHierarchy()[partIndex].ChildDrawObjects;
+        PartChildDrawObjects childDrawObjects = model
+            .GetPartsHierarchy()[partIndex]
+            .ChildDrawObjects;
         for (int i = 0; i < childDrawObjects.DrawableIndices.Count; ++i)
         {
             childDrawableIndexList.Add(childDrawObjects.DrawableIndices[i]);
         }
         for (int i = 0; i < childDrawObjects.OffscreenIndices.Count; ++i)
         {
-            CollectOffscreenChildDrawableIndexList(model, childDrawObjects.OffscreenIndices[i], childDrawableIndexList);
+            CollectOffscreenChildDrawableIndexList(
+                model,
+                childDrawObjects.OffscreenIndices[i],
+                childDrawableIndexList
+            );
         }
     }
 

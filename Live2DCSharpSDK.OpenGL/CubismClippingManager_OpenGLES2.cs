@@ -1,7 +1,7 @@
 using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.Framework.Core;
-using Live2DCSharpSDK.Framework.Model;
 using Live2DCSharpSDK.Framework.Math;
+using Live2DCSharpSDK.Framework.Model;
 using Live2DCSharpSDK.Framework.Rendering;
 using Live2DCSharpSDK.Framework.Type;
 
@@ -9,7 +9,7 @@ namespace Live2DCSharpSDK.OpenGL;
 
 /// <summary>
 /// 执行 Clipping Mask 处理的类
-/// (官方 OpenGL/CubismRenderer_OpenGLES2.hpp:62-76 / .cpp:35-194). 
+/// (官方 OpenGL/CubismRenderer_OpenGLES2.hpp:62-76 / .cpp:35-194).
 /// Drawable / Offscreen 的区分由 manager 的 Type 属性完成.
 /// </summary>
 public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManager
@@ -21,21 +21,30 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
     /// </summary>
     private readonly CubismMatrix44 _invertMvpBuffer = new();
 
-    public override unsafe CubismClippingContext CreateClippingContext(CubismClippingManager manager, CubismModel model,
-        int* clippingDrawableIndices, int clipCount)
+    public override unsafe CubismClippingContext CreateClippingContext(
+        CubismClippingManager manager,
+        CubismModel model,
+        int* clippingDrawableIndices,
+        int clipCount
+    )
     {
         // 派生上下文不接收 model 参数(与基类 / Vulkan 侧保持同形, 详见 CubismClippingContext_OpenGLES2 的 remarks).
         return new CubismClippingContext_OpenGLES2(manager, clippingDrawableIndices, clipCount);
     }
 
     /// <summary>
-    /// 创建 Clipping 上下文. 在模型绘制时执行. 
+    /// 创建 Clipping 上下文. 在模型绘制时执行.
     /// </summary>
     /// <param name="model">模型实例</param>
     /// <param name="renderer">渲染器实例</param>
     /// <param name="lastFBO">帧缓冲</param>
     /// <param name="lastViewport">视口</param>
-    internal unsafe void SetupClippingContext(CubismModel model, CubismRenderer_OpenGLES2 renderer, int lastFBO, int[] lastViewport)
+    internal unsafe void SetupClippingContext(
+        CubismModel model,
+        CubismRenderer_OpenGLES2 renderer,
+        int lastFBO,
+        int[] lastViewport
+    )
     {
         // 准备所有的 Clipping
         // 使用相同 Clip (多个时合并为一个 Clip) 时只设置一次
@@ -60,9 +69,9 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
         }
 
         // 遮罩用渲染目标创建失败时, 不再向该缓冲区绘制任何内容.
-        //      RenderTexture == 0 时若执行 BeginDraw / PreDraw / Clear, BeginDraw 会被忽略, 
-        //      从而对当前绑定的 FBO (画面或父 FBO) 执行 Clear 与 Mask 绘制. 
-        //      因此先选择 RT 有效的第一个缓冲作为初始缓冲 (替代原实现中固定使用缓冲 0 的做法). 
+        //      RenderTexture == 0 时若执行 BeginDraw / PreDraw / Clear, BeginDraw 会被忽略,
+        //      从而对当前绑定的 FBO (画面或父 FBO) 执行 Clear 与 Mask 绘制.
+        //      因此先选择 RT 有效的第一个缓冲作为初始缓冲 (替代原实现中固定使用缓冲 0 的做法).
         int initialBufferIndex = -1;
         for (int clipIndex = 0; clipIndex < ClippingContextListForMask.Count; clipIndex++)
         {
@@ -86,9 +95,10 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
         gl.Viewport(0, 0, (int)ClippingMaskBufferSize.X, (int)ClippingMaskBufferSize.Y);
 
         // 为后续计算设置索引的开头
-        CubismRenderTarget_OpenGLES2 currentMaskBuffer = Type == CsmEnum.DrawableObjectType.Offscreen
-            ? renderer.GetOffscreenMaskBuffer(initialBufferIndex)
-            : renderer.GetDrawableMaskBuffer(initialBufferIndex);
+        CubismRenderTarget_OpenGLES2 currentMaskBuffer =
+            Type == CsmEnum.DrawableObjectType.Offscreen
+                ? renderer.GetOffscreenMaskBuffer(initialBufferIndex)
+                : renderer.GetDrawableMaskBuffer(initialBufferIndex);
         CurrentMaskBuffer = currentMaskBuffer;
 
         // ----- Mask 绘制处理 -----
@@ -136,9 +146,10 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
             float MARGIN = 0.05f;
 
             // 按索引取得 clipContext 中设置的渲染目标
-            CubismRenderTarget_OpenGLES2 maskBuffer = Type == CsmEnum.DrawableObjectType.Offscreen
-                ? renderer.GetOffscreenMaskBuffer(clipContext.BufferIndex)
-                : renderer.GetDrawableMaskBuffer(clipContext.BufferIndex);
+            CubismRenderTarget_OpenGLES2 maskBuffer =
+                Type == CsmEnum.DrawableObjectType.Offscreen
+                    ? renderer.GetOffscreenMaskBuffer(clipContext.BufferIndex)
+                    : renderer.GetDrawableMaskBuffer(clipContext.BufferIndex);
 
             // 当前渲染目标与 clipContext 的不一致时
             if (!ReferenceEquals(currentMaskBuffer, maskBuffer))
@@ -150,13 +161,16 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
                 // 将用于 Mask 的 RenderTexture 设为 active
                 currentMaskBuffer.BeginDraw(lastFBO);
 
-                // 清除缓冲. 
+                // 清除缓冲.
                 renderer.PreDraw();
             }
 
             // 在模型坐标上的矩形上适当添加边距后使用
             TmpBoundsOnModel.SetRect(allClippedDrawRect);
-            TmpBoundsOnModel.Expand(allClippedDrawRect.Width * MARGIN, allClippedDrawRect.Height * MARGIN);
+            TmpBoundsOnModel.Expand(
+                allClippedDrawRect.Width * MARGIN,
+                allClippedDrawRect.Height * MARGIN
+            );
             //########## 本来应使用必要的最小尺寸, 而不是分配区域的全部
             // 求 Shader 用的计算公式. 不考虑旋转时如下
             // movePeriod' = movePeriod * scaleX + offX     [[ movePeriod' = (movePeriod - tmpBoundsOnModel.movePeriod)*scale + layoutBoundsOnTex01.movePeriod ]]
@@ -223,14 +237,23 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
     private CubismMatrix44 CalcInvertMvp(CubismMatrix44 src)
     {
         float[] tr = src.Tr;
-        float r00 = tr[0], r10 = tr[1], r20 = tr[2];
-        float r01 = tr[4], r11 = tr[5], r21 = tr[6];
-        float r02 = tr[8], r12 = tr[9], r22 = tr[10];
-        float tx = tr[12], ty = tr[13], tz = tr[14];
+        float r00 = tr[0],
+            r10 = tr[1],
+            r20 = tr[2];
+        float r01 = tr[4],
+            r11 = tr[5],
+            r21 = tr[6];
+        float r02 = tr[8],
+            r12 = tr[9],
+            r22 = tr[10];
+        float tx = tr[12],
+            ty = tr[13],
+            tz = tr[14];
 
-        float det = r00 * (r11 * r22 - r12 * r21) -
-                    r01 * (r10 * r22 - r12 * r20) +
-                    r02 * (r10 * r21 - r11 * r20);
+        float det =
+            r00 * (r11 * r22 - r12 * r21)
+            - r01 * (r10 * r22 - r12 * r20)
+            + r02 * (r10 * r21 - r11 * r20);
 
         CubismMatrix44 dst = _invertMvpBuffer;
         if (MathF.Abs(det) < CubismMath.Epsilon)
@@ -251,9 +274,18 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
         float inv22 = (r00 * r11 - r01 * r10) * invDet;
 
         float[] d = dst.Tr;
-        d[0] = inv00; d[1] = inv10; d[2] = inv20; d[3] = 0.0f;
-        d[4] = inv01; d[5] = inv11; d[6] = inv21; d[7] = 0.0f;
-        d[8] = inv02; d[9] = inv12; d[10] = inv22; d[11] = 0.0f;
+        d[0] = inv00;
+        d[1] = inv10;
+        d[2] = inv20;
+        d[3] = 0.0f;
+        d[4] = inv01;
+        d[5] = inv11;
+        d[6] = inv21;
+        d[7] = 0.0f;
+        d[8] = inv02;
+        d[9] = inv12;
+        d[10] = inv22;
+        d[11] = 0.0f;
         d[12] = -(inv00 * tx + inv01 * ty + inv02 * tz);
         d[13] = -(inv10 * tx + inv11 * ty + inv12 * tz);
         d[14] = -(inv20 * tx + inv21 * ty + inv22 * tz);

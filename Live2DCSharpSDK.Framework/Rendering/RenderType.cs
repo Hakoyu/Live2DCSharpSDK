@@ -3,5 +3,5 @@
 public enum RenderType
 {
     OpenGL,
-    Vulkan
+    Vulkan,
 }

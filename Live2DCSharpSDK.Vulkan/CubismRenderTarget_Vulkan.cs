@@ -47,9 +47,8 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     /// 无参构造函数.
     /// ICubismOffscreenManager&lt;T&gt; 用 new T() 创建实例, 因此必须提供无参构造(官方同样无参).
     /// </summary>
-    public CubismRenderTarget_Vulkan() : this(Vk.GetApi())
-    {
-    }
+    public CubismRenderTarget_Vulkan()
+        : this(Vk.GetApi()) { }
 
     /// <summary>
     /// 构造函数
@@ -71,7 +70,14 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     /// <param name="a">α(0.0~1.0)</param>
     /// <param name="isClear">是否清除渲染目标(官方 R5 新增参数)</param>
     /// <returns>渲染通道已开启时返回 true, 渲染目标无效时返回 false(后续绘制应跳过)</returns>
-    public unsafe bool BeginDraw(CommandBuffer commandBuffer, float r, float g, float b, float a, bool isClear = true)
+    public unsafe bool BeginDraw(
+        CommandBuffer commandBuffer,
+        float r,
+        float g,
+        float b,
+        float a,
+        bool isClear = true
+    )
     {
         // 渲染通道处于活动状态时跳过(官方 R5)
         if (_isRendering)
@@ -80,14 +86,27 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
         }
 
         // 附件缺失(例如分配失败导致的降级目标)时直接失败, 不再使用未初始化的句柄开启渲染通道.
-        if (_colorImage is null || _depthImage is null
-            || _colorImage.IsValid is false || _depthImage.IsValid is false)
+        if (
+            _colorImage is null
+            || _depthImage is null
+            || _colorImage.IsValid is false
+            || _depthImage.IsValid is false
+        )
         {
-            CubismLog.Warning("[Live2D Vulkan]begin draw on invalid render target ({0}x{1}).", BufferWidth, BufferHeight);
+            CubismLog.Warning(
+                "[Live2D Vulkan]begin draw on invalid render target ({0}x{1}).",
+                BufferWidth,
+                BufferHeight
+            );
             return false;
         }
 
-        _colorImage.SetImageLayout(commandBuffer, ImageLayout.ColorAttachmentOptimal, 1, ImageAspectFlags.ColorBit);
+        _colorImage.SetImageLayout(
+            commandBuffer,
+            ImageLayout.ColorAttachmentOptimal,
+            1,
+            ImageAspectFlags.ColorBit
+        );
 
         var colorAttachment = new RenderingAttachmentInfo
         {
@@ -96,11 +115,15 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
             ImageLayout = ImageLayout.AttachmentOptimalKhr,
             LoadOp = isClear ? AttachmentLoadOp.Clear : AttachmentLoadOp.Load,
             StoreOp = AttachmentStoreOp.Store,
-            ClearValue = new(new(r, g, b, a))
+            ClearValue = new(new(r, g, b, a)),
         };
 
-        _depthImage.SetImageLayout(commandBuffer, ImageLayout.DepthStencilAttachmentOptimal,
-            1, ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit);
+        _depthImage.SetImageLayout(
+            commandBuffer,
+            ImageLayout.DepthStencilAttachmentOptimal,
+            1,
+            ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit
+        );
 
         var depthStencilAttachment = new RenderingAttachmentInfo
         {
@@ -109,7 +132,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
             ImageLayout = ImageLayout.DepthStencilAttachmentOptimal,
             LoadOp = AttachmentLoadOp.Clear,
             StoreOp = AttachmentStoreOp.DontCare,
-            ClearValue = new(new(1.0f, 0.0f))
+            ClearValue = new(new(1.0f, 0.0f)),
         };
 
         var renderingInfo = new RenderingInfo
@@ -119,7 +142,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
             LayerCount = 1,
             ColorAttachmentCount = 1,
             PColorAttachments = &colorAttachment,
-            PDepthAttachment = &depthStencilAttachment
+            PDepthAttachment = &depthStencilAttachment,
         };
 
         _vk.CmdBeginRendering(commandBuffer, ref renderingInfo);
@@ -132,7 +155,10 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     /// </summary>
     /// <param name="commandBuffer">命令缓冲区</param>
     /// <param name="currentLayout">当前的 image 布局(官方 R5 参数)</param>
-    public unsafe void EndDraw(CommandBuffer commandBuffer, ImageLayout currentLayout = ImageLayout.ColorAttachmentOptimal)
+    public unsafe void EndDraw(
+        CommandBuffer commandBuffer,
+        ImageLayout currentLayout = ImageLayout.ColorAttachmentOptimal
+    )
     {
         // 渲染通道未处于活动状态时跳过(官方 R5)
         if (!_isRendering)
@@ -159,11 +185,21 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
             OldLayout = currentLayout,
             NewLayout = ImageLayout.ShaderReadOnlyOptimal,
             Image = _colorImage.Image,
-            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1),
         };
 
-        _vk.CmdPipelineBarrier(commandBuffer, PipelineStageFlags.ColorAttachmentOutputBit,
-                             PipelineStageFlags.FragmentShaderBit, 0, 0, null, 0, null, 1, ref memoryBarrier);
+        _vk.CmdPipelineBarrier(
+            commandBuffer,
+            PipelineStageFlags.ColorAttachmentOutputBit,
+            PipelineStageFlags.FragmentShaderBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref memoryBarrier
+        );
 
         _colorImage.SetCurrentLayout(ImageLayout.ShaderReadOnlyOptimal);
 
@@ -182,11 +218,26 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
         memoryBarrier.OldLayout = ImageLayout.DepthStencilAttachmentOptimal;
         memoryBarrier.NewLayout = ImageLayout.DepthStencilAttachmentOptimal;
         memoryBarrier.Image = _depthImage.Image;
-        memoryBarrier.SubresourceRange = new(ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit, 0, 1, 0, 1);
+        memoryBarrier.SubresourceRange = new(
+            ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit,
+            0,
+            1,
+            0,
+            1
+        );
 
-        _vk.CmdPipelineBarrier(commandBuffer,
+        _vk.CmdPipelineBarrier(
+            commandBuffer,
             PipelineStageFlags.EarlyFragmentTestsBit | PipelineStageFlags.LateFragmentTestsBit,
-            PipelineStageFlags.BottomOfPipeBit, 0, 0, null, 0, null, 1, ref memoryBarrier);
+            PipelineStageFlags.BottomOfPipeBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref memoryBarrier
+        );
 
         _depthImage.SetCurrentLayout(ImageLayout.DepthStencilAttachmentOptimal);
     }
@@ -201,56 +252,109 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
     /// <param name="surfaceFormat">surface 格式</param>
     /// <param name="depthFormat">深度格式</param>
     /// <returns>成功返回 true, 失败时已回收部分资源并返回 false(此时 IsValid() 为 false)</returns>
-    public bool CreateRenderTarget(Device device, PhysicalDevice physicalDevice,
-        uint displayBufferWidth, uint displayBufferHeight, Format surfaceFormat, Format depthFormat)
+    public bool CreateRenderTarget(
+        Device device,
+        PhysicalDevice physicalDevice,
+        uint displayBufferWidth,
+        uint displayBufferHeight,
+        Format surfaceFormat,
+        Format depthFormat
+    )
     {
         DestroyRenderTarget();
 
         if (displayBufferWidth == 0 || displayBufferHeight == 0)
         {
-            CubismLog.Warning("[Live2D Vulkan]create render target with zero extent ({0}x{1}).",
-                displayBufferWidth, displayBufferHeight);
+            CubismLog.Warning(
+                "[Live2D Vulkan]create render target with zero extent ({0}x{1}).",
+                displayBufferWidth,
+                displayBufferHeight
+            );
             return false;
         }
 
         _device = device;
 
         _colorImage = new(_vk);
-        if (_colorImage.CreateImage(device, physicalDevice, displayBufferWidth, displayBufferHeight,
-                                 1, surfaceFormat, ImageTiling.Optimal,
-                                 ImageUsageFlags.ColorAttachmentBit | ImageUsageFlags.SampledBit |
-                                 ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit) is false)
+        if (
+            _colorImage.CreateImage(
+                device,
+                physicalDevice,
+                displayBufferWidth,
+                displayBufferHeight,
+                1,
+                surfaceFormat,
+                ImageTiling.Optimal,
+                ImageUsageFlags.ColorAttachmentBit
+                    | ImageUsageFlags.SampledBit
+                    | ImageUsageFlags.TransferSrcBit
+                    | ImageUsageFlags.TransferDstBit
+            )
+            is false
+        )
         {
-            CubismLog.Warning("[Live2D Vulkan]failed to create render target color image ({0}x{1}).",
-                displayBufferWidth, displayBufferHeight);
+            CubismLog.Warning(
+                "[Live2D Vulkan]failed to create render target color image ({0}x{1}).",
+                displayBufferWidth,
+                displayBufferHeight
+            );
             DestroyRenderTarget();
             return false;
         }
 
-        if (_colorImage.CreateView(device, surfaceFormat, ImageAspectFlags.ColorBit, 1) is false
-            || _colorImage.CreateSampler(device, 1.0f, 1) is false)
+        if (
+            _colorImage.CreateView(device, surfaceFormat, ImageAspectFlags.ColorBit, 1) is false
+            || _colorImage.CreateSampler(device, 1.0f, 1) is false
+        )
         {
-            CubismLog.Warning("[Live2D Vulkan]failed to create render target color image view/sampler ({0}x{1}).",
-                displayBufferWidth, displayBufferHeight);
+            CubismLog.Warning(
+                "[Live2D Vulkan]failed to create render target color image view/sampler ({0}x{1}).",
+                displayBufferWidth,
+                displayBufferHeight
+            );
             DestroyRenderTarget();
             return false;
         }
 
         _depthImage = new(_vk);
-        if (_depthImage.CreateImage(device, physicalDevice, displayBufferWidth, displayBufferHeight,
-                                 1, depthFormat, ImageTiling.Optimal,
-                                ImageUsageFlags.DepthStencilAttachmentBit) is false)
+        if (
+            _depthImage.CreateImage(
+                device,
+                physicalDevice,
+                displayBufferWidth,
+                displayBufferHeight,
+                1,
+                depthFormat,
+                ImageTiling.Optimal,
+                ImageUsageFlags.DepthStencilAttachmentBit
+            )
+            is false
+        )
         {
-            CubismLog.Warning("[Live2D Vulkan]failed to create render target depth image ({0}x{1}).",
-                displayBufferWidth, displayBufferHeight);
+            CubismLog.Warning(
+                "[Live2D Vulkan]failed to create render target depth image ({0}x{1}).",
+                displayBufferWidth,
+                displayBufferHeight
+            );
             DestroyRenderTarget();
             return false;
         }
 
-        if (_depthImage.CreateView(device, depthFormat, ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit, 1) is false)
+        if (
+            _depthImage.CreateView(
+                device,
+                depthFormat,
+                ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit,
+                1
+            )
+            is false
+        )
         {
-            CubismLog.Warning("[Live2D Vulkan]failed to create render target depth image view ({0}x{1}).",
-                displayBufferWidth, displayBufferHeight);
+            CubismLog.Warning(
+                "[Live2D Vulkan]failed to create render target depth image view ({0}x{1}).",
+                displayBufferWidth,
+                displayBufferHeight
+            );
             DestroyRenderTarget();
             return false;
         }

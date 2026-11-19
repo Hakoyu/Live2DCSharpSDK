@@ -5,9 +5,7 @@
 /// 把 drawable 用 / offscreen 用的 2 套 manager 以不依赖类型参数的形式
 /// 用于持有与枚举的公共类型(两套 manager 各持一份时使用).
 /// </summary>
-public abstract class CubismOffscreenManager
-{
-}
+public abstract class CubismOffscreenManager { }
 
 /// <summary>
 /// 管理 Offscreen 用渲染目标的类
@@ -28,6 +26,7 @@ public abstract class ICubismOffscreenManager<T> : CubismOffscreenManager, IDisp
         /// 渲染目标本体
         /// </summary>
         public T RenderTarget = null!;
+
         /// <summary>
         /// 是否使用中 (官方的构造函数中初始化为 true)
         /// </summary>
@@ -38,14 +37,17 @@ public abstract class ICubismOffscreenManager<T> : CubismOffscreenManager, IDisp
     /// Offscreen 绘制用渲染目标的容器列表
     /// </summary>
     private readonly List<CubismRenderTargetContainer> _offscreenRenderTargetList = [];
+
     /// <summary>
     /// 上一次活动渲染目标的最大数量
     /// </summary>
     private uint _previousActiveRenderTextureMaxCount;
+
     /// <summary>
     /// 当前活动渲染目标的数量
     /// </summary>
     private uint _currentActiveRenderTextureCount;
+
     /// <summary>
     /// 是否在本帧中被重置
     /// </summary>
@@ -168,7 +170,8 @@ public abstract class ICubismOffscreenManager<T> : CubismOffscreenManager, IDisp
                     if (!_offscreenRenderTargetList[(int)findPos].IsUsed)
                     {
                         T renderTarget = _offscreenRenderTargetList[(int)findPos].RenderTarget;
-                        _offscreenRenderTargetList[(int)findPos].RenderTarget = _offscreenRenderTargetList[index].RenderTarget;
+                        _offscreenRenderTargetList[(int)findPos].RenderTarget =
+                            _offscreenRenderTargetList[index].RenderTarget;
                         _offscreenRenderTargetList[(int)findPos].IsUsed = true;
                         _offscreenRenderTargetList[index].RenderTarget = renderTarget;
                         _offscreenRenderTargetList[index].IsUsed = false;
@@ -191,7 +194,10 @@ public abstract class ICubismOffscreenManager<T> : CubismOffscreenManager, IDisp
 
         if (resize < (uint)_offscreenRenderTargetList.Count)
         {
-            _offscreenRenderTargetList.RemoveRange((int)resize, _offscreenRenderTargetList.Count - (int)resize);
+            _offscreenRenderTargetList.RemoveRange(
+                (int)resize,
+                _offscreenRenderTargetList.Count - (int)resize
+            );
         }
     }
 
@@ -234,9 +240,10 @@ public abstract class ICubismOffscreenManager<T> : CubismOffscreenManager, IDisp
         ++_currentActiveRenderTextureCount;
 
         // 最大数更新
-        _previousActiveRenderTextureMaxCount = _currentActiveRenderTextureCount > _previousActiveRenderTextureMaxCount
-            ? _currentActiveRenderTextureCount
-            : _previousActiveRenderTextureMaxCount;
+        _previousActiveRenderTextureMaxCount =
+            _currentActiveRenderTextureCount > _previousActiveRenderTextureMaxCount
+                ? _currentActiveRenderTextureCount
+                : _previousActiveRenderTextureMaxCount;
     }
 
     /// <summary>

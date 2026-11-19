@@ -72,7 +72,12 @@ public class OpenTKWPFApi : OpenGLApi
 
     public override void BlendFuncSeparate(int a, int b, int c, int d)
     {
-        GL.BlendFuncSeparate((BlendingFactorSrc)a, (BlendingFactorDest)b, (BlendingFactorSrc)c, (BlendingFactorDest)d);
+        GL.BlendFuncSeparate(
+            (BlendingFactorSrc)a,
+            (BlendingFactorDest)b,
+            (BlendingFactorSrc)c,
+            (BlendingFactorDest)d
+        );
     }
 
     public override void Clear(int bit)
@@ -115,9 +120,31 @@ public class OpenTKWPFApi : OpenGLApi
         GL.DeleteFramebuffer(data);
     }
 
-    public override void BlitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, int mask, int filter)
+    public override void BlitFramebuffer(
+        int srcX0,
+        int srcY0,
+        int srcX1,
+        int srcY1,
+        int dstX0,
+        int dstY0,
+        int dstX1,
+        int dstY1,
+        int mask,
+        int filter
+    )
     {
-        GL.BlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, (ClearBufferMask)mask, (BlitFramebufferFilter)filter);
+        GL.BlitFramebuffer(
+            srcX0,
+            srcY0,
+            srcX1,
+            srcY1,
+            dstX0,
+            dstY0,
+            dstX1,
+            dstY1,
+            (ClearBufferMask)mask,
+            (BlitFramebufferFilter)filter
+        );
     }
 
     public override void DeleteBuffer(int index)
@@ -177,8 +204,13 @@ public class OpenTKWPFApi : OpenGLApi
 
     public override void FramebufferTexture2D(int a, int b, int c, int buff, int offset)
     {
-        GL.FramebufferTexture2D((FramebufferTarget)a, (FramebufferAttachment)b,
-            (TextureTarget)c, buff, offset);
+        GL.FramebufferTexture2D(
+            (FramebufferTarget)a,
+            (FramebufferAttachment)b,
+            (TextureTarget)c,
+            buff,
+            offset
+        );
     }
 
     /// <summary>
@@ -274,9 +306,29 @@ public class OpenTKWPFApi : OpenGLApi
         GL.ShaderSource(a, source);
     }
 
-    public override void TexImage2D(int type, int a, int type1, int w, int h, int size, int type2, int type3, nint data)
+    public override void TexImage2D(
+        int type,
+        int a,
+        int type1,
+        int w,
+        int h,
+        int size,
+        int type2,
+        int type3,
+        nint data
+    )
     {
-        GL.TexImage2D((TextureTarget)type, a, (PixelInternalFormat)type1, w, h, size, (PixelFormat)type2, (PixelType)type3, data);
+        GL.TexImage2D(
+            (TextureTarget)type,
+            a,
+            (PixelInternalFormat)type1,
+            w,
+            h,
+            size,
+            (PixelFormat)type2,
+            (PixelType)type3,
+            data
+        );
     }
 
     public override void TexParameterf(int type, int type1, float value)
@@ -314,7 +366,14 @@ public class OpenTKWPFApi : OpenGLApi
         GL.ValidateProgram(index);
     }
 
-    public override unsafe void VertexAttribPointer(int index, int length, int type, bool b, int size, nint arr)
+    public override unsafe void VertexAttribPointer(
+        int index,
+        int length,
+        int type,
+        bool b,
+        int size,
+        nint arr
+    )
     {
         GL.VertexAttribPointer(index, length, (VertexAttribPointerType)type, b, size, arr);
     }

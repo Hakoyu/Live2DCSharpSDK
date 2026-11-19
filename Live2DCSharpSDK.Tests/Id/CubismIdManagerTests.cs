@@ -27,7 +27,10 @@ public sealed class CubismIdManagerTests
         Assert.AreEqual("ParamAngleX", second);
         Assert.AreEqual("ParamAngleX", third);
         Assert.AreEqual(1, CubismIdManagerProbe.GetRegisteredCount(manager));
-        CollectionAssert.AreEqual(new[] { "ParamAngleX" }, CubismIdManagerProbe.GetRegisteredIds(manager).ToArray());
+        CollectionAssert.AreEqual(
+            new[] { "ParamAngleX" },
+            CubismIdManagerProbe.GetRegisteredIds(manager).ToArray()
+        );
     }
 
     /// <summary>
@@ -44,7 +47,10 @@ public sealed class CubismIdManagerTests
         }
 
         Assert.AreEqual(1, CubismIdManagerProbe.GetRegisteredCount(manager));
-        CollectionAssert.AreEqual(new[] { "ParamEyeLOpen" }, CubismIdManagerProbe.GetRegisteredIds(manager).ToArray());
+        CollectionAssert.AreEqual(
+            new[] { "ParamEyeLOpen" },
+            CubismIdManagerProbe.GetRegisteredIds(manager).ToArray()
+        );
     }
 
     /// <summary>
@@ -63,7 +69,10 @@ public sealed class CubismIdManagerTests
         manager.GetId(second);
 
         Assert.AreEqual(1, CubismIdManagerProbe.GetRegisteredCount(manager));
-        CollectionAssert.AreEqual(new[] { first }, CubismIdManagerProbe.GetRegisteredIds(manager).ToArray());
+        CollectionAssert.AreEqual(
+            new[] { first },
+            CubismIdManagerProbe.GetRegisteredIds(manager).ToArray()
+        );
     }
 
     /// <summary>
@@ -84,8 +93,14 @@ public sealed class CubismIdManagerTests
 
         Assert.AreEqual(1, CubismIdManagerProbe.GetRegisteredCount(first));
         Assert.AreEqual(1, CubismIdManagerProbe.GetRegisteredCount(second));
-        CollectionAssert.AreEqual(new[] { "ParamAngleX" }, CubismIdManagerProbe.GetRegisteredIds(first).ToArray());
-        CollectionAssert.AreEqual(new[] { "ParamAngleY" }, CubismIdManagerProbe.GetRegisteredIds(second).ToArray());
+        CollectionAssert.AreEqual(
+            new[] { "ParamAngleX" },
+            CubismIdManagerProbe.GetRegisteredIds(first).ToArray()
+        );
+        CollectionAssert.AreEqual(
+            new[] { "ParamAngleY" },
+            CubismIdManagerProbe.GetRegisteredIds(second).ToArray()
+        );
     }
 
     /// <summary>
@@ -101,7 +116,8 @@ public sealed class CubismIdManagerTests
         Assert.AreEqual(2, CubismIdManagerProbe.GetRegisteredCount(manager));
         CollectionAssert.AreEqual(
             new[] { "ParamAngleX", "ParamAngleZ" },
-            CubismIdManagerProbe.GetRegisteredIds(manager).ToArray());
+            CubismIdManagerProbe.GetRegisteredIds(manager).ToArray()
+        );
     }
 
     /// <summary>

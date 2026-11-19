@@ -102,11 +102,24 @@ public sealed class ModelSettingObjTests
         ModelSettingObj.FileReference.Motion motion = setting.FileReferences.Motions["Idle"][0];
 
         // 修复前 FadeInTime 会被反序列化成 0, 这两个断言会失败.
-        Assert.AreEqual(-1f, motion.FadeInTime, 0f, "The DTO default must stay -1 (regression: it used to be 0).");
-        Assert.AreEqual(-1f, setting.GetMotionFadeInTimeValue("Idle", 0), 0f,
-            "A missing FadeInTime must be reported as -1.");
-        Assert.AreEqual(-1f, setting.GetMotionFadeOutTimeValue("Idle", 0), 0f,
-            "A missing FadeOutTime must be reported as -1.");
+        Assert.AreEqual(
+            -1f,
+            motion.FadeInTime,
+            0f,
+            "The DTO default must stay -1 (regression: it used to be 0)."
+        );
+        Assert.AreEqual(
+            -1f,
+            setting.GetMotionFadeInTimeValue("Idle", 0),
+            0f,
+            "A missing FadeInTime must be reported as -1."
+        );
+        Assert.AreEqual(
+            -1f,
+            setting.GetMotionFadeOutTimeValue("Idle", 0),
+            0f,
+            "A missing FadeOutTime must be reported as -1."
+        );
     }
 
     /// <summary>
@@ -119,8 +132,12 @@ public sealed class ModelSettingObjTests
         ModelSettingObj.FileReference.Motion motion = setting.FileReferences.Motions["Idle"][0];
 
         Assert.AreEqual(0f, motion.FadeInTime, 0f, "An explicitly recorded 0 must be preserved.");
-        Assert.AreEqual(0f, setting.GetMotionFadeInTimeValue("Idle", 0), 0f,
-            "An explicitly recorded 0 must not fall back to -1.");
+        Assert.AreEqual(
+            0f,
+            setting.GetMotionFadeInTimeValue("Idle", 0),
+            0f,
+            "An explicitly recorded 0 must not fall back to -1."
+        );
     }
 
     /// <summary>
@@ -167,18 +184,40 @@ public sealed class ModelSettingObjTests
 
         ModelSettingObj.FileReference.Motion motion = setting.FileReferences.Motions["Idle"][0];
 
-        Assert.AreEqual("motions/idle.motion3.json", motion.File,
-            "The motion file name must round-trip through the source generated context.");
-        Assert.AreEqual("sounds/idle.wav", motion.Sound,
-            "The motion sound name must round-trip through the source generated context.");
-        Assert.AreEqual(1.5f, motion.FadeInTime, 1e-6f,
-            "An explicit FadeInTime must be parsed verbatim.");
-        Assert.AreEqual(0.75f, motion.FadeOutTime, 1e-6f,
-            "An explicit FadeOutTime must be parsed verbatim.");
-        Assert.AreEqual(1.5f, setting.GetMotionFadeInTimeValue("Idle", 0), 1e-6f,
-            "The accessor must expose the parsed FadeInTime.");
-        Assert.AreEqual(0.75f, setting.GetMotionFadeOutTimeValue("Idle", 0), 1e-6f,
-            "The accessor must expose the parsed FadeOutTime.");
+        Assert.AreEqual(
+            "motions/idle.motion3.json",
+            motion.File,
+            "The motion file name must round-trip through the source generated context."
+        );
+        Assert.AreEqual(
+            "sounds/idle.wav",
+            motion.Sound,
+            "The motion sound name must round-trip through the source generated context."
+        );
+        Assert.AreEqual(
+            1.5f,
+            motion.FadeInTime,
+            1e-6f,
+            "An explicit FadeInTime must be parsed verbatim."
+        );
+        Assert.AreEqual(
+            0.75f,
+            motion.FadeOutTime,
+            1e-6f,
+            "An explicit FadeOutTime must be parsed verbatim."
+        );
+        Assert.AreEqual(
+            1.5f,
+            setting.GetMotionFadeInTimeValue("Idle", 0),
+            1e-6f,
+            "The accessor must expose the parsed FadeInTime."
+        );
+        Assert.AreEqual(
+            0.75f,
+            setting.GetMotionFadeOutTimeValue("Idle", 0),
+            1e-6f,
+            "The accessor must expose the parsed FadeOutTime."
+        );
     }
 
     /// <summary>
@@ -209,9 +248,15 @@ public sealed class ModelSettingObjTests
     /// <returns>反序列化结果</returns>
     private static ModelSettingObj Load(string json)
     {
-        ModelSettingObj? setting = JsonSerializer.Deserialize(json, ModelSettingObjContext.Default.ModelSettingObj);
+        ModelSettingObj? setting = JsonSerializer.Deserialize(
+            json,
+            ModelSettingObjContext.Default.ModelSettingObj
+        );
 
-        return setting ?? throw new InvalidOperationException("The test model settings JSON could not be deserialized.");
+        return setting
+            ?? throw new InvalidOperationException(
+                "The test model settings JSON could not be deserialized."
+            );
     }
 
     /// <summary>
@@ -222,8 +267,12 @@ public sealed class ModelSettingObjTests
     {
         Assert.AreEqual(0, setting.GetMotionCount("Idle"));
         Assert.IsNull(setting.GetMotionFileName("Idle", 0));
-        Assert.AreEqual(-1f, setting.GetMotionFadeInTimeValue("Idle", 0), 0f,
-            "A missing motion must be reported as -1.");
+        Assert.AreEqual(
+            -1f,
+            setting.GetMotionFadeInTimeValue("Idle", 0),
+            0f,
+            "A missing motion must be reported as -1."
+        );
         Assert.IsFalse(setting.IsExistEyeBlinkParameters());
         Assert.IsFalse(setting.IsExistLipSyncParameters());
     }

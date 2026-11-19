@@ -11,14 +11,17 @@ public class CubismModel : IDisposable
     /// 不存在父级时的索引值
     /// </summary>
     public const int CubismNoIndex_Parent = -1;
+
     /// <summary>
     /// 引用的 Offscreen 不存在时的索引值
     /// </summary>
     public const int CubismNoIndex_Offscreen = -1;
+
     /// <summary>
     /// 网格顶点的偏移值
     /// </summary>
     public const int VertexOffset = 0;
+
     /// <summary>
     /// 网格顶点的步进值
     /// </summary>
@@ -33,6 +36,7 @@ public class CubismModel : IDisposable
         /// 是否用 SDK 侧的设置覆盖
         /// </summary>
         public bool IsOverridden;
+
         /// <summary>
         /// 剔除信息 (0: 无效 / 1: 有效)
         /// </summary>
@@ -57,6 +61,7 @@ public class CubismModel : IDisposable
         /// 是否用 SDK 侧的设置覆盖
         /// </summary>
         public bool IsOverridden;
+
         /// <summary>
         /// 是否重复
         /// </summary>
@@ -90,38 +95,47 @@ public class CubismModel : IDisposable
     /// 不存在的部件的透明度列表
     /// </summary>
     protected readonly Dictionary<int, float> _notExistPartOpacities = [];
+
     /// <summary>
     /// 不存在的部件的 ID 列表
     /// </summary>
     protected readonly Dictionary<string, int> _notExistPartId = [];
+
     /// <summary>
     /// 不存在的参数的值列表
     /// </summary>
     protected readonly Dictionary<int, float> _notExistParameterValues = [];
+
     /// <summary>
     /// 不存在的参数的 ID 列表
     /// </summary>
     protected readonly Dictionary<string, int> _notExistParameterId = [];
+
     /// <summary>
     /// 保存的参数
     /// </summary>
     protected readonly List<float> _savedParameters = [];
+
     /// <summary>
     /// 参数的值列表
     /// </summary>
     protected unsafe float* _parameterValues;
+
     /// <summary>
     /// 参数的最大值列表
     /// </summary>
     protected unsafe float* _parameterMaximumValues;
+
     /// <summary>
     /// 参数的最小值列表
     /// </summary>
     protected unsafe float* _parameterMinimumValues;
+
     /// <summary>
     /// 部件的透明度列表
     /// </summary>
     protected unsafe float* _partOpacities;
+
     /// <summary>
     /// 模型的透明度
     /// </summary>
@@ -131,30 +145,37 @@ public class CubismModel : IDisposable
     /// 部件层级列表 (5-r.5 中由 _partChildDrawables 替换. 禁止重新赋值: 乘算色类持有该引用)
     /// </summary>
     protected readonly List<CubismModelPartInfo> _partsHierarchy = [];
+
     /// <summary>
     /// 参数重复设置的列表 (为了原地更新结构体, 使用数组)
     /// </summary>
     protected ParameterRepeatData[] _userParameterRepeatDataList = [];
+
     /// <summary>
     /// Drawable 剔除设置的列表 (为了原地更新结构体, 使用数组)
     /// </summary>
     protected CullingData[] _userDrawableCullings = [];
+
     /// <summary>
     /// Offscreen 剔除设置的列表 (为了原地更新结构体, 使用数组)
     /// </summary>
     protected CullingData[] _userOffscreenCullings = [];
+
     /// <summary>
     /// 乘算色与屏幕色 (5-r.5 中分离为独立类)
     /// </summary>
     protected readonly CubismModelMultiplyAndScreenColor _overrideMultiplyAndScreenColors;
+
     /// <summary>
     /// 是否在 SDK 侧覆盖参数的重复设置 (官方 5-r.5 的初始值为 true)
     /// </summary>
     protected bool _isOverriddenParameterRepeat;
+
     /// <summary>
     /// 是否覆盖模型的全部剔除设置?
     /// </summary>
     protected bool _isOverriddenCullings;
+
     /// <summary>
     /// 是否使用混合模式
     /// </summary>
@@ -175,7 +196,10 @@ public class CubismModel : IDisposable
     {
         if (context is null)
         {
-            throw new ArgumentNullException(nameof(context), "CubismModel requires a context instance.");
+            throw new ArgumentNullException(
+                nameof(context),
+                "CubismModel requires a context instance."
+            );
         }
 
         Context = context;
@@ -184,7 +208,10 @@ public class CubismModel : IDisposable
 
         // 与官方在构造函数初始化列表中传入 this 和 _partsHierarchy 的做法等价.
         // 此时 _partsHierarchy 为空, 但引用会在 Initialize() 之后填充, 因此没有问题.
-        _overrideMultiplyAndScreenColors = new CubismModelMultiplyAndScreenColor(this, _partsHierarchy);
+        _overrideMultiplyAndScreenColors = new CubismModelMultiplyAndScreenColor(
+            this,
+            _partsHierarchy
+        );
 
         _isOverriddenParameterRepeat = true;
         _isOverriddenCullings = false;
@@ -326,9 +353,14 @@ public class CubismModel : IDisposable
                 var alphaBlendType = blendMode.GetAlphaBlendType();
 
                 // 如果不是 NormalOver, AddCompatible, MultiplyCompatible, 则启用混合模式.
-                if (!(colorBlendType == CsmEnum.CsmColorBlendType_Normal && alphaBlendType == CsmEnum.CsmAlphaBlendType_Over) &&
-                    colorBlendType != CsmEnum.CsmColorBlendType_AddCompatible &&
-                    colorBlendType != CsmEnum.CsmColorBlendType_MultiplyCompatible)
+                if (
+                    !(
+                        colorBlendType == CsmEnum.CsmColorBlendType_Normal
+                        && alphaBlendType == CsmEnum.CsmAlphaBlendType_Over
+                    )
+                    && colorBlendType != CsmEnum.CsmColorBlendType_AddCompatible
+                    && colorBlendType != CsmEnum.CsmColorBlendType_MultiplyCompatible
+                )
                 {
                     _isBlendModeEnabled = true;
                     break;
@@ -370,8 +402,10 @@ public class CubismModel : IDisposable
             {
                 if (partIndex == parentPartIndex)
                 {
-                    _partsHierarchy[partIndex].Objects.Add(
-                        new CubismModelObjectInfo(i, CubismModelObjectType.ObjectType_Parts));
+                    _partsHierarchy[partIndex]
+                        .Objects.Add(
+                            new CubismModelObjectInfo(i, CubismModelObjectType.ObjectType_Parts)
+                        );
                     break;
                 }
             }
@@ -392,8 +426,10 @@ public class CubismModel : IDisposable
             {
                 if (partIndex == parentPartIndex)
                 {
-                    _partsHierarchy[partIndex].Objects.Add(
-                        new CubismModelObjectInfo(i, CubismModelObjectType.ObjectType_Drawable));
+                    _partsHierarchy[partIndex]
+                        .Objects.Add(
+                            new CubismModelObjectInfo(i, CubismModelObjectType.ObjectType_Drawable)
+                        );
                     break;
                 }
             }
@@ -428,8 +464,10 @@ public class CubismModel : IDisposable
         var childDrawObjects = _partsHierarchy[partInfoIndex].ChildDrawObjects;
 
         // 如果 childDrawObjects 已经处理过则跳过
-        if (childDrawObjects.DrawableIndices.Count != 0 ||
-            childDrawObjects.OffscreenIndices.Count != 0)
+        if (
+            childDrawObjects.DrawableIndices.Count != 0
+            || childDrawObjects.OffscreenIndices.Count != 0
+        )
         {
             return;
         }
@@ -444,21 +482,29 @@ public class CubismModel : IDisposable
                 GetPartChildDrawObjects(objects[i].ObjectIndex);
 
                 // 获取子部件的子 Drawable, Offscreen
-                var childToChildDrawObjects = _partsHierarchy[objects[i].ObjectIndex].ChildDrawObjects;
+                var childToChildDrawObjects = _partsHierarchy[
+                    objects[i].ObjectIndex
+                ].ChildDrawObjects;
 
                 for (int j = 0; j < childToChildDrawObjects.DrawableIndices.Count; ++j)
                 {
                     // 将孙级 Drawable 添加到部件的子 Drawable
-                    childDrawObjects.DrawableIndices.Add(childToChildDrawObjects.DrawableIndices[j]);
+                    childDrawObjects.DrawableIndices.Add(
+                        childToChildDrawObjects.DrawableIndices[j]
+                    );
                 }
                 for (int j = 0; j < childToChildDrawObjects.OffscreenIndices.Count; ++j)
                 {
                     // 将孙级 Offscreen 添加到部件的子 Offscreen
-                    childDrawObjects.OffscreenIndices.Add(childToChildDrawObjects.OffscreenIndices[j]);
+                    childDrawObjects.OffscreenIndices.Add(
+                        childToChildDrawObjects.OffscreenIndices[j]
+                    );
                 }
 
                 // 确认 Offscreen
-                var offscreenIndex = CubismCore.GetPartOffscreenIndices(Model)[objects[i].ObjectIndex];
+                var offscreenIndex = CubismCore.GetPartOffscreenIndices(Model)[
+                    objects[i].ObjectIndex
+                ];
                 if (offscreenIndex != CubismNoIndex_Offscreen)
                 {
                     // 如果 Offscreen 存在, 则添加到部件的子 Offscreen
@@ -948,8 +994,8 @@ public class CubismModel : IDisposable
 
         if (_notExistParameterValues.TryGetValue(parameterIndex, out float value1))
         {
-            _notExistParameterValues[parameterIndex] = weight == 1
-                ? value : (value1 * (1 - weight)) + (value * weight);
+            _notExistParameterValues[parameterIndex] =
+                weight == 1 ? value : (value1 * (1 - weight)) + (value * weight);
             return;
         }
 
@@ -968,9 +1014,10 @@ public class CubismModel : IDisposable
             value = GetParameterClampValue(parameterIndex, value);
         }
 
-        _parameterValues[parameterIndex] = (weight == 1)
-                                          ? value
-                                          : (_parameterValues[parameterIndex] * (1 - weight)) + (value * weight);
+        _parameterValues[parameterIndex] =
+            (weight == 1)
+                ? value
+                : (_parameterValues[parameterIndex] * (1 - weight)) + (value * weight);
     }
 
     /// <summary>
@@ -1001,7 +1048,10 @@ public class CubismModel : IDisposable
         bool isRepeat;
 
         // 判定是否执行参数重复处理
-        if (_isOverriddenParameterRepeat || _userParameterRepeatDataList[parameterIndex].IsOverridden)
+        if (
+            _isOverriddenParameterRepeat
+            || _userParameterRepeatDataList[parameterIndex].IsOverridden
+        )
         {
             // 使用 SDK 侧设置的重复信息
             isRepeat = _userParameterRepeatDataList[parameterIndex].IsParameterRepeated;
@@ -1159,7 +1209,10 @@ public class CubismModel : IDisposable
 
         if (parameterIndex == -1)
             return;
-        SetParameterValue(parameterIndex, GetParameterValue(parameterIndex) * (1.0f + (value - 1.0f) * weight));
+        SetParameterValue(
+            parameterIndex,
+            GetParameterValue(parameterIndex) * (1.0f + (value - 1.0f) * weight)
+        );
     }
 
     /// <summary>
@@ -1956,7 +2009,9 @@ public class CubismModel : IDisposable
             return 0;
         }
 
-        if (GetOverrideFlagForModelCullings() || GetOverrideFlagForOffscreenCullings(offscreenIndex))
+        if (
+            GetOverrideFlagForModelCullings() || GetOverrideFlagForOffscreenCullings(offscreenIndex)
+        )
         {
             return _userOffscreenCullings[offscreenIndex].IsCulling;
         }

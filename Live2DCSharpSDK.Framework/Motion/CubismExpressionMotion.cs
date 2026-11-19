@@ -12,6 +12,7 @@ public class CubismExpressionMotion : ACubismMotion
     /// 加算应用的初始值
     /// </summary>
     public const float DefaultAdditiveValue = 0.0f;
+
     /// <summary>
     /// 乘算应用的初始值
     /// </summary>
@@ -48,7 +49,10 @@ public class CubismExpressionMotion : ACubismMotion
     {
         if (context is null)
         {
-            throw new ArgumentNullException(nameof(context), "CubismExpressionMotion requires a context instance.");
+            throw new ArgumentNullException(
+                nameof(context),
+                "CubismExpressionMotion requires a context instance."
+            );
         }
 
         _context = context;
@@ -58,9 +62,11 @@ public class CubismExpressionMotion : ACubismMotion
         var json = obj.AsObject();
 
         FadeInSeconds = json.ContainsKey(ExpressionKeyFadeIn)
-            ? (float)json[ExpressionKeyFadeIn]! : DefaultFadeTime;   // 淡入
+            ? (float)json[ExpressionKeyFadeIn]!
+            : DefaultFadeTime; // 淡入
         FadeOutSeconds = json.ContainsKey(ExpressionKeyFadeOut)
-            ? (float)json[ExpressionKeyFadeOut]! : DefaultFadeTime; // 淡出
+            ? (float)json[ExpressionKeyFadeOut]!
+            : DefaultFadeTime; // 淡出
 
         if (FadeInSeconds < 0.0f)
         {
@@ -104,36 +110,43 @@ public class CubismExpressionMotion : ACubismMotion
             }
 
             // 创建设置对象并添加到列表
-            Parameters.Add(new()
-            {
-                ParameterId = parameterId,
-                BlendType = blendType,
-                Value = value
-            });
+            Parameters.Add(
+                new()
+                {
+                    ParameterId = parameterId,
+                    BlendType = blendType,
+                    Value = value,
+                }
+            );
         }
     }
 
-    public override void DoUpdateParameters(CubismModel model, float userTimeSeconds, float weight, CubismMotionQueueEntry motionQueueEntry)
+    public override void DoUpdateParameters(
+        CubismModel model,
+        float userTimeSeconds,
+        float weight,
+        CubismMotionQueueEntry motionQueueEntry
+    )
     {
         foreach (var item in Parameters)
         {
             switch (item.BlendType)
             {
                 case ExpressionBlendType.Add:
-                    {
-                        model.AddParameterValue(item.ParameterId, item.Value, weight);            // 相对变化 加算
-                        break;
-                    }
+                {
+                    model.AddParameterValue(item.ParameterId, item.Value, weight); // 相对变化 加算
+                    break;
+                }
                 case ExpressionBlendType.Multiply:
-                    {
-                        model.MultiplyParameterValue(item.ParameterId, item.Value, weight);       // 相对变化 乘算
-                        break;
-                    }
+                {
+                    model.MultiplyParameterValue(item.ParameterId, item.Value, weight); // 相对变化 乘算
+                    break;
+                }
                 case ExpressionBlendType.Overwrite:
-                    {
-                        model.SetParameterValue(item.ParameterId, item.Value, weight);            // 绝对变化 覆盖
-                        break;
-                    }
+                {
+                    model.SetParameterValue(item.ParameterId, item.Value, weight); // 绝对变化 覆盖
+                    break;
+                }
                 default:
                     // 设置了规范外的值时已经处于加算模式
                     break;
@@ -149,8 +162,14 @@ public class CubismExpressionMotion : ACubismMotion
     /// <param name="motionQueueEntry">CubismMotionQueueManager 中管理的动作</param>
     /// <param name="expressionParameterValues">应用到模型的各参数的值</param>
     /// <param name="expressionIndex">表情的索引</param>
-    public void CalculateExpressionParameters(CubismModel model, float userTimeSeconds, CubismMotionQueueEntry? motionQueueEntry,
-    List<ExpressionParameterValue>? expressionParameterValues, int expressionIndex, float fadeWeight)
+    public void CalculateExpressionParameters(
+        CubismModel model,
+        float userTimeSeconds,
+        CubismMotionQueueEntry? motionQueueEntry,
+        List<ExpressionParameterValue>? expressionParameterValues,
+        int expressionIndex,
+        float fadeWeight
+    )
     {
         if (motionQueueEntry == null || expressionParameterValues == null)
         {
@@ -205,21 +224,32 @@ public class CubismExpressionMotion : ACubismMotion
                 }
                 else
                 {
-                    expressionParameterValues[i].AdditiveValue =
-                        CalculateValue(expressionParameterValue.AdditiveValue, DefaultAdditiveValue, fadeWeight);
+                    expressionParameterValues[i].AdditiveValue = CalculateValue(
+                        expressionParameterValue.AdditiveValue,
+                        DefaultAdditiveValue,
+                        fadeWeight
+                    );
 
-                    expressionParameterValues[i].MultiplyValue =
-                        CalculateValue(expressionParameterValue.MultiplyValue, DefaultMultiplyValue, fadeWeight);
+                    expressionParameterValues[i].MultiplyValue = CalculateValue(
+                        expressionParameterValue.MultiplyValue,
+                        DefaultMultiplyValue,
+                        fadeWeight
+                    );
 
-                    expressionParameterValues[i].OverwriteValue =
-                        CalculateValue(expressionParameterValue.OverwriteValue, currentParameterValue, fadeWeight);
+                    expressionParameterValues[i].OverwriteValue = CalculateValue(
+                        expressionParameterValue.OverwriteValue,
+                        currentParameterValue,
+                        fadeWeight
+                    );
                 }
                 continue;
             }
 
             // 计算值
             float value = expressionParameters[parameterIndex].Value;
-            float newAdditiveValue, newMultiplyValue, newSetValue;
+            float newAdditiveValue,
+                newMultiplyValue,
+                newSetValue;
             switch (expressionParameters[parameterIndex].BlendType)
             {
                 case ExpressionBlendType.Add:
@@ -249,9 +279,15 @@ public class CubismExpressionMotion : ACubismMotion
             }
             else
             {
-                expressionParameterValues[i].AdditiveValue = (expressionParameterValue.AdditiveValue * (1.0f - fadeWeight)) + newAdditiveValue * fadeWeight;
-                expressionParameterValues[i].MultiplyValue = (expressionParameterValue.MultiplyValue * (1.0f - fadeWeight)) + newMultiplyValue * fadeWeight;
-                expressionParameterValues[i].OverwriteValue = (expressionParameterValue.OverwriteValue * (1.0f - fadeWeight)) + newSetValue * fadeWeight;
+                expressionParameterValues[i].AdditiveValue =
+                    (expressionParameterValue.AdditiveValue * (1.0f - fadeWeight))
+                    + newAdditiveValue * fadeWeight;
+                expressionParameterValues[i].MultiplyValue =
+                    (expressionParameterValue.MultiplyValue * (1.0f - fadeWeight))
+                    + newMultiplyValue * fadeWeight;
+                expressionParameterValues[i].OverwriteValue =
+                    (expressionParameterValue.OverwriteValue * (1.0f - fadeWeight))
+                    + newSetValue * fadeWeight;
             }
         }
     }

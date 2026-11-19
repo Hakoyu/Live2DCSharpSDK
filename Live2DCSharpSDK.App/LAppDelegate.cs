@@ -24,13 +24,19 @@ public abstract class LAppDelegate : IDisposable
     /// <exception cref="InvalidOperationException">尚未设置上下文时读取</exception>
     public CubismContext Context
     {
-        get => _context ?? throw new InvalidOperationException(
-            "LAppDelegate.Context has not been set. Create a CubismContext and assign it before loading models.");
+        get =>
+            _context
+            ?? throw new InvalidOperationException(
+                "LAppDelegate.Context has not been set. Create a CubismContext and assign it before loading models."
+            );
         set
         {
             if (value is null)
             {
-                throw new ArgumentNullException(nameof(value), "LAppDelegate.Context cannot be null.");
+                throw new ArgumentNullException(
+                    nameof(value),
+                    "LAppDelegate.Context cannot be null."
+                );
             }
 
             if (_context is not null)
@@ -82,10 +88,12 @@ public abstract class LAppDelegate : IDisposable
     /// 是否正在点击
     /// </summary>
     private bool _captured;
+
     /// <summary>
     /// 鼠标 X 坐标
     /// </summary>
     private float _mouseX;
+
     /// <summary>
     /// 鼠标 Y 坐标
     /// </summary>
@@ -95,6 +103,7 @@ public abstract class LAppDelegate : IDisposable
     /// 由 Initialize 函数设置的窗口宽度
     /// </summary>
     public int WindowWidth { get; protected set; }
+
     /// <summary>
     /// 由 Initialize 函数设置的窗口高度
     /// </summary>
@@ -103,7 +112,13 @@ public abstract class LAppDelegate : IDisposable
     public abstract void OnUpdatePre();
     public abstract void GetWindowSize(out int width, out int height);
     public abstract CubismRenderer CreateRenderer(CubismModel model);
-    public abstract TextureInfo CreateTexture(LAppModel model, int index, int width, int height, IntPtr data);
+    public abstract TextureInfo CreateTexture(
+        LAppModel model,
+        int index,
+        int width,
+        int height,
+        IntPtr data
+    );
 
     public void InitApp()
     {

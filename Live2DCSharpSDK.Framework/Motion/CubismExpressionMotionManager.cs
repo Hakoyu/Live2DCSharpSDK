@@ -12,14 +12,17 @@ public record ExpressionParameterValue
     /// 参数 ID
     /// </summary>
     public string ParameterId;
+
     /// <summary>
     /// 加算值
     /// </summary>
     public float AdditiveValue;
+
     /// <summary>
     /// 乘算值
     /// </summary>
     public float MultiplyValue;
+
     /// <summary>
     /// 覆盖值
     /// </summary>
@@ -30,6 +33,7 @@ public class CubismExpressionMotionManager : CubismMotionQueueManager
 {
     // 应用到模型的各参数的值
     private readonly List<ExpressionParameterValue> _expressionParameterValues = [];
+
     // 播放中的表情的权重
     private readonly List<float> _fadeWeights = [];
 
@@ -81,7 +85,10 @@ public class CubismExpressionMotionManager : CubismMotionQueueManager
                     // 检索列表中是否存在该参数 ID
                     for (int j = 0; j < _expressionParameterValues.Count; ++j)
                     {
-                        if (_expressionParameterValues[j].ParameterId != expressionParameters[i].ParameterId)
+                        if (
+                            _expressionParameterValues[j].ParameterId
+                            != expressionParameters[i].ParameterId
+                        )
                         {
                             continue;
                         }
@@ -100,7 +107,7 @@ public class CubismExpressionMotionManager : CubismMotionQueueManager
                     {
                         ParameterId = expressionParameters[i].ParameterId,
                         AdditiveValue = CubismExpressionMotion.DefaultAdditiveValue,
-                        MultiplyValue = CubismExpressionMotion.DefaultMultiplyValue
+                        MultiplyValue = CubismExpressionMotion.DefaultMultiplyValue,
                     };
                     item1.OverwriteValue = model.GetParameterValue(item1.ParameterId);
                     _expressionParameterValues.Add(item1);
@@ -109,13 +116,25 @@ public class CubismExpressionMotionManager : CubismMotionQueueManager
 
             // ------ 计算值 ------
             expressionMotion.SetupMotionQueueEntry(item, UserTimeSeconds);
-            SetFadeWeight(expressionIndex, expressionMotion.UpdateFadeWeight(item, UserTimeSeconds));
-            expressionMotion.CalculateExpressionParameters(model, UserTimeSeconds,
-                item, _expressionParameterValues, expressionIndex, GetFadeWeight(expressionIndex));
+            SetFadeWeight(
+                expressionIndex,
+                expressionMotion.UpdateFadeWeight(item, UserTimeSeconds)
+            );
+            expressionMotion.CalculateExpressionParameters(
+                model,
+                UserTimeSeconds,
+                item,
+                _expressionParameterValues,
+                expressionIndex,
+                GetFadeWeight(expressionIndex)
+            );
 
-            expressionWeight += expressionMotion.FadeInSeconds == 0.0f
-                ? 1.0f
-                : CubismMath.GetEasingSine((UserTimeSeconds - item.FadeInStartTime) / expressionMotion.FadeInSeconds);
+            expressionWeight +=
+                expressionMotion.FadeInSeconds == 0.0f
+                    ? 1.0f
+                    : CubismMath.GetEasingSine(
+                        (UserTimeSeconds - item.FadeInStartTime) / expressionMotion.FadeInSeconds
+                    );
 
             updated = true;
 
@@ -151,12 +170,19 @@ public class CubismExpressionMotionManager : CubismMotionQueueManager
         // 把各值应用到模型
         for (int i = 0; i < _expressionParameterValues.Count; ++i)
         {
-            model.SetParameterValue(_expressionParameterValues[i].ParameterId,
-                (_expressionParameterValues[i].OverwriteValue + _expressionParameterValues[i].AdditiveValue) * _expressionParameterValues[i].MultiplyValue,
-                expressionWeight);
+            model.SetParameterValue(
+                _expressionParameterValues[i].ParameterId,
+                (
+                    _expressionParameterValues[i].OverwriteValue
+                    + _expressionParameterValues[i].AdditiveValue
+                ) * _expressionParameterValues[i].MultiplyValue,
+                expressionWeight
+            );
 
-            _expressionParameterValues[i].AdditiveValue = CubismExpressionMotion.DefaultAdditiveValue;
-            _expressionParameterValues[i].MultiplyValue = CubismExpressionMotion.DefaultMultiplyValue;
+            _expressionParameterValues[i].AdditiveValue =
+                CubismExpressionMotion.DefaultAdditiveValue;
+            _expressionParameterValues[i].MultiplyValue =
+                CubismExpressionMotion.DefaultMultiplyValue;
         }
 
         return updated;
@@ -171,7 +197,9 @@ public class CubismExpressionMotionManager : CubismMotionQueueManager
     {
         if (index < 0 || _fadeWeights.Count < 1 || _fadeWeights.Count <= index)
         {
-            CubismLog.Warning("[Live2D SDK]Failed to get the fade weight value. The element at that index does not exist.");
+            CubismLog.Warning(
+                "[Live2D SDK]Failed to get the fade weight value. The element at that index does not exist."
+            );
             return -1;
         }
 
@@ -187,7 +215,9 @@ public class CubismExpressionMotionManager : CubismMotionQueueManager
     {
         if (index < 0 || _fadeWeights.Count < 1 || _fadeWeights.Count <= index)
         {
-            CubismLog.Warning("[Live2D SDK]Failed to set the fade weight value. The element at that index does not exist.");
+            CubismLog.Warning(
+                "[Live2D SDK]Failed to set the fade weight value. The element at that index does not exist."
+            );
             return;
         }
 

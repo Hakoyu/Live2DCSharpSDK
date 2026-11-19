@@ -20,6 +20,7 @@ public class CubismModelUserData
     /// 用户数据结构体数组
     /// </summary>
     private readonly List<CubismModelUserDataNode> _userDataNodes = [];
+
     /// <summary>
     /// 保持浏览列表
     /// </summary>
@@ -35,12 +36,17 @@ public class CubismModelUserData
     {
         if (context is null)
         {
-            throw new ArgumentNullException(nameof(context), "CubismModelUserData requires a context instance.");
+            throw new ArgumentNullException(
+                nameof(context),
+                "CubismModelUserData requires a context instance."
+            );
         }
 
         using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        var obj = JsonSerializer.Deserialize(stream, CubismModelUserDataObjContext.Default.CubismModelUserDataObj)
-            ?? throw new Exception("Load UserData error");
+        var obj = JsonSerializer.Deserialize(
+            stream,
+            CubismModelUserDataObjContext.Default.CubismModelUserDataObj
+        ) ?? throw new Exception("Load UserData error");
 
         string typeOfArtMesh = context.IdManager.GetId(ArtMesh);
 
@@ -53,7 +59,7 @@ public class CubismModelUserData
             {
                 TargetId = context.IdManager.GetId(node.Id),
                 TargetType = context.IdManager.GetId(node.Target),
-                Value = context.IdManager.GetId(node.Value)
+                Value = context.IdManager.GetId(node.Value),
             };
             _userDataNodes.Add(addNode);
 

@@ -9,15 +9,18 @@ namespace Live2DCSharpSDK.OpenGL;
 /// (每个渲染器持有自己的管理器, 不再使用进程级单例).
 /// </summary>
 public class CubismOffscreenRenderTarget_OpenGLES2
-    : ICubismOffscreenRenderTarget<CubismOffscreenRenderTarget_OpenGLES2, CubismRenderTarget_OpenGLES2>
+    : ICubismOffscreenRenderTarget<
+        CubismOffscreenRenderTarget_OpenGLES2,
+        CubismRenderTarget_OpenGLES2
+    >
 {
     /// <summary>
-    /// 本对象借出渲染目标的管理器. 
+    /// 本对象借出渲染目标的管理器.
     /// </summary>
     private readonly CubismOffscreenManager_OpenGLES2 _offscreenManager;
 
     /// <summary>
-    /// 构造实例. 
+    /// 构造实例.
     /// </summary>
     /// <param name="offscreenManager">本对象借出渲染目标的管理器 (渲染器自有的实例)</param>
     /// <exception cref="ArgumentNullException">offscreenManager 为 null 时抛出</exception>
@@ -25,15 +28,17 @@ public class CubismOffscreenRenderTarget_OpenGLES2
     {
         if (offscreenManager is null)
         {
-            throw new ArgumentNullException(nameof(offscreenManager),
-                "[Live2D OpenGL]CubismOffscreenRenderTarget_OpenGLES2 requires an offscreen manager instance.");
+            throw new ArgumentNullException(
+                nameof(offscreenManager),
+                "[Live2D OpenGL]CubismOffscreenRenderTarget_OpenGLES2 requires an offscreen manager instance."
+            );
         }
 
         _offscreenManager = offscreenManager;
     }
 
     /// <summary>
-    /// 设置 Offscreen 渲染用的渲染目标 (官方 SetOffscreenRenderTarget). 
+    /// 设置 Offscreen 渲染用的渲染目标 (官方 SetOffscreenRenderTarget).
     /// </summary>
     /// <param name="width">幅</param>
     /// <param name="height">高度</param>
@@ -42,7 +47,10 @@ public class CubismOffscreenRenderTarget_OpenGLES2
         if (GetUsingRenderTextureState())
         {
             // 使用中时只检查尺寸
-            if (_renderTarget!.GetBufferWidth() != width || _renderTarget.GetBufferHeight() != height)
+            if (
+                _renderTarget!.GetBufferWidth() != width
+                || _renderTarget.GetBufferHeight() != height
+            )
             {
                 _renderTarget.CreateRenderTarget((int)width, (int)height);
             }
@@ -53,7 +61,7 @@ public class CubismOffscreenRenderTarget_OpenGLES2
     }
 
     /// <summary>
-    /// 获取渲染目标的使用状态 (官方 GetUsingRenderTextureState). 
+    /// 获取渲染目标的使用状态 (官方 GetUsingRenderTextureState).
     /// </summary>
     /// <returns>使用中为 true, 未使用时为 false</returns>
     public bool GetUsingRenderTextureState()
@@ -63,7 +71,7 @@ public class CubismOffscreenRenderTarget_OpenGLES2
     }
 
     /// <summary>
-    /// 结束 Offscreen 渲染用的渲染目标的使用 (官方 StopUsingRenderTexture). 
+    /// 结束 Offscreen 渲染用的渲染目标的使用 (官方 StopUsingRenderTexture).
     /// </summary>
     public void StopUsingRenderTexture()
     {

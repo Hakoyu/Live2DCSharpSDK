@@ -27,7 +27,10 @@ public class CubismExpressionUpdater : ICubismUpdater
     /// </summary>
     /// <param name="expressionManager">表情管理</param>
     /// <param name="executionOrder">执行顺序</param>
-    public CubismExpressionUpdater(CubismExpressionMotionManager expressionManager, int executionOrder)
+    public CubismExpressionUpdater(
+        CubismExpressionMotionManager expressionManager,
+        int executionOrder
+    )
         : base(executionOrder)
     {
         _expressionManager = expressionManager;

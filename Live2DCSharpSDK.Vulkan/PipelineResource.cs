@@ -12,10 +12,12 @@ public class PipelineResource(Vk vk, Device device)
     /// (5.3 以后的 blend / Copy 只有 1 个)
     /// </summary>
     private Pipeline[] _pipeline;
+
     /// <summary>
     /// normal, add, multi, mask 各自的 pipeline layout
     /// </summary>
     private PipelineLayout[] _pipelineLayout;
+
     /// <summary>
     /// 是否为单一 pipeline(Copy / 5.3 以后的 blend)
     /// </summary>
@@ -47,7 +49,7 @@ public class PipelineResource(Vk vk, Device device)
         var createInfo = new ShaderModuleCreateInfo
         {
             SType = StructureType.ShaderModuleCreateInfo,
-            CodeSize = (uint)data.Length
+            CodeSize = (uint)data.Length,
         };
 
         ShaderModule shaderModule;
@@ -56,7 +58,10 @@ public class PipelineResource(Vk vk, Device device)
         {
             createInfo.PCode = (uint*)codePtr;
 
-            if (vk.CreateShaderModule(device, ref createInfo, null, out shaderModule) != Result.Success)
+            if (
+                vk.CreateShaderModule(device, ref createInfo, null, out shaderModule)
+                != Result.Success
+            )
             {
                 CubismLog.Error("failed to create shader module!");
             }
@@ -74,16 +79,21 @@ public class PipelineResource(Vk vk, Device device)
     /// <param name="shaderName">ShaderNames 的下标(用于 Copy 判定)</param>
     /// <param name="colorBlendMode">颜色混合模式(仅 5.3 以后)</param>
     /// <param name="alphaBlendMode">alpha 混合模式(仅 5.3 以后)</param>
-    public unsafe void CreateGraphicsPipeline(string vertFileName, string fragFileName,
-                                    DescriptorSetLayout descriptorSetLayout,
-                                    int shaderName = -1, int colorBlendMode = -1, int alphaBlendMode = -1)
+    public unsafe void CreateGraphicsPipeline(
+        string vertFileName,
+        string fragFileName,
+        DescriptorSetLayout descriptorSetLayout,
+        int shaderName = -1,
+        int colorBlendMode = -1,
+        int alphaBlendMode = -1
+    )
     {
         var vertShaderModule = CreateShaderModule(device, vertFileName);
         var fragShaderModule = CreateShaderModule(device, fragFileName);
 
         // 官方 CubismRenderer_Vulkan.cpp:544-551: Copy 与 5.3 以后的 blend 均为单一 pipeline
-        _singlePipeline = shaderName == ShaderNames.Copy
-            || (colorBlendMode != -1 && alphaBlendMode != -1);
+        _singlePipeline =
+            shaderName == ShaderNames.Copy || (colorBlendMode != -1 && alphaBlendMode != -1);
 
         if (_singlePipeline)
         {
@@ -101,7 +111,7 @@ public class PipelineResource(Vk vk, Device device)
             SType = StructureType.PipelineShaderStageCreateInfo,
             Stage = ShaderStageFlags.VertexBit,
             Module = vertShaderModule,
-            PName = (byte*)SilkMarshal.StringToPtr("main")
+            PName = (byte*)SilkMarshal.StringToPtr("main"),
         };
 
         var fragShaderStageInfo = new PipelineShaderStageCreateInfo
@@ -109,18 +119,14 @@ public class PipelineResource(Vk vk, Device device)
             SType = StructureType.PipelineShaderStageCreateInfo,
             Stage = ShaderStageFlags.FragmentBit,
             Module = fragShaderModule,
-            PName = (byte*)SilkMarshal.StringToPtr("main")
+            PName = (byte*)SilkMarshal.StringToPtr("main"),
         };
 
-        var shaderStages = stackalloc[]
-        {
-            vertShaderStageInfo,
-            fragShaderStageInfo
-        };
+        var shaderStages = stackalloc[] { vertShaderStageInfo, fragShaderStageInfo };
 
         var vertexInputInfo = new PipelineVertexInputStateCreateInfo
         {
-            SType = StructureType.PipelineVertexInputStateCreateInfo
+            SType = StructureType.PipelineVertexInputStateCreateInfo,
         };
 
         var bindingDescription = ModelVertex.GetBindingDescription();
@@ -135,14 +141,14 @@ public class PipelineResource(Vk vk, Device device)
         {
             SType = StructureType.PipelineInputAssemblyStateCreateInfo,
             Topology = PrimitiveTopology.TriangleList,
-            PrimitiveRestartEnable = false
+            PrimitiveRestartEnable = false,
         };
 
         var viewportState = new PipelineViewportStateCreateInfo
         {
             SType = StructureType.PipelineViewportStateCreateInfo,
             ViewportCount = 1,
-            ScissorCount = 1
+            ScissorCount = 1,
         };
 
         var rasterizer = new PipelineRasterizationStateCreateInfo
@@ -152,28 +158,31 @@ public class PipelineResource(Vk vk, Device device)
             RasterizerDiscardEnable = false,
             PolygonMode = PolygonMode.Fill,
             LineWidth = 1.0f,
-            FrontFace = FrontFace.CounterClockwise
+            FrontFace = FrontFace.CounterClockwise,
         };
 
         var multisampling = new PipelineMultisampleStateCreateInfo
         {
             SType = StructureType.PipelineMultisampleStateCreateInfo,
             SampleShadingEnable = false,
-            RasterizationSamples = SampleCountFlags.Count1Bit
+            RasterizationSamples = SampleCountFlags.Count1Bit,
         };
 
         // 初始值: 通常(Blend_Normal)
         var colorBlendAttachment = new PipelineColorBlendAttachmentState
         {
-            ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit
-            | ColorComponentFlags.BBit | ColorComponentFlags.ABit,
+            ColorWriteMask =
+                ColorComponentFlags.RBit
+                | ColorComponentFlags.GBit
+                | ColorComponentFlags.BBit
+                | ColorComponentFlags.ABit,
             BlendEnable = true,
             SrcColorBlendFactor = BlendFactor.One,
             DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
             ColorBlendOp = BlendOp.Add,
             SrcAlphaBlendFactor = BlendFactor.One,
             DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            AlphaBlendOp = BlendOp.Add
+            AlphaBlendOp = BlendOp.Add,
         };
 
         var colorBlending = new PipelineColorBlendStateCreateInfo
@@ -182,28 +191,27 @@ public class PipelineResource(Vk vk, Device device)
             LogicOpEnable = false,
             LogicOp = LogicOp.Copy,
             AttachmentCount = 1,
-            PAttachments = &colorBlendAttachment
+            PAttachments = &colorBlendAttachment,
         };
 
         var pipelineLayoutInfo = new PipelineLayoutCreateInfo
         {
             SType = StructureType.PipelineLayoutCreateInfo,
             SetLayoutCount = 1,
-            PSetLayouts = &descriptorSetLayout
+            PSetLayouts = &descriptorSetLayout,
         };
 
-        var dynamicState = stackalloc[]
-        {
+        var dynamicState = stackalloc[] {
             DynamicState.Viewport,
             DynamicState.Scissor,
-            DynamicState.CullMode
+            DynamicState.CullMode,
         };
 
         var dynamicStateCI = new PipelineDynamicStateCreateInfo
         {
             SType = StructureType.PipelineDynamicStateCreateInfo,
             DynamicStateCount = 3,
-            PDynamicStates = dynamicState
+            PDynamicStates = dynamicState,
         };
 
         var pipelineDepthStencilStateCreateInfo = new PipelineDepthStencilStateCreateInfo
@@ -212,17 +220,14 @@ public class PipelineResource(Vk vk, Device device)
             DepthTestEnable = true,
             DepthWriteEnable = true,
             DepthCompareOp = CompareOp.LessOrEqual,
-            Back = new()
-            {
-                CompareOp = CompareOp.Always
-            }
+            Back = new() { CompareOp = CompareOp.Always },
         };
 
         var renderingInfo = new PipelineRenderingCreateInfo
         {
             SType = StructureType.PipelineRenderingCreateInfo,
             ColorAttachmentCount = 1,
-            DepthAttachmentFormat = CubismRenderer_Vulkan.DepthFormat
+            DepthAttachmentFormat = CubismRenderer_Vulkan.DepthFormat,
         };
         var format = CubismRenderer_Vulkan.ImageFormat;
         var format1 = CubismRenderer_Vulkan.SwapchainImageFormat;
@@ -250,7 +255,7 @@ public class PipelineResource(Vk vk, Device device)
             PDynamicState = &dynamicStateCI,
             PDepthStencilState = &pipelineDepthStencilStateCreateInfo,
             PNext = &renderingInfo,
-            PStages = shaderStages
+            PStages = shaderStages,
         };
 
         if (_singlePipeline)
@@ -271,13 +276,29 @@ public class PipelineResource(Vk vk, Device device)
                 colorBlendAttachment.DstAlphaBlendFactor = BlendFactor.Zero;
             }
 
-            if (vk.CreatePipelineLayout(device, ref pipelineLayoutInfo, null, out _pipelineLayout[0]) != Result.Success)
+            if (
+                vk.CreatePipelineLayout(
+                    device,
+                    ref pipelineLayoutInfo,
+                    null,
+                    out _pipelineLayout[0]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create _pipeline layout!");
             }
 
             pipelineInfo.Layout = _pipelineLayout[0];
-            if (vk.CreateGraphicsPipelines(device, default, 1, ref pipelineInfo, null, out _pipeline[0]) != Result.Success)
+            if (
+                vk.CreateGraphicsPipelines(
+                    device,
+                    default,
+                    1,
+                    ref pipelineInfo,
+                    null,
+                    out _pipeline[0]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create graphics _pipeline!");
             }
@@ -285,16 +306,30 @@ public class PipelineResource(Vk vk, Device device)
         else
         {
             // 5.2 以前: 通常 / 加法 / 乘法 / 遮罩 共 4 个
-            if (vk.CreatePipelineLayout(device, ref pipelineLayoutInfo, null,
-                out _pipelineLayout[Blend.Normal]) != Result.Success)
+            if (
+                vk.CreatePipelineLayout(
+                    device,
+                    ref pipelineLayoutInfo,
+                    null,
+                    out _pipelineLayout[Blend.Normal]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create _pipeline layout!");
             }
 
             pipelineInfo.Layout = _pipelineLayout[Blend.Normal];
 
-            if (vk.CreateGraphicsPipelines(device, default, 1, ref pipelineInfo, null, out _pipeline[Blend.Normal]) !=
-                 Result.Success)
+            if (
+                vk.CreateGraphicsPipelines(
+                    device,
+                    default,
+                    1,
+                    ref pipelineInfo,
+                    null,
+                    out _pipeline[Blend.Normal]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create graphics _pipeline!");
             }
@@ -305,15 +340,30 @@ public class PipelineResource(Vk vk, Device device)
             colorBlendAttachment.SrcAlphaBlendFactor = BlendFactor.Zero;
             colorBlendAttachment.DstAlphaBlendFactor = BlendFactor.One;
 
-            if (vk.CreatePipelineLayout(device, ref pipelineLayoutInfo, null, out _pipelineLayout[Blend.Add]) != Result.Success)
+            if (
+                vk.CreatePipelineLayout(
+                    device,
+                    ref pipelineLayoutInfo,
+                    null,
+                    out _pipelineLayout[Blend.Add]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create _pipeline layout!");
             }
 
             pipelineInfo.Layout = _pipelineLayout[Blend.Add];
 
-            if (vk.CreateGraphicsPipelines(device, default, 1, ref pipelineInfo, null, out _pipeline[Blend.Add]) !=
-                 Result.Success)
+            if (
+                vk.CreateGraphicsPipelines(
+                    device,
+                    default,
+                    1,
+                    ref pipelineInfo,
+                    null,
+                    out _pipeline[Blend.Add]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create graphics _pipeline!");
             }
@@ -324,15 +374,30 @@ public class PipelineResource(Vk vk, Device device)
             colorBlendAttachment.SrcAlphaBlendFactor = BlendFactor.Zero;
             colorBlendAttachment.DstAlphaBlendFactor = BlendFactor.One;
 
-            if (vk.CreatePipelineLayout(device, ref pipelineLayoutInfo, null, out _pipelineLayout[Blend.Mult]) != Result.Success)
+            if (
+                vk.CreatePipelineLayout(
+                    device,
+                    ref pipelineLayoutInfo,
+                    null,
+                    out _pipelineLayout[Blend.Mult]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create _pipeline layout!");
             }
 
             pipelineInfo.Layout = _pipelineLayout[Blend.Mult];
 
-            if (vk.CreateGraphicsPipelines(device, default, 1, ref pipelineInfo, null, out _pipeline[Blend.Mult]) !=
-                 Result.Success)
+            if (
+                vk.CreateGraphicsPipelines(
+                    device,
+                    default,
+                    1,
+                    ref pipelineInfo,
+                    null,
+                    out _pipeline[Blend.Mult]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create graphics _pipeline!");
             }
@@ -343,7 +408,14 @@ public class PipelineResource(Vk vk, Device device)
             colorBlendAttachment.SrcAlphaBlendFactor = BlendFactor.Zero;
             colorBlendAttachment.DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha;
 
-            if (vk.CreatePipelineLayout(device, ref pipelineLayoutInfo, null, out _pipelineLayout[Blend.Mask]) != Result.Success)
+            if (
+                vk.CreatePipelineLayout(
+                    device,
+                    ref pipelineLayoutInfo,
+                    null,
+                    out _pipelineLayout[Blend.Mask]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create _pipeline layout!");
             }
@@ -351,8 +423,16 @@ public class PipelineResource(Vk vk, Device device)
             renderingInfo.PColorAttachmentFormats = &format;
             pipelineInfo.Layout = _pipelineLayout[Blend.Mask];
 
-            if (vk.CreateGraphicsPipelines(device, default, 1, ref pipelineInfo, null, out _pipeline[Blend.Mask]) !=
-                 Result.Success)
+            if (
+                vk.CreateGraphicsPipelines(
+                    device,
+                    default,
+                    1,
+                    ref pipelineInfo,
+                    null,
+                    out _pipeline[Blend.Mask]
+                ) != Result.Success
+            )
             {
                 CubismLog.Error("failed to create graphics _pipeline!");
             }

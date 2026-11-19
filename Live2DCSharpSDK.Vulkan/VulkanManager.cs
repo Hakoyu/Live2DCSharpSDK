@@ -20,7 +20,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     public static readonly string[] deviceExtensions =
     [
         "VK_KHR_swapchain",
-        "VK_EXT_extended_dynamic_state"
+        "VK_EXT_extended_dynamic_state",
     ];
 
     public static readonly string[] validationLayers = ["VK_LAYER_KHRONOS_validation"];
@@ -49,14 +49,17 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// </summary>
     private Instance _instance;
     private KhrSurface khrSurface;
+
     /// <summary>
     /// 为在窗口系统中绘制所需的 surface
     /// </summary>
     public SurfaceKHR Surface { get; private set; }
+
     /// <summary>
     /// 物理设备
     /// </summary>
     public PhysicalDevice PhysicalDevice { get; private set; }
+
     /// <summary>
     /// 逻辑设备
     /// </summary>
@@ -75,32 +78,39 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// </summary>
     public Queue PresentQueue => _presentQueue;
     private Queue _presentQueue;
+
     /// <summary>
     /// 创建命令缓冲区所需的命令池
     /// </summary>
     public CommandPool CommandPool => _commandPool;
 
     private CommandPool _commandPool;
+
     /// <summary>
     /// semaphore
     /// </summary>
     private Semaphore _imageAvailableSemaphore;
+
     /// <summary>
     /// 负责 swapchain 管理的 swapchain 管理器
     /// </summary>
     public SwapchainManager SwapchainManager { get; private set; }
+
     /// <summary>
     /// 窗口尺寸是否已变更的标志
     /// </summary>
     public bool IsSwapchainInvalid { get; set; }
+
     /// <summary>
     ///  当前的 image 索引
     /// </summary>
     private uint _imageIndex = 0;
+
     /// <summary>
     /// 深度格式
     /// </summary>
     public Format DepthFormat { get; private set; }
+
     /// <summary>
     /// framebuffer 尺寸是否已变更
     /// </summary>
@@ -108,6 +118,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
 
     private ExtDebugUtils? debugUtils;
     private DebugUtilsMessengerEXT debugMessenger;
+
     /// <summary>
     /// 是否已完成销毁, 防止退出路径重复释放
     /// </summary>
@@ -128,7 +139,9 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
             vk.EnumerateInstanceLayerProperties(ref layerCount, availableLayersPtr);
         }
 
-        var availableLayerNames = availableLayers.Select(layer => Marshal.PtrToStringAnsi((IntPtr)layer.LayerName)).ToHashSet();
+        var availableLayerNames = availableLayers
+            .Select(layer => Marshal.PtrToStringAnsi((IntPtr)layer.LayerName))
+            .ToHashSet();
 
         return validationLayers.All(availableLayerNames.Contains);
     }
@@ -140,7 +153,10 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     public unsafe string[] GetRequiredExtensions()
     {
         var glfwExtensions = api.GetRequiredExtensions(out var glfwExtensionCount);
-        var extensions = SilkMarshal.PtrToStringArray((nint)glfwExtensions, (int)glfwExtensionCount);
+        var extensions = SilkMarshal.PtrToStringArray(
+            (nint)glfwExtensions,
+            (int)glfwExtensionCount
+        );
 
         if (EnableValidationLayers)
         {
@@ -150,9 +166,16 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
         return extensions;
     }
 
-    private unsafe uint DebugCallback(DebugUtilsMessageSeverityFlagsEXT messageSeverity, DebugUtilsMessageTypeFlagsEXT messageTypes, DebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+    private unsafe uint DebugCallback(
+        DebugUtilsMessageSeverityFlagsEXT messageSeverity,
+        DebugUtilsMessageTypeFlagsEXT messageTypes,
+        DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+        void* pUserData
+    )
     {
-        CubismLog.Debug($"validation layer:" + Marshal.PtrToStringAnsi((nint)pCallbackData->PMessage));
+        CubismLog.Debug(
+            $"validation layer:" + Marshal.PtrToStringAnsi((nint)pCallbackData->PMessage)
+        );
 
         return Vk.False;
     }
@@ -161,15 +184,19 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// 启用调试消息
     /// </summary>
     /// <param name="createInfo">调试 messenger 对象的信息</param>
-    public unsafe void PopulateDebugMessengerCreateInfo(ref DebugUtilsMessengerCreateInfoEXT createInfo)
+    public unsafe void PopulateDebugMessengerCreateInfo(
+        ref DebugUtilsMessengerCreateInfoEXT createInfo
+    )
     {
         createInfo.SType = StructureType.DebugUtilsMessengerCreateInfoExt;
-        createInfo.MessageSeverity = DebugUtilsMessageSeverityFlagsEXT.VerboseBitExt |
-                                     DebugUtilsMessageSeverityFlagsEXT.WarningBitExt |
-                                     DebugUtilsMessageSeverityFlagsEXT.ErrorBitExt;
-        createInfo.MessageType = DebugUtilsMessageTypeFlagsEXT.GeneralBitExt |
-                                 DebugUtilsMessageTypeFlagsEXT.PerformanceBitExt |
-                                 DebugUtilsMessageTypeFlagsEXT.ValidationBitExt;
+        createInfo.MessageSeverity =
+            DebugUtilsMessageSeverityFlagsEXT.VerboseBitExt
+            | DebugUtilsMessageSeverityFlagsEXT.WarningBitExt
+            | DebugUtilsMessageSeverityFlagsEXT.ErrorBitExt;
+        createInfo.MessageType =
+            DebugUtilsMessageTypeFlagsEXT.GeneralBitExt
+            | DebugUtilsMessageTypeFlagsEXT.PerformanceBitExt
+            | DebugUtilsMessageTypeFlagsEXT.ValidationBitExt;
         createInfo.PfnUserCallback = (DebugUtilsMessengerCallbackFunctionEXT)DebugCallback;
     }
 
@@ -190,13 +217,13 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
             PApplicationName = (byte*)SilkMarshal.StringToPtr("Live2D"),
             PEngineName = (byte*)SilkMarshal.StringToPtr("Live2D"),
             EngineVersion = new Version32(1, 0, 0),
-            ApiVersion = Vk.Version13
+            ApiVersion = Vk.Version13,
         };
 
         var createInfo = new InstanceCreateInfo
         {
             SType = StructureType.InstanceCreateInfo,
-            PApplicationInfo = &appInfo
+            PApplicationInfo = &appInfo,
         };
 
         var extensions = GetRequiredExtensions();
@@ -241,15 +268,24 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// </summary>
     public unsafe void SetupDebugMessenger()
     {
-        if (!EnableValidationLayers) return;
+        if (!EnableValidationLayers)
+            return;
 
         //TryGetInstanceExtension equivilant to method CreateDebugUtilsMessengerEXT from original tutorial.
-        if (!vk.TryGetInstanceExtension(_instance, out debugUtils)) return;
+        if (!vk.TryGetInstanceExtension(_instance, out debugUtils))
+            return;
 
         DebugUtilsMessengerCreateInfoEXT createInfo = new();
         PopulateDebugMessengerCreateInfo(ref createInfo);
 
-        if (debugUtils!.CreateDebugUtilsMessenger(_instance, in createInfo, null, out debugMessenger) != Result.Success)
+        if (
+            debugUtils!.CreateDebugUtilsMessenger(
+                _instance,
+                in createInfo,
+                null,
+                out debugMessenger
+            ) != Result.Success
+        )
         {
             throw new Exception("failed to set up debug messenger!");
         }
@@ -263,15 +299,27 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     public unsafe bool CheckDeviceExtensionSupport(PhysicalDevice physicalDevice)
     {
         uint extentionsCount = 0;
-        vk!.EnumerateDeviceExtensionProperties(physicalDevice, (byte*)null, ref extentionsCount, null);
+        vk!.EnumerateDeviceExtensionProperties(
+            physicalDevice,
+            (byte*)null,
+            ref extentionsCount,
+            null
+        );
 
         var availableExtensions = new ExtensionProperties[extentionsCount];
         fixed (ExtensionProperties* availableExtensionsPtr = availableExtensions)
         {
-            vk.EnumerateDeviceExtensionProperties(physicalDevice, (byte*)null, ref extentionsCount, availableExtensionsPtr);
+            vk.EnumerateDeviceExtensionProperties(
+                physicalDevice,
+                (byte*)null,
+                ref extentionsCount,
+                availableExtensionsPtr
+            );
         }
 
-        var availableExtensionNames = availableExtensions.Select(extension => Marshal.PtrToStringAnsi((IntPtr)extension.ExtensionName)).ToHashSet();
+        var availableExtensionNames = availableExtensions
+            .Select(extension => Marshal.PtrToStringAnsi((IntPtr)extension.ExtensionName))
+            .ToHashSet();
 
         return deviceExtensions.All(availableExtensionNames.Contains);
     }
@@ -301,7 +349,11 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
         var queueFamilies = new QueueFamilyProperties[queueFamilityCount];
         fixed (QueueFamilyProperties* queueFamiliesPtr = queueFamilies)
         {
-            vk.GetPhysicalDeviceQueueFamilyProperties(device, ref queueFamilityCount, queueFamiliesPtr);
+            vk.GetPhysicalDeviceQueueFamilyProperties(
+                device,
+                ref queueFamilityCount,
+                queueFamiliesPtr
+            );
         }
 
         uint i = 0;
@@ -329,7 +381,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="device">确认设备是否可用</param>
     /// <returns>物理设备</returns>
@@ -341,8 +393,13 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
         // 设备扩展功能受支持时, 确认是否支持 swapchain
         if (extensionsSupported)
         {
-            var swapchainSupport = SwapchainManager.QuerySwapchainSupport(khrSurface, device, Surface);
-            swapChainAdequate = swapchainSupport.Formats.Length != 0 && swapchainSupport.PresentModes.Length != 0;
+            var swapchainSupport = SwapchainManager.QuerySwapchainSupport(
+                khrSurface,
+                device,
+                Surface
+            );
+            swapChainAdequate =
+                swapchainSupport.Formats.Length != 0 && swapchainSupport.PresentModes.Length != 0;
         }
 
         vk.GetPhysicalDeviceFeatures(device, out var supportedFeatures);
@@ -379,11 +436,18 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     {
         FindQueueFamilies(PhysicalDevice);
 
-        var uniqueQueueFamilies = new[] { (uint)Indices.GraphicsFamily, (uint)Indices.PresentFamily };
+        var uniqueQueueFamilies = new[]
+        {
+            (uint)Indices.GraphicsFamily,
+            (uint)Indices.PresentFamily,
+        };
         uniqueQueueFamilies = uniqueQueueFamilies.Distinct().ToArray();
 
-        using var mem = GlobalMemory.Allocate(uniqueQueueFamilies.Length * sizeof(DeviceQueueCreateInfo));
-        var queueCreateInfos = (DeviceQueueCreateInfo*)Unsafe.AsPointer(ref mem.GetPinnableReference());
+        using var mem = GlobalMemory.Allocate(
+            uniqueQueueFamilies.Length * sizeof(DeviceQueueCreateInfo)
+        );
+        var queueCreateInfos = (DeviceQueueCreateInfo*)
+            Unsafe.AsPointer(ref mem.GetPinnableReference());
 
         float queuePriority = 1.0f;
         for (int i = 0; i < uniqueQueueFamilies.Length; i++)
@@ -393,7 +457,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
                 SType = StructureType.DeviceQueueCreateInfo,
                 QueueFamilyIndex = uniqueQueueFamilies[i],
                 QueueCount = 1,
-                PQueuePriorities = &queuePriority
+                PQueuePriorities = &queuePriority,
             };
         }
 
@@ -403,7 +467,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
             QueueCreateInfoCount = (uint)uniqueQueueFamilies.Length,
             PQueueCreateInfos = queueCreateInfos,
             EnabledExtensionCount = (uint)deviceExtensions.Length,
-            PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions)
+            PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions),
         };
 
         // Vulkan 1.0 起设备层已禁用. 仅使用实例层(对应 validation VUID).
@@ -413,20 +477,20 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
         var dynamicRenderingF = new PhysicalDeviceDynamicRenderingFeatures
         {
             SType = StructureType.PhysicalDeviceDynamicRenderingFeaturesKhr,
-            DynamicRendering = true
+            DynamicRendering = true,
         };
 
         var dynamicStateF = new PhysicalDeviceExtendedDynamicStateFeaturesEXT
         {
             SType = StructureType.PhysicalDeviceExtendedDynamicStateFeaturesExt,
             ExtendedDynamicState = true,
-            PNext = &dynamicRenderingF
+            PNext = &dynamicRenderingF,
         };
 
         var deviceFeatures2 = new PhysicalDeviceFeatures2
         {
             SType = StructureType.PhysicalDeviceFeatures2,
-            PNext = &dynamicStateF
+            PNext = &dynamicStateF,
         };
         vk.GetPhysicalDeviceFeatures2(PhysicalDevice, &deviceFeatures2);
         createInfo.PNext = &deviceFeatures2;
@@ -449,17 +513,25 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     {
         Format[] depthFormats =
         [
-            Format.D32SfloatS8Uint, Format.D32Sfloat,
+            Format.D32SfloatS8Uint,
+            Format.D32Sfloat,
             Format.D24UnormS8Uint,
-            Format.D16UnormS8Uint, Format.D16Unorm,
+            Format.D16UnormS8Uint,
+            Format.D16Unorm,
         ];
 
         for (int i = 0; i < depthFormats.Length; i++)
         {
-            vk.GetPhysicalDeviceFormatProperties(PhysicalDevice, depthFormats[i], out var formatProps);
+            vk.GetPhysicalDeviceFormatProperties(
+                PhysicalDevice,
+                depthFormats[i],
+                out var formatProps
+            );
 
-            if ((formatProps.OptimalTilingFeatures & FormatFeatureFlags.DepthStencilAttachmentBit)
-                == FormatFeatureFlags.DepthStencilAttachmentBit)
+            if (
+                (formatProps.OptimalTilingFeatures & FormatFeatureFlags.DepthStencilAttachmentBit)
+                == FormatFeatureFlags.DepthStencilAttachmentBit
+            )
             {
                 DepthFormat = depthFormats[i];
                 return;
@@ -478,7 +550,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
         {
             SType = StructureType.CommandPoolCreateInfo,
             Flags = CommandPoolCreateFlags.ResetCommandBufferBit,
-            QueueFamilyIndex = (uint)Indices.GraphicsFamily
+            QueueFamilyIndex = (uint)Indices.GraphicsFamily,
         };
 
         if (vk.CreateCommandPool(_device, ref poolInfo, null, out _commandPool) != Result.Success)
@@ -492,10 +564,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// </summary>
     public unsafe void CreateSyncObjects()
     {
-        var semaphoreInfo = new SemaphoreCreateInfo()
-        {
-            SType = StructureType.SemaphoreCreateInfo
-        };
+        var semaphoreInfo = new SemaphoreCreateInfo() { SType = StructureType.SemaphoreCreateInfo };
         vk.CreateSemaphore(_device, ref semaphoreInfo, null, out _imageAvailableSemaphore);
     }
 
@@ -519,8 +588,17 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
         }
 
         ChooseSupportedDepthFormat();
-        SwapchainManager = new SwapchainManager(_khrs, khrSurface, api, vk, PhysicalDevice, _device, Surface, Indices.GraphicsFamily,
-                                                Indices.PresentFamily);
+        SwapchainManager = new SwapchainManager(
+            _khrs,
+            khrSurface,
+            api,
+            vk,
+            PhysicalDevice,
+            _device,
+            Surface,
+            Indices.GraphicsFamily,
+            Indices.PresentFamily
+        );
         CreateCommandPool();
         CreateSyncObjects();
     }
@@ -536,7 +614,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
             SType = StructureType.CommandBufferAllocateInfo,
             Level = CommandBufferLevel.Primary,
             CommandPool = _commandPool,
-            CommandBufferCount = 1
+            CommandBufferCount = 1,
         };
 
         vk.AllocateCommandBuffers(_device, ref allocInfo, out var commandBuffer);
@@ -544,7 +622,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
         var beginInfo = new CommandBufferBeginInfo
         {
             SType = StructureType.CommandBufferBeginInfo,
-            Flags = CommandBufferUsageFlags.OneTimeSubmitBit
+            Flags = CommandBufferUsageFlags.OneTimeSubmitBit,
         };
 
         vk.BeginCommandBuffer(commandBuffer, ref beginInfo);
@@ -563,13 +641,15 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
 
         var submitInfo = new SubmitInfo
         {
-            SType = StructureType
-            .SubmitInfo,
+            SType = StructureType.SubmitInfo,
             CommandBufferCount = 1,
-            PCommandBuffers = &commandBuffer
+            PCommandBuffers = &commandBuffer,
         };
         var sem = _imageAvailableSemaphore;
-        var waitStages = stackalloc PipelineStageFlags[] { PipelineStageFlags.ColorAttachmentOutputBit };
+        var waitStages = stackalloc PipelineStageFlags[]
+        {
+            PipelineStageFlags.ColorAttachmentOutputBit,
+        };
         if (isFirstDraw)
         {
             submitInfo.WaitSemaphoreCount = 1;
@@ -587,9 +667,14 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// </summary>
     public void UpdateDrawFrame()
     {
-        Result result = _khrs.AcquireNextImage(_device, SwapchainManager.Swapchain, uint.MaxValue,
-        _imageAvailableSemaphore, default,
-        ref _imageIndex);
+        Result result = _khrs.AcquireNextImage(
+            _device,
+            SwapchainManager.Swapchain,
+            uint.MaxValue,
+            _imageAvailableSemaphore,
+            default,
+            ref _imageIndex
+        );
         if (result == Result.ErrorOutOfDateKhr)
         {
             IsSwapchainInvalid = true;
@@ -606,7 +691,11 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     public void PostDraw()
     {
         Result result = SwapchainManager.QueuePresent(_presentQueue, _imageIndex);
-        if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr || FramebufferResized)
+        if (
+            result == Result.ErrorOutOfDateKhr
+            || result == Result.SuboptimalKhr
+            || FramebufferResized
+        )
         {
             FramebufferResized = false;
             IsSwapchainInvalid = true;
@@ -624,8 +713,13 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     {
         vk.DeviceWaitIdle(_device);
         SwapchainManager.Cleanup(_device);
-        SwapchainManager.CreateSwapchain(PhysicalDevice, _device, Surface, Indices.GraphicsFamily,
-                                          Indices.PresentFamily);
+        SwapchainManager.CreateSwapchain(
+            PhysicalDevice,
+            _device,
+            Surface,
+            Indices.GraphicsFamily,
+            Indices.PresentFamily
+        );
         SwapchainManager.ChangeLayout(_device, _commandPool, _graphicQueue);
     }
 
@@ -695,13 +789,19 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// 获取 swapchain image
     /// </summary>
     /// <returns>swapchain image</returns>
-    public Image GetSwapchainImage() { return SwapchainManager.Images[_imageIndex]; }
+    public Image GetSwapchainImage()
+    {
+        return SwapchainManager.Images[_imageIndex];
+    }
 
     /// <summary>
     /// 获取 swapchain image
     /// </summary>
     /// <returns>swapchain image</returns>
-    public ImageView GetSwapchainImageView() { return SwapchainManager.ImageViews[_imageIndex]; }
+    public ImageView GetSwapchainImageView()
+    {
+        return SwapchainManager.ImageViews[_imageIndex];
+    }
 
     public void Dispose()
     {

@@ -9,14 +9,17 @@ public struct CubismTextureColor
     /// 红色通道
     /// </summary>
     public float R;
+
     /// <summary>
     /// 绿色通道
     /// </summary>
     public float G;
+
     /// <summary>
     /// 蓝色通道
     /// </summary>
     public float B;
+
     /// <summary>
     /// α 通道
     /// </summary>

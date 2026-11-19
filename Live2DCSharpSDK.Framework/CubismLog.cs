@@ -50,8 +50,10 @@ public static class CubismLog
     /// <summary>
     /// 当前生效的日志输出级别: 优先当前上下文, 否则全局默认.
     /// </summary>
-    private static LogLevel CurrentLevel
-        => CubismContext.Current is null ? CubismContext.Default.LogLevel : CubismContext.Current.LogLevel;
+    private static LogLevel CurrentLevel =>
+        CubismContext.Current is null
+            ? CubismContext.Default.LogLevel
+            : CubismContext.Current.LogLevel;
 
     /// <summary>
     /// 当前生效的日志输出函数: 上下文设置优先, 未设置时回退到 Core 当前注册的回调.
@@ -64,7 +66,12 @@ public static class CubismLog
         return context.LogOutput ?? CubismCore.GetLogFunction();
     }
 
-    private static void CubismLogPrintln(LogLevel level, string head, string fmt, params object?[] args)
+    private static void CubismLogPrintln(
+        LogLevel level,
+        string head,
+        string fmt,
+        params object?[] args
+    )
     {
         string data = $"[CSM] {head} {string.Format(fmt, args)}";
         if (level < CurrentLevel)

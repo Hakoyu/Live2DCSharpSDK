@@ -9,9 +9,12 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
 {
     public override RenderType RenderType => RenderType.Vulkan;
 
-
-    public override unsafe CubismClippingContext CreateClippingContext(CubismClippingManager manager,
-        CubismModel model, int* clippingDrawableIndices, int clipCount)
+    public override unsafe CubismClippingContext CreateClippingContext(
+        CubismClippingManager manager,
+        CubismModel model,
+        int* clippingDrawableIndices,
+        int clipCount
+    )
     {
         return new CubismClippingContext_Vulkan(manager, clippingDrawableIndices, clipCount);
     }
@@ -23,8 +26,12 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
     /// <param name="commandBuffer">命令缓冲区</param>
     /// <param name="updateCommandBuffer">更新用命令缓冲区</param>
     /// <param name="renderer">渲染器实例</param>
-    public unsafe void SetupClippingContext(CubismModel model, CommandBuffer commandBuffer, CommandBuffer updateCommandBuffer,
-                              CubismRenderer_Vulkan renderer)
+    public unsafe void SetupClippingContext(
+        CubismModel model,
+        CommandBuffer commandBuffer,
+        CommandBuffer updateCommandBuffer,
+        CubismRenderer_Vulkan renderer
+    )
     {
         // 准备所有裁剪
         // 使用同一裁剪(多个时合并为一个裁剪)时只设置一次
@@ -60,14 +67,26 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
         if (buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f) is false)
         {
             // 遮罩缓冲区分配失败时为无效目标, 跳过本帧遮罩生成而不是在未开启的渲染通道里提交绘制.
-            CubismLog.Warning("[Live2D Vulkan]mask render target is invalid, skip clipping mask setup.");
+            CubismLog.Warning(
+                "[Live2D Vulkan]mask render target is invalid, skip clipping mask setup."
+            );
             return;
         }
 
         // 以与生成的 FrameBuffer 相同的尺寸设置 viewport
-        var viewport = CubismRenderer_Vulkan.GetViewport(ClippingMaskBufferSize.X, ClippingMaskBufferSize.Y, 0.0f, 1.0f);
+        var viewport = CubismRenderer_Vulkan.GetViewport(
+            ClippingMaskBufferSize.X,
+            ClippingMaskBufferSize.Y,
+            0.0f,
+            1.0f
+        );
         vk.CmdSetViewport(commandBuffer, 0, 1, &viewport);
-        var rect = CubismRenderer_Vulkan.GetScissor(0.0f, 0.0f, ClippingMaskBufferSize.X, ClippingMaskBufferSize.Y);
+        var rect = CubismRenderer_Vulkan.GetScissor(
+            0.0f,
+            0.0f,
+            ClippingMaskBufferSize.X,
+            ClippingMaskBufferSize.Y
+        );
         vk.CmdSetScissor(commandBuffer, 0, 1, &rect);
 
         // 逐个决定各遮罩的布局
@@ -97,13 +116,18 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
         for (int clipIndex = 0; clipIndex < ClippingContextListForMask.Count; clipIndex++)
         {
             // --- 实际绘制一个遮罩 ---
-            var clipContext = (ClippingContextListForMask[clipIndex] as CubismClippingContext_Vulkan)!;
+            var clipContext = (
+                ClippingContextListForMask[clipIndex] as CubismClippingContext_Vulkan
+            )!;
             var allClippedDrawRect = clipContext.AllClippedDrawRect; // 使用该遮罩的全部绘制对象在逻辑坐标上的包围矩形
             var layoutBoundsOnTex01 = clipContext.LayoutBounds; // 把遮罩放入其中
             var MARGIN = 0.05f;
 
             // 按索引获取设置到 clipContext 的离屏 surface
-            var clipContextOffscreenSurface = renderer.GetMaskBufferForType(Type, clipContext.BufferIndex)!;
+            var clipContextOffscreenSurface = renderer.GetMaskBufferForType(
+                Type,
+                clipContext.BufferIndex
+            )!;
 
             // 当前离屏 surface 与 clipContext 的不同时
             if (CurrentMaskBuffer != clipContextOffscreenSurface)
@@ -114,14 +138,19 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
                 // 把遮罩用 RenderTexture 设为 active
                 if (buffer.BeginDraw(commandBuffer, 1.0f, 1.0f, 1.0f, 1.0f) is false)
                 {
-                    CubismLog.Warning("[Live2D Vulkan]mask render target is invalid, skip clipping mask setup.");
+                    CubismLog.Warning(
+                        "[Live2D Vulkan]mask render target is invalid, skip clipping mask setup."
+                    );
                     return;
                 }
             }
 
             // 使用模型坐标上的矩形, 并适当附加 margin
             TmpBoundsOnModel.SetRect(allClippedDrawRect);
-            TmpBoundsOnModel.Expand(allClippedDrawRect.Width * MARGIN, allClippedDrawRect.Height * MARGIN);
+            TmpBoundsOnModel.Expand(
+                allClippedDrawRect.Width * MARGIN,
+                allClippedDrawRect.Height * MARGIN
+            );
             //########## 本来不应使用分配区域的全部, 而应取所需的最小尺寸
             // 求出 shader 用的计算式. 不考虑旋转时如下
             // movePeriod' = movePeriod * scaleX + offX     [[ movePeriod' = (movePeriod - tmpBoundsOnModel.movePeriod)*scale + layoutBoundsOnTex01.movePeriod ]]

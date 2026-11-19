@@ -51,7 +51,8 @@ public sealed class CubismUpdateSchedulerTests
 
         CollectionAssert.AreEqual(
             Enumerable.Range(0, 10).Select(i => $"same-{i}").ToArray(),
-            calls);
+            calls
+        );
     }
 
     /// <summary>

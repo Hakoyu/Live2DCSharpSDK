@@ -16,14 +16,17 @@ public abstract class ICubismOffscreenRenderTarget<TSelf, TRenderTarget>
     /// 渲染目标 (官方 _renderTarget)
     /// </summary>
     protected TRenderTarget? _renderTarget;
+
     /// <summary>
     /// _offscreens 的 Index (官方 _offscreenIndex, 初始值 -1)
     /// </summary>
     private int _offscreenIndex = -1;
+
     /// <summary>
     /// 父级 Offscreen 渲染目标 (官方 _parentRenderTarget)
     /// </summary>
     private TSelf? _parentRenderTarget;
+
     /// <summary>
     /// 之前的 Offscreen 渲染目标 (官方 _oldOffscreen)
     /// </summary>

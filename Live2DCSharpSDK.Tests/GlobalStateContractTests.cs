@@ -19,7 +19,9 @@ public class GlobalStateContractTests
     [TestMethod]
     public void ATier_DoesNotProbeCoreLibrary()
     {
-        if (string.Equals(GlobalStateFixture.Tier, "a", StringComparison.OrdinalIgnoreCase) is false)
+        if (
+            string.Equals(GlobalStateFixture.Tier, "a", StringComparison.OrdinalIgnoreCase) is false
+        )
         {
             return;
         }

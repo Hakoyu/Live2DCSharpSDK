@@ -12,22 +12,27 @@ public unsafe struct ModelUBO
     /// 传递给 shader program 的数据(ProjectionMatrix)
     /// </summary>
     public fixed float ProjectionMatrix[16];
+
     /// <summary>
     /// 传递给 shader program 的数据(ClipMatrix)
     /// </summary>
     public fixed float ClipMatrix[16];
+
     /// <summary>
     /// 传递给 shader program 的数据(BaseColor)
     /// </summary>
     public fixed float BaseColor[4];
+
     /// <summary>
     /// 传递给 shader program 的数据(MultiplyColor)
     /// </summary>
     public fixed float MultiplyColor[4];
+
     /// <summary>
     /// 传递给 shader program 的数据(ScreenColor)
     /// </summary>
     public fixed float ScreenColor[4];
+
     /// <summary>
     /// 传递给 shader program 的数据(ChannelFlag)
     /// </summary>

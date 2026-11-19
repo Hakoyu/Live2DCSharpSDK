@@ -20,9 +20,17 @@ public class TextureInfoVulkan : TextureInfo
     /// <param name="tiling">图像数据的 tiling 布局设置</param>
     /// <param name="usage">图像的使用标志</param>
     /// <param name="imageProperties"></param>
-    public unsafe TextureInfoVulkan(Vk vk, LAppDelegateVulkan lapp, LAppModel model,
-        Format format, ImageTiling tiling, ImageUsageFlags usage,
-        uint width, uint height, nint data)
+    public unsafe TextureInfoVulkan(
+        Vk vk,
+        LAppDelegateVulkan lapp,
+        LAppModel model,
+        Format format,
+        ImageTiling tiling,
+        ImageUsageFlags usage,
+        uint width,
+        uint height,
+        nint data
+    )
     {
         _vk = vk;
         _lapp = lapp;
@@ -36,18 +44,31 @@ public class TextureInfoVulkan : TextureInfo
         // 纹理解算是模型加载的必经步骤, 任一步失败都抛出明确异常,
         // 且抛出前先释放已创建的 staging buffer / image, 避免泄漏与无效句柄外泄.
         var stagingBuffer = new CubismBufferVulkan(vk);
-        if (stagingBuffer.CreateBuffer(device, physicalDevice, imageSize, BufferUsageFlags.TransferSrcBit,
-                                   MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit) is false)
+        if (
+            stagingBuffer.CreateBuffer(
+                device,
+                physicalDevice,
+                imageSize,
+                BufferUsageFlags.TransferSrcBit,
+                MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit
+            )
+            is false
+        )
         {
             throw new InvalidOperationException(
-                $"failed to create texture staging buffer ({width}x{height}, {imageSize} bytes).");
+                $"failed to create texture staging buffer ({width}x{height}, {imageSize} bytes)."
+            );
         }
 
-        if (stagingBuffer.Map(device, imageSize) is false
-            || stagingBuffer.MemCpy((void*)data, imageSize) is false)
+        if (
+            stagingBuffer.Map(device, imageSize) is false
+            || stagingBuffer.MemCpy((void*)data, imageSize) is false
+        )
         {
             stagingBuffer.Destroy(device);
-            throw new InvalidOperationException($"failed to upload texture data ({width}x{height}).");
+            throw new InvalidOperationException(
+                $"failed to upload texture data ({width}x{height})."
+            );
         }
 
         stagingBuffer.UnMap(device);
@@ -55,14 +76,33 @@ public class TextureInfoVulkan : TextureInfo
         uint mipLevels = (uint)Math.Floor(Math.Log2(Math.Max(width, height))) + 1;
 
         _image = new CubismImageVulkan(vk);
-        if (_image.CreateImage(device, physicalDevice, width, height, mipLevels, format, tiling, usage) is false)
+        if (
+            _image.CreateImage(
+                device,
+                physicalDevice,
+                width,
+                height,
+                mipLevels,
+                format,
+                tiling,
+                usage
+            )
+            is false
+        )
         {
             stagingBuffer.Destroy(device);
-            throw new InvalidOperationException($"failed to create texture image ({width}x{height}).");
+            throw new InvalidOperationException(
+                $"failed to create texture image ({width}x{height})."
+            );
         }
 
         CommandBuffer commandBuffer = lapp.VulkanManager.BeginSingleTimeCommands();
-        _image.SetImageLayout(commandBuffer, ImageLayout.TransferDstOptimal, mipLevels, ImageAspectFlags.ColorBit);
+        _image.SetImageLayout(
+            commandBuffer,
+            ImageLayout.TransferDstOptimal,
+            mipLevels,
+            ImageAspectFlags.ColorBit
+        );
         CopyBufferToImage(commandBuffer, stagingBuffer.Buffer, _image.Image, width, height);
         lapp.VulkanManager.SubmitCommand(commandBuffer);
         GenerateMipmaps(_image, width, height, mipLevels);
@@ -71,15 +111,21 @@ public class TextureInfoVulkan : TextureInfo
         {
             stagingBuffer.Destroy(device);
             _image.Destroy(device);
-            throw new InvalidOperationException($"failed to create texture image view ({width}x{height}).");
+            throw new InvalidOperationException(
+                $"failed to create texture image view ({width}x{height})."
+            );
         }
 
         vk.GetPhysicalDeviceProperties(physicalDevice, out var properties);
-        if (_image.CreateSampler(device, properties.Limits.MaxSamplerAnisotropy, mipLevels) is false)
+        if (
+            _image.CreateSampler(device, properties.Limits.MaxSamplerAnisotropy, mipLevels) is false
+        )
         {
             stagingBuffer.Destroy(device);
             _image.Destroy(device);
-            throw new InvalidOperationException($"failed to create texture sampler ({width}x{height}).");
+            throw new InvalidOperationException(
+                $"failed to create texture sampler ({width}x{height})."
+            );
         }
 
         stagingBuffer.Destroy(device);
@@ -95,8 +141,13 @@ public class TextureInfoVulkan : TextureInfo
     /// <param name="image">image</param>
     /// <param name="width">图像的宽度</param>
     /// <param name="height">图像的高度</param>
-    public unsafe void CopyBufferToImage(CommandBuffer commandBuffer, Buffer buffer, Image image, uint width,
-                           uint height)
+    public unsafe void CopyBufferToImage(
+        CommandBuffer commandBuffer,
+        Buffer buffer,
+        Image image,
+        uint width,
+        uint height
+    )
     {
         var region = new BufferImageCopy
         {
@@ -108,13 +159,20 @@ public class TextureInfoVulkan : TextureInfo
                 AspectMask = ImageAspectFlags.ColorBit,
                 MipLevel = 0,
                 BaseArrayLayer = 0,
-                LayerCount = 1
+                LayerCount = 1,
             },
             ImageOffset = new(0, 0, 0),
-            ImageExtent = new(width, height, 1)
+            ImageExtent = new(width, height, 1),
         };
 
-        _vk.CmdCopyBufferToImage(commandBuffer, buffer, image, ImageLayout.TransferDstOptimal, 1, ref region);
+        _vk.CmdCopyBufferToImage(
+            commandBuffer,
+            buffer,
+            image,
+            ImageLayout.TransferDstOptimal,
+            1,
+            ref region
+        );
     }
 
     /// <summary>
@@ -124,8 +182,12 @@ public class TextureInfoVulkan : TextureInfo
     /// <param name="texWidth">图像的宽度</param>
     /// <param name="texHeight">图像的高度</param>
     /// <param name="mipLevels">mip 层级</param>
-    public unsafe void GenerateMipmaps(CubismImageVulkan image, uint texWidth, uint texHeight,
-                         uint mipLevels)
+    public unsafe void GenerateMipmaps(
+        CubismImageVulkan image,
+        uint texWidth,
+        uint texHeight,
+        uint mipLevels
+    )
     {
         CommandBuffer commandBuffer = _lapp.VulkanManager.BeginSingleTimeCommands();
 
@@ -140,8 +202,8 @@ public class TextureInfoVulkan : TextureInfo
                 AspectMask = ImageAspectFlags.ColorBit,
                 BaseArrayLayer = 0,
                 LayerCount = 1,
-                LevelCount = 1
-            }
+                LevelCount = 1,
+            },
         };
 
         int mipWidth = (int)texWidth;
@@ -155,11 +217,18 @@ public class TextureInfoVulkan : TextureInfo
             barrier.SrcAccessMask = AccessFlags.TransferWriteBit;
             barrier.DstAccessMask = AccessFlags.TransferReadBit;
 
-            _vk.CmdPipelineBarrier(commandBuffer,
-                                 PipelineStageFlags.TransferBit, PipelineStageFlags.TransferBit, 0,
-                                 0, null,
-                                 0, null,
-                                 1, ref barrier);
+            _vk.CmdPipelineBarrier(
+                commandBuffer,
+                PipelineStageFlags.TransferBit,
+                PipelineStageFlags.TransferBit,
+                0,
+                0,
+                null,
+                0,
+                null,
+                1,
+                ref barrier
+            );
 
             var blit = new ImageBlit
             {
@@ -168,43 +237,61 @@ public class TextureInfoVulkan : TextureInfo
                     AspectMask = ImageAspectFlags.ColorBit,
                     MipLevel = i - 1,
                     BaseArrayLayer = 0,
-                    LayerCount = 1
+                    LayerCount = 1,
                 },
                 DstSubresource = new()
                 {
                     AspectMask = ImageAspectFlags.ColorBit,
                     MipLevel = i,
                     BaseArrayLayer = 0,
-                    LayerCount = 1
+                    LayerCount = 1,
                 },
                 SrcOffsets = new(),
-                DstOffsets = new()
+                DstOffsets = new(),
             };
 
             blit.SrcOffsets[0] = new(0, 0, 0);
             blit.SrcOffsets[1] = new(mipWidth, mipHeight, 1);
             blit.DstOffsets[0] = new(0, 0, 0);
-            blit.DstOffsets[1] = new(mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1);
+            blit.DstOffsets[1] = new(
+                mipWidth > 1 ? mipWidth / 2 : 1,
+                mipHeight > 1 ? mipHeight / 2 : 1,
+                1
+            );
 
-            _vk.CmdBlitImage(commandBuffer,
-                           image.Image, ImageLayout.TransferSrcOptimal,
-                           image.Image, ImageLayout.TransferDstOptimal,
-                           1, &blit,
-                           Filter.Linear);
+            _vk.CmdBlitImage(
+                commandBuffer,
+                image.Image,
+                ImageLayout.TransferSrcOptimal,
+                image.Image,
+                ImageLayout.TransferDstOptimal,
+                1,
+                &blit,
+                Filter.Linear
+            );
 
             barrier.OldLayout = ImageLayout.TransferSrcOptimal;
             barrier.NewLayout = ImageLayout.ShaderReadOnlyOptimal;
             barrier.SrcAccessMask = AccessFlags.TransferReadBit;
             barrier.DstAccessMask = AccessFlags.ShaderReadBit;
 
-            _vk.CmdPipelineBarrier(commandBuffer,
-                                 PipelineStageFlags.TransferBit, PipelineStageFlags.FragmentShaderBit, 0,
-                                 0, null,
-                                 0, null,
-                                 1, ref barrier);
+            _vk.CmdPipelineBarrier(
+                commandBuffer,
+                PipelineStageFlags.TransferBit,
+                PipelineStageFlags.FragmentShaderBit,
+                0,
+                0,
+                null,
+                0,
+                null,
+                1,
+                ref barrier
+            );
 
-            if (mipWidth > 1) mipWidth /= 2;
-            if (mipHeight > 1) mipHeight /= 2;
+            if (mipWidth > 1)
+                mipWidth /= 2;
+            if (mipHeight > 1)
+                mipHeight /= 2;
         }
 
         barrier.SubresourceRange.BaseMipLevel = mipLevels - 1;
@@ -213,11 +300,18 @@ public class TextureInfoVulkan : TextureInfo
         barrier.SrcAccessMask = AccessFlags.TransferWriteBit;
         barrier.DstAccessMask = AccessFlags.ShaderReadBit;
 
-        _vk.CmdPipelineBarrier(commandBuffer,
-                             PipelineStageFlags.TransferBit, PipelineStageFlags.FragmentShaderBit, 0,
-                             0, null,
-                             0, null,
-                             1, ref barrier);
+        _vk.CmdPipelineBarrier(
+            commandBuffer,
+            PipelineStageFlags.TransferBit,
+            PipelineStageFlags.FragmentShaderBit,
+            0,
+            0,
+            null,
+            0,
+            null,
+            1,
+            ref barrier
+        );
 
         _lapp.VulkanManager.SubmitCommand(commandBuffer);
     }

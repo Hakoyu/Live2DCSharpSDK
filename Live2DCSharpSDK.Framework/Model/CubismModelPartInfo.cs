@@ -9,6 +9,7 @@ public class CubismModelPartInfo
     /// 子对象信息的列表
     /// </summary>
     public List<CubismModelObjectInfo> Objects { get; } = [];
+
     /// <summary>
     /// 子绘制对象信息
     /// </summary>
