@@ -139,7 +139,10 @@ public abstract class CubismUserModel : IDisposable
         _dragManager = new();
     }
 
-    public void Dispose()
+    /// <summary>
+    /// 解放する（G2 finding F1: 派生クラスの Dispose が確実に呼ばれるよう virtual にする）。
+    /// </summary>
+    public virtual void Dispose()
     {
         _updateScheduler.Dispose();
 
@@ -284,7 +287,19 @@ public abstract class CubismUserModel : IDisposable
 
         CubismLog.Debug($"[Live2D SDK]load motion: {name}");
 
-        var motion = new CubismMotion(buffer, onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
+        ACubismMotion motion;
+        try
+        {
+            motion = new CubismMotion(buffer, onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
+        }
+        catch (CubismMotionConsistencyException e)
+        {
+            // 官方 CubismMotion::Create は整合性不一致時に NULL を返し、呼び出し側（LAppModel）はそのモーションをスキップする。
+            // 本地はコンストラクタで例外を投げるため、ここで捕捉して NULL 相当（null）に変換する（G2 finding F2）。
+            // 注意: 引数不正・ファイル不在・JSON 破損など他の例外は握りつぶさず、そのまま伝播させる。
+            CubismLog.Warning("[Live2D SDK]failed to load motion (inconsistent): {0} : {1}", name, e.Message);
+            return null;
+        }
 
         // 官方 LoadMotion: model3.json の FadeInTime / FadeOutTime が 0 以上なら上書きする
         if (fadeInTime.HasValue)

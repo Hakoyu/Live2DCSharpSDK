@@ -5,6 +5,23 @@ using Live2DCSharpSDK.Framework.Model;
 namespace Live2DCSharpSDK.Framework.Motion;
 
 /// <summary>
+/// motion3.json の整合性検証に失敗したことを表す例外（本地独自）。
+/// 官方の CubismMotion::Create は NULL を返すが、C# のコンストラクタは null を返せないため、
+/// この型で失敗を通知する。CubismUserModel.LoadMotion はこの型だけを捕捉して null に変換する
+/// （G2 finding F2: 他の例外は握りつぶさない）。
+/// </summary>
+public sealed class CubismMotionConsistencyException : Exception
+{
+    public CubismMotionConsistencyException() : base("Inconsistent motion3.json.")
+    {
+    }
+
+    public CubismMotionConsistencyException(string message) : base(message)
+    {
+    }
+}
+
+/// <summary>
 /// モーションのクラス。
 /// </summary>
 public class CubismMotion : ACubismMotion
@@ -339,7 +356,9 @@ public class CubismMotion : ACubismMotion
         // 整合性が確認できなければ処理しない（官方 CubismMotion::Parse）
         if (shouldCheckMotionConsistency && !CubismMotionJson.HasConsistency(obj))
         {
-            throw new Exception("Inconsistent motion3.json.");
+            // 官方 CubismMotion::Parse は _motionData を埋めずに戻り、Create が NULL を返す。
+            // C# はコンストラクタから null を返せないため、専用例外で通知する（G2 finding F2）。
+            throw new CubismMotionConsistencyException();
         }
 
         _motionData = new()

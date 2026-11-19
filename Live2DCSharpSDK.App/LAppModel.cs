@@ -364,10 +364,13 @@ public class LAppModel : CubismUserModel
         SetupTextures();
     }
 
-    public new void Dispose()
+    /// <summary>
+    /// 解放する（G2 finding F1: 基底の Dispose が virtual になったため override に変更）。
+    /// 清理順: 先に App 側のリソース（モーション・テクスチャ）を解放し、最後に基底（scheduler / Moc / Renderer）を解放する。
+    /// </summary>
+    public override void Dispose()
     {
-        base.Dispose();
-
+        // --- App 側のリソースを先に解放 ---
         _motions.Clear();
         _expressions.Clear();
 
@@ -385,6 +388,9 @@ public class LAppModel : CubismUserModel
             _lapp.TextureManager.ReleaseTexture(item);
         }
         Textures.Clear();
+
+        // --- 最後に基底（_updateScheduler / _moc / Renderer）を解放 ---
+        base.Dispose();
     }
 
     public void LoadBreath()
