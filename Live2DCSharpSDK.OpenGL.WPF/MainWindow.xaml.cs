@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Windows;
+using System.Windows.Threading;
 using Live2DCSharpSDK.App;
 using Live2DCSharpSDK.Framework;
 using Live2DCSharpSDK.OpenGL;
@@ -16,6 +17,11 @@ public partial class MainWindow : Window
 {
     GLWpfControl GLControl;
     private LAppDelegate lapp;
+
+    /// <summary>
+    /// 是否已经输出过窗口/framebuffer 尺寸诊断(只输出一次).
+    /// </summary>
+    private bool _loggedSize;
 
     public MainWindow()
     {
@@ -39,7 +45,10 @@ public partial class MainWindow : Window
         var settings = new GLWpfControlSettings
         {
             MajorVersion = 3,
-            MinorVersion = 3
+            MinorVersion = 3,
+            // 按设备像素渲染: 高 DPI 下 framebuffer 尺寸 = 控件逻辑尺寸 x 缩放率,
+            // 与 Avalonia 宿主的 RenderScaling 口径一致, 避免整幅画面被 WPF 放大而发虚.
+            UseDeviceDpi = true
         };
         GLControl.Start(settings);
         lapp = new LAppDelegateOpenGL(new OpenTKWPFApi(GLControl))
@@ -68,6 +77,13 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// 可选的日志文件路径(环境变量 LIVE2D_LOG_FILE). 设置后每条日志同时追加到该文件.
+    /// 实测: 模型加载完成后, WinExe 宿主进程的 stdout 句柄会失效(Console.WriteLine 抛 "句柄无效"),
+    /// 无控制台场景下后续日志全部丢失; 需要排障时用这个文件兜底.
+    /// </summary>
+    private static readonly string? LogFilePath = Environment.GetEnvironmentVariable("LIVE2D_LOG_FILE");
+
+    /// <summary>
     /// 日志输出. 以 WinExe(无控制台)启动时, Console.WriteLine 可能因
     /// "句柄无效"(ERROR_INVALID_HANDLE)而抛出异常, 因此
     /// 把日志输出包起来, 避免导致进程退出.
@@ -85,10 +101,32 @@ public partial class MainWindow : Window
             // 会同时出现 IOException / UnauthorizedAccessException, 因此在此吞掉.
             System.Diagnostics.Debug.WriteLine($"{message} (console write failed: {e.GetType().Name})");
         }
+
+        if (LogFilePath is null)
+        {
+            return;
+        }
+
+        try
+        {
+            File.AppendAllText(LogFilePath, message + Environment.NewLine);
+        }
+        catch (Exception)
+        {
+            // 日志文件不可写时保持静默, 不影响宿主主流程.
+        }
     }
 
     private void GLControl_Render(TimeSpan obj)
     {
+        UpdateViewport();
+
+        if (_loggedSize is false && GLControl.FrameBufferWidth > 0)
+        {
+            _loggedSize = true;
+            Log($"[Live2D App]window: logical={GLControl.ActualWidth}x{GLControl.ActualHeight}, framebuffer={GLControl.FrameBufferWidth}x{GLControl.FrameBufferHeight}");
+        }
+
         GL.ClearColor(Color4.Blue);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         lapp.Run((float)obj.TotalSeconds);
@@ -96,10 +134,24 @@ public partial class MainWindow : Window
 
     private void GLControl_Resized(object sender, SizeChangedEventArgs e)
     {
-        if (lapp == null)
+        if (lapp is null)
             return;
         lapp.Resize();
-        GL.Viewport(0, 0, (int)GLControl.ActualWidth, (int)GLControl.ActualHeight);
+        UpdateViewport();
+    }
+
+    /// <summary>
+    /// 把 viewport 设为 GLWpfControl 的 framebuffer 实际像素尺寸.
+    /// 高 DPI 下它等于控件逻辑尺寸乘以缩放率, 与 LAppDelegate 的窗口尺寸保持同一口径.
+    /// </summary>
+    private void UpdateViewport()
+    {
+        int width = GLControl.FrameBufferWidth;
+        int height = GLControl.FrameBufferHeight;
+        if (width > 0 && height > 0)
+        {
+            GL.Viewport(0, 0, width, height);
+        }
     }
 
     /// <summary>
@@ -110,21 +162,39 @@ public partial class MainWindow : Window
     {
         try
         {
-            var context = GLControl?.Context;
+            var context = GLControl.Context;
             context?.MakeCurrent();
 
-            lapp?.Dispose();
+            // 先摘掉事件, 避免释放过程中还有渲染/尺寸回调进来.
+            GLWpfControl control = GLControl;
+            control.Render -= GLControl_Render;
+            control.SizeChanged -= GLControl_Resized;
 
-            // 释放进程共享的 offscreen manager(官方 LAppLive2DManager::ReleaseInstance()).
+            // 1) App 侧: 模型(renderer / texture / moc) -> 进程共享 offscreen manager.
+            lapp?.Dispose();
+            Log($"[Live2D App]models after dispose: {lapp?.Live2dManager?.GetModelNum() ?? 0}");
+
             CubismOffscreenManager_OpenGLES2.ReleaseInstance();
             Log("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
 
+            // 2) 控件侧: 把控件移出可视树, 触发 Unloaded -> GLWpfControlRenderer.ReleaseFramebufferResources(),
+            //    它自己的 framebuffer / D3D 互操作 surface 才会被释放(lapp.Dispose + ReleaseInstance 不负责这些).
+            //    Unloaded 是异步派发的, 这里驱动 UI 队列等它完成, 此时 GL context 仍为 current.
+            BorderOpenTK.Child = null;
+            for (int i = 0; i < 100 && GLControl.FrameBufferWidth > 0; i++)
+            {
+                Dispatcher.Invoke(() => { }, DispatcherPriority.Background);
+                Thread.Sleep(5);
+            }
+
+            Log($"[Live2D App]GLWpfControl framebuffer released: {GLControl.FrameBufferWidth == 0}");
+
             context?.MakeNoneCurrent();
 
-            // 注: 不调用 GLControl.Dispose(). OpenTK.GLWpfControl 4.3.1 中
-            // GLWpfControlRenderer.Dispose → DxGlContext.Dispose → DXCloseDeviceNV 会
-            // 引发 AccessViolation(实测 0xC0000005, 退出码 139), 因此 D3D 互操作的清理
-            // 交给 WPF/OS 的销毁路径处理(GL 资源已由 lapp.Dispose + ReleaseInstance 释放).
+            // 注: 不调用 GLControl.Dispose(). GLWpfControlRenderer.Dispose 会继续调用
+            // DxGlContext.Dispose -> Wgl.DXCloseDeviceNV, 历史上实测引发 AccessViolation(0xC0000005);
+            // 上面的 Unloaded 路径只做 ReleaseFramebufferResources, 不碰 D3D 互操作设备,
+            // 因此 GL 资源已释放, D3D 侧交给 WPF/OS 的销毁路径.
         }
         catch (Exception ex)
         {

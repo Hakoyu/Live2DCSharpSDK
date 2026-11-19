@@ -12,6 +12,11 @@ namespace Live2DCSharpSDK.OpenTK;
 public class Window : GameWindow
 {
     private LAppDelegate lapp;
+
+    /// <summary>
+    /// 已经记录过的 GL 错误码. 同一错误码只记录一次, 避免逐帧刷屏.
+    /// </summary>
+    private readonly HashSet<ErrorCode> _reportedGlErrors = [];
     public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
             : base(gameWindowSettings, nativeWindowSettings)
     {
@@ -54,18 +59,27 @@ public class Window : GameWindow
         {
             Console.WriteLine($"[Live2D App]未找到模型, 以空场景启动: {modelName}");
         }
+
+        // 高 DPI 或 Retina 下 client 与 framebuffer 尺寸可能不同, 记录一次便于核对口径.
+        Console.WriteLine($"[Live2D App]window: client={ClientSize.X}x{ClientSize.Y}, framebuffer={FramebufferSize.X}x{FramebufferSize.Y}");
+        ApplyFramebufferViewport();
     }
 
     protected override void OnRenderFrame(FrameEventArgs e)
     {
         base.OnRenderFrame(e);
 
+        // 每帧同步 viewport: 窗口移动/跨显示器切换 DPI 时也不至于沿用旧尺寸.
+        ApplyFramebufferViewport();
+
         lapp.Run((float)UpdateTime);
 
-        var code = GL.GetError();
-        if (code != ErrorCode.NoError)
+        ErrorCode code = GL.GetError();
+        if (code is not ErrorCode.NoError && _reportedGlErrors.Add(code))
         {
-            throw new Exception();
+            // 旧实现此处 throw new Exception(): 既无消息也无错误码, 日志里无从定位.
+            // 现在按错误码各记录一次并继续渲染, 避免单帧 GL 错误直接终止宿主.
+            CubismLog.Warning($"[Live2D App]OpenGL error detected: {code} (0x{(int)code:X4}).");
         }
 
         SwapBuffers();
@@ -75,9 +89,22 @@ public class Window : GameWindow
     {
         base.OnResize(e);
 
-        lapp.Resize();
+        lapp?.Resize();
 
-        GL.Viewport(0, 0, e.Width, e.Height);
+        ApplyFramebufferViewport();
+    }
+
+    /// <summary>
+    /// 把 viewport 设为 framebuffer 的实际像素尺寸.
+    /// 高 DPI 屏或 Retina 上 framebuffer 与窗口逻辑尺寸不同, 统一以 framebuffer 为准.
+    /// </summary>
+    private void ApplyFramebufferViewport()
+    {
+        var size = FramebufferSize;
+        if (size.X > 0 && size.Y > 0)
+        {
+            GL.Viewport(0, 0, size.X, size.Y);
+        }
     }
 
     protected override void OnUpdateFrame(FrameEventArgs e)

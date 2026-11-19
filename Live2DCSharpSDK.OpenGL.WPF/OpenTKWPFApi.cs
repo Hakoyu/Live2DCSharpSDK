@@ -21,8 +21,17 @@ public class OpenTKWPFApi : OpenGLApi
 
     public override void GetWindowSize(out int w, out int h)
     {
-        w = (int)Window.ActualWidth;
-        h = (int)Window.ActualHeight;
+        // 以 GLWpfControl 的 framebuffer 实际像素尺寸为准(高 DPI 下 = 逻辑尺寸 x 缩放率).
+        // 与 GL.Viewport 使用同一口径, 保证投影矩阵与绘制区域一致.
+        w = Window.FrameBufferWidth;
+        h = Window.FrameBufferHeight;
+
+        // 首帧渲染前 framebuffer 尚未建立, 此时退回控件逻辑尺寸.
+        if (w <= 0 || h <= 0)
+        {
+            w = (int)Math.Round(Window.ActualWidth);
+            h = (int)Math.Round(Window.ActualHeight);
+        }
     }
 
     public override void ActiveTexture(int bit)

@@ -21,8 +21,17 @@ public class OpenTKApi : OpenGLApi
 
     public override void GetWindowSize(out int w, out int h)
     {
-        w = Window.ClientSize.X;
-        h = Window.ClientSize.Y;
+        // 以 framebuffer 的实际像素尺寸为准(高 DPI 屏 / Retina 下与 ClientSize 不同),
+        // 与 GL.Viewport 保持同一口径, 保证投影矩阵与绘制区域一致.
+        w = Window.FramebufferSize.X;
+        h = Window.FramebufferSize.Y;
+
+        // 最小化等状态下 framebuffer 可能为 0, 此时退回窗口 client 尺寸.
+        if (w <= 0 || h <= 0)
+        {
+            w = Window.ClientSize.X;
+            h = Window.ClientSize.Y;
+        }
     }
 
     public override void ActiveTexture(int bit)

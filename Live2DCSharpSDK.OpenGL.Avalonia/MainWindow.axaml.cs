@@ -35,7 +35,7 @@ public partial class MainWindow : Window
         GLTop.PointerMoved += GLTop_PointerMoved;
         GLTop.PointerReleased += GLTop_PointerReleased;
 
-        // Cubism SDK の初期化
+        // Cubism SDK 的初始化
         var cubismOption = new CubismOption()
         {
             LogFunction = Console.WriteLine,
@@ -77,7 +77,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        // ドラッグ中も GLTop でイベントを受け続ける（Look の切替検証用）。
+        // 拖动过程中也由 GLTop 持续接收事件 (用于验证 Look 的切换). 
         e.Pointer.Capture(GLTop);
 
         var (x, y) = GetPointerPosition(e);
@@ -104,9 +104,9 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// ポインタ座標を取得する。
-    /// 座標系は Avalonia の DIP。LAppView のデバイス→スクリーン行列も
-    /// AvaloniaApi.GetWindowSize（Bounds = DIP）で作られるため、ここで拡大率を掛けてはいけない。
+    /// 获取指针坐标. 
+    /// 坐标系为 Avalonia 的 DIP. LAppView 的设备坐标→屏幕坐标矩阵也是
+    /// 由 AvaloniaApi.GetWindowSize (Bounds = DIP) 构建, 因此此处不能乘以缩放率. 
     /// </summary>
     private (double X, double Y) GetPointerPosition(PointerEventArgs e)
     {
@@ -124,7 +124,7 @@ public class OpenGlPageControl : OpenGlControlBase
     private DateTime time;
 
     /// <summary>
-    /// 現在ロードしているモデル（未ロードなら null）
+    /// 当前加载的模型 (未加载时为 null)
     /// </summary>
     private LAppModel? _model;
 
@@ -150,7 +150,7 @@ public class OpenGlPageControl : OpenGlControlBase
     }
 
     /// <summary>
-    /// 動作/表情/物理の切替結果を表示するためのテキスト
+    /// 用于显示动作/表情/物理切换结果的文本
     /// </summary>
     public string Status
     {
@@ -185,9 +185,9 @@ public class OpenGlPageControl : OpenGlControlBase
             return;
         }
 
-        // モデルのパスはハードコードせず、App 層の ModelResourceLocator で解決する
-        // （上流 sample は "F:\\live2d\\Resources" 直書きだった。本仓库はパラメータ化）。
-        // 見つからない場合も例外にせず、空のシーンで起動を続ける。
+        // 模型路径不硬编码, 由 App 层的 ModelResourceLocator 解析
+        // (上游 sample 是 "F:\live2d\Resources" 直写. 本仓库已参数化). 
+        // 即使找不到也不抛出异常, 以空场景继续启动. 
         if (ModelResourceLocator.TryResolve(null, out string modelDir, out string modelName))
         {
             try
@@ -215,16 +215,16 @@ public class OpenGlPageControl : OpenGlControlBase
         lapp = null;
         _model = null;
 
-        // アプリ終了時にプロセス共有の offscreen manager を解放する
-        // （官方 Samples/OpenGL/Demo/proj.win.cmake/src/LAppLive2DManager.cpp:77
-        //   LAppLive2DManager::ReleaseInstance() の CubismOffscreenManager_OpenGLES2::ReleaseInstance() に相当）。
-        // ここは GL コンテキストが current な唯一の後片付けポイントなので、必ず lapp.Dispose()（= 各 renderer の解放）の後に呼ぶ。
+        // 应用退出时释放进程共享的 offscreen manager
+        // (官方 Samples/OpenGL/Demo/proj.win.cmake/src/LAppLive2DManager.cpp:77
+        //   相当于 LAppLive2DManager::ReleaseInstance() 中的 CubismOffscreenManager_OpenGLES2::ReleaseInstance()). 
+        // 这里是 GL 上下文为 current 的唯一收尾点, 因此必须在 lapp.Dispose() (= 各 renderer 的释放) 之后调用. 
         CubismOffscreenManager_OpenGLES2.ReleaseInstance();
         Console.WriteLine("[Live2D App]CubismOffscreenManager_OpenGLES2.ReleaseInstance()");
     }
 
     /// <summary>
-    /// マウス押下（LAppDelegate の glfw 相当 API に橋渡しする）
+    /// 鼠标按下 (桥接到 LAppDelegate 的 glfw 对应 API)
     /// </summary>
     public void NotifyMousePressed(double x, double y)
     {
@@ -238,7 +238,7 @@ public class OpenGlPageControl : OpenGlControlBase
     }
 
     /// <summary>
-    /// マウス移動（ドラッグ）
+    /// 鼠标移动 (拖动)
     /// </summary>
     public void NotifyMouseMoved(double x, double y)
     {
@@ -246,7 +246,7 @@ public class OpenGlPageControl : OpenGlControlBase
     }
 
     /// <summary>
-    /// マウス解放（タップ判定もここで走る）
+    /// 鼠标释放 (点击判定也在这里执行)
     /// </summary>
     public void NotifyMouseReleased(double x, double y)
     {
@@ -364,7 +364,7 @@ public class OpenGlPageControl : OpenGlControlBase
         gl.Viewport(0, 0, x, y);
 
         // 模型的渲染目标按实际像素设置(与 viewport 使用同一坐标系).
-        // LAppDelegate 側のウィンドウサイズは DIP なので、ここで上書きする。
+        // LAppDelegate 侧的窗口尺寸为 DIP, 因此在此处覆盖. 
         if (x > 0 && y > 0)
         {
             lapp.Live2dManager.SetRenderTargetSize(x, y);
