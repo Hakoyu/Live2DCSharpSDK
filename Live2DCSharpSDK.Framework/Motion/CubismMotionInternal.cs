@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework.Model;
+using Live2DCSharpSDK.Framework.Model;
 
 namespace Live2DCSharpSDK.Framework.Motion;
 
@@ -6,6 +6,12 @@ namespace Live2DCSharpSDK.Framework.Motion;
 /// モーション再生終了コールバック関数定義
 /// </summary>
 public delegate void FinishedMotionCallback(CubismModel model, ACubismMotion self);
+
+/// <summary>
+/// モーション再生開始コールバック関数定義（官方 5-r.5 の BeganMotionCallback）
+/// </summary>
+/// <param name="self">再生を開始したモーション</param>
+public delegate void BeganMotionCallback(ACubismMotion self);
 
 /// <summary>
 /// イベントのコールバックに登録できる関数の型情報

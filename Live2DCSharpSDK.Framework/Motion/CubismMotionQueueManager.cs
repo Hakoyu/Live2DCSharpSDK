@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework.Model;
+using Live2DCSharpSDK.Framework.Model;
 
 namespace Live2DCSharpSDK.Framework.Motion;
 
@@ -57,42 +57,6 @@ public class CubismMotionQueueManager
         {
             Motion = motion
         };
-
-        Motions.Add(motionQueueEntry);
-
-        return motionQueueEntry;
-    }
-
-    /// <summary>
-    /// 指定したモーションを開始する。同じタイプのモーションが既にある場合は、既存のモーションに終了フラグを立て、フェードアウトを開始させる。
-    /// </summary>
-    /// <param name="motion">開始するモーション</param>
-    /// <param name="autoDelete">再生が終了したモーションのインスタンスを削除するなら true</param>
-    /// <param name="userTimeSeconds">デルタ時間の積算値[秒]</param>
-    /// <returns>開始したモーションの識別番号を返す。個別のモーションが終了したか否かを判定するIsFinished()の引数で使用する。開始できない時は「-1」</returns>
-    [Obsolete("Please use StartMotion(ACubismMotion motion")]
-    public CubismMotionQueueEntry StartMotion(ACubismMotion motion, float userTimeSeconds)
-    {
-        CubismLog.Warning("[Live2D SDK] StartMotion(ACubismMotion motion, float userTimeSeconds) is a deprecated function. Please use StartMotion(ACubismMotion motion).");
-
-        CubismMotionQueueEntry motionQueueEntry;
-
-        // 既にモーションがあれば終了フラグを立てる
-        for (int i = 0; i < Motions.Count; ++i)
-        {
-            motionQueueEntry = Motions[i];
-            if (motionQueueEntry == null)
-            {
-                continue;
-            }
-
-            motionQueueEntry.SetFadeout(motionQueueEntry.Motion.FadeOutSeconds);
-        }
-
-        motionQueueEntry = new CubismMotionQueueEntry
-        {
-            Motion = motion
-        }; // 終了時に破棄する
 
         Motions.Add(motionQueueEntry);
 

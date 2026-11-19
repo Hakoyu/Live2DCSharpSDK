@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework.Math;
+using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Model;
 
 namespace Live2DCSharpSDK.Framework.Motion;
@@ -30,6 +30,22 @@ public abstract class ACubismMotion
     // モーション再生終了コールバック関数
     public FinishedMotionCallback? OnFinishedMotion { get; set; }
 
+    // モーション再生開始コールバック関数（官方 5-r.5 で追加）
+    public BeganMotionCallback? OnBeganMotion { get; set; }
+
+    /// <summary>
+    /// ループするかどうか（官方 5-r.5 で CubismMotion から移動。既定値 false）
+    /// </summary>
+    protected bool _isLoop;
+    /// <summary>
+    /// ループ時にフェードインが有効かどうかのフラグ（既定値 true）
+    /// </summary>
+    protected bool _isLoopFadeIn;
+    /// <summary>
+    /// 直前のループ状態（公式 5-r.5 の _previousLoopState）
+    /// </summary>
+    protected bool _previousLoopState;
+
     /// <summary>
     /// コンストラクタ。
     /// </summary>
@@ -38,6 +54,9 @@ public abstract class ACubismMotion
         FadeInSeconds = -1.0f;
         FadeOutSeconds = -1.0f;
         Weight = 1.0f;
+        _isLoop = false;
+        _isLoopFadeIn = true;
+        _previousLoopState = _isLoop;
     }
 
     /// <summary>
@@ -89,14 +108,64 @@ public abstract class ACubismMotion
         motionQueueEntry.StartTime = userTimeSeconds - OffsetSeconds; //モーションの開始時刻を記録
         motionQueueEntry.FadeInStartTime = userTimeSeconds; //フェードインの開始時刻
 
-        var duration = GetDuration();
-
         if (motionQueueEntry.EndTime < 0)
         {
             //開始していないうちに終了設定している場合がある。
-            motionQueueEntry.EndTime = (duration <= 0) ? -1 : motionQueueEntry.StartTime + duration;
-            //duration == -1 の場合はループする
+            AdjustEndTime(motionQueueEntry);
         }
+
+        // モーション再生開始コールバック（官方 ACubismMotion.cpp:55-59）
+        OnBeganMotion?.Invoke(this);
+    }
+
+    /// <summary>
+    /// モーションの終了時刻を設定する（官方 5-r.5 で追加された AdjustEndTime）。
+    /// </summary>
+    /// <param name="motionQueueEntry">CubismMotionQueueManagerによって管理されるモーション</param>
+    protected void AdjustEndTime(CubismMotionQueueEntry motionQueueEntry)
+    {
+        var duration = GetDuration();
+
+        // duration == -1 の場合はループする
+        motionQueueEntry.EndTime = (duration <= 0)
+            ? -1
+            : motionQueueEntry.StartTime + duration;
+    }
+
+    /// <summary>
+    /// モーションがループするかどうかを設定する。
+    /// </summary>
+    /// <param name="loop">true ならループする</param>
+    public void SetLoop(bool loop)
+    {
+        _isLoop = loop;
+    }
+
+    /// <summary>
+    /// モーションがループするかどうかを取得する。
+    /// </summary>
+    /// <returns>ループするなら true</returns>
+    public bool GetLoop()
+    {
+        return _isLoop;
+    }
+
+    /// <summary>
+    /// ループ時にフェードインを行うかどうかを設定する。
+    /// </summary>
+    /// <param name="loopFadeIn">true ならループ時にフェードインする</param>
+    public void SetLoopFadeIn(bool loopFadeIn)
+    {
+        _isLoopFadeIn = loopFadeIn;
+    }
+
+    /// <summary>
+    /// ループ時にフェードインを行うかどうかを取得する。
+    /// </summary>
+    /// <returns>ループ時にフェードインするなら true</returns>
+    public bool GetLoopFadeIn()
+    {
+        return _isLoopFadeIn;
     }
 
     /// <summary>
@@ -110,8 +179,10 @@ public abstract class ACubismMotion
     {
         if (motionQueueEntry == null)
         {
-            CubismLog.Error("[Live2D SDK]motionQueueEntry is null.");
-            return 0;
+            // 官方は CubismLogError のうえ -1 を返す。本地の CubismLog.Error は例外を投げるため、
+            // 官方と同じく「-1 を返して呼び出し元に委ねる」挙動にするため Warning を使う。
+            CubismLog.Warning("[Live2D SDK]motionQueueEntry is null.");
+            return -1;
         }
 
         float fadeWeight = Weight; //現在の値と掛け合わせる割合

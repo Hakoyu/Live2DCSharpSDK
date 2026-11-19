@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Model;
 
@@ -27,13 +27,20 @@ public class CubismMotion : ACubismMotion
     /// </summary>
     private readonly float _loopDurationSeconds;
     /// <summary>
-    /// ループするか?
+    /// Motion Behavior のバージョン（官方 5-r.5 の CubismMotion::MotionBehavior）
     /// </summary>
-    public bool IsLoop { get; set; }
+    public enum MotionBehavior
+    {
+        /// <summary>旧来のモーション挙動（公式 MotionBehavior_V1）</summary>
+        V1,
+        /// <summary>アニメータのモーションを正しく再現する挙動（公式 MotionBehavior_V2）</summary>
+        V2
+    }
+
     /// <summary>
-    /// ループ時にフェードインが有効かどうかのフラグ。初期値では有効。
+    /// Motion Behavior のバージョン。既定値は V2。
     /// </summary>
-    public bool IsLoopFadeIn { get; set; }
+    private MotionBehavior _motionBehavior;
     /// <summary>
     /// 最後に設定された重み
     /// </summary>
@@ -47,11 +54,11 @@ public class CubismMotion : ACubismMotion
     /// <summary>
     /// 自動まばたきを適用するパラメータIDハンドルのリスト。  モデル（モデルセッティング）とパラメータを対応付ける。
     /// </summary>
-    private List<string> _eyeBlinkParameterIds;
+    private List<string> _eyeBlinkParameterIds = [];
     /// <summary>
     /// リップシンクを適用するパラメータIDハンドルのリスト。  モデル（モデルセッティング）とパラメータを対応付ける。
     /// </summary>
-    private List<string> _lipSyncParameterIds;
+    private List<string> _lipSyncParameterIds = [];
 
     /// <summary>
     /// モデルが持つ自動まばたき用パラメータIDのハンドル。  モデルとモーションを対応付ける。
@@ -235,7 +242,39 @@ public class CubismMotion : ACubismMotion
         return points[start + 1].Value;
     }
 
-    private static float EvaluateCurve(CubismMotionData motionData, int index, float time)
+    /// <summary>
+    /// 終点から始点への補正処理（官方 5-r.5 の CorrectEndPoint）。
+    /// </summary>
+    /// <param name="motionData">モーションデータ</param>
+    /// <param name="segmentIndex">セグメントのインデックス</param>
+    /// <param name="beginIndex">最初のポイントのインデックス</param>
+    /// <param name="endIndex">最後のポイントのインデックス</param>
+    /// <param name="time">評価する時間[秒]</param>
+    /// <param name="endTime">モーションの終了時間[秒]</param>
+    /// <returns>補正した値</returns>
+    private static float CorrectEndPoint(CubismMotionData motionData, int segmentIndex, int beginIndex, int endIndex,
+        float time, float endTime)
+    {
+        var motionPoint = new CubismMotionPoint[2];
+        motionPoint[0] = motionData.Points[endIndex];
+        motionPoint[1] = motionData.Points[beginIndex];
+        motionPoint[1].Time = endTime;
+
+        switch (motionData.Segments[segmentIndex].SegmentType)
+        {
+            case CubismMotionSegmentType.Stepped:
+                return SteppedEvaluate(motionPoint, 0, time);
+            case CubismMotionSegmentType.InverseStepped:
+                return InverseSteppedEvaluate(motionPoint, 0, time);
+            case CubismMotionSegmentType.Linear:
+            case CubismMotionSegmentType.Bezier:
+            default:
+                return LinearEvaluate(motionPoint, 0, time);
+        }
+    }
+
+    private static float EvaluateCurve(CubismMotionData motionData, int index, float time, bool isCorrection,
+        float endTime)
     {
         // Find segment to evaluate.
         var curve = motionData.Curves[index];
@@ -260,6 +299,13 @@ public class CubismMotion : ACubismMotion
 
         if (target == -1)
         {
+            if (isCorrection && time < endTime)
+            {
+                // 終点から始点への補正処理
+                return CorrectEndPoint(motionData, totalSegmentCount - 1,
+                    motionData.Segments[curve.BaseSegmentIndex].BasePointIndex, pointPosition, time, endTime);
+            }
+
             return motionData.Points[pointPosition].Value;
         }
 
@@ -273,16 +319,28 @@ public class CubismMotion : ACubismMotion
     /// </summary>
     /// <param name="buffer">motion3.jsonが読み込まれているバッファ</param>
     /// <param name="onFinishedMotionHandler">モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
-    public CubismMotion(string buffer, FinishedMotionCallback? onFinishedMotionHandler = null)
+    /// <param name="onBeganMotionHandler">モーション再生開始時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
+    /// <param name="shouldCheckMotionConsistency">motion3.jsonの整合性を検証するかどうか</param>
+    /// <remarks>
+    /// 官方の Create() は整合性が取れない場合に NULL を返すが、C# のコンストラクタは null を返せないため例外を投げる。
+    /// </remarks>
+    public CubismMotion(string buffer, FinishedMotionCallback? onFinishedMotionHandler = null,
+        BeganMotionCallback? onBeganMotionHandler = null, bool shouldCheckMotionConsistency = false)
     {
         _sourceFrameRate = 30.0f;
         _loopDurationSeconds = -1.0f;
-        IsLoopFadeIn = true;       // ループ時にフェードインが有効かどうかのフラグ
+        _motionBehavior = MotionBehavior.V2;   // 官方 5-r.5 の既定値
         _modelOpacity = 1.0f;
 
         using var stream = File.Open(buffer, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var obj = JsonSerializer.Deserialize(stream, CubismMotionObjContext.Default.CubismMotionObj)
             ?? throw new Exception("Load Motion error");
+
+        // 整合性が確認できなければ処理しない（官方 CubismMotion::Parse）
+        if (shouldCheckMotionConsistency && !CubismMotionJson.HasConsistency(obj))
+        {
+            throw new Exception("Inconsistent motion3.json.");
+        }
 
         _motionData = new()
         {
@@ -474,6 +532,7 @@ public class CubismMotion : ACubismMotion
         _sourceFrameRate = _motionData.Fps;
         _loopDurationSeconds = _motionData.Duration;
         OnFinishedMotion = onFinishedMotionHandler;
+        OnBeganMotion = onBeganMotionHandler;
     }
 
     /// <summary>
@@ -490,6 +549,16 @@ public class CubismMotion : ACubismMotion
         _modelCurveIdLipSync ??= CubismFramework.CubismIdManager.GetId(EffectNameLipSync);
 
         _modelCurveIdOpacity ??= CubismFramework.CubismIdManager.GetId(IdNameOpacity);
+
+        if (_motionBehavior == MotionBehavior.V2)
+        {
+            if (_previousLoopState != _isLoop)
+            {
+                // 終了時間を再計算する
+                AdjustEndTime(motionQueueEntry);
+                _previousLoopState = _isLoop;
+            }
+        }
 
         float timeOffsetSeconds = userTimeSeconds - motionQueueEntry.StartTime;
 
@@ -527,12 +596,19 @@ public class CubismMotion : ACubismMotion
 
         // 'Repeat' time as necessary.
         float time = timeOffsetSeconds;
+        float duration = _motionData.Duration;
+        bool isCorrection = _motionBehavior == MotionBehavior.V2 && _isLoop;
 
-        if (IsLoop)
+        if (_isLoop)
         {
-            while (time > _motionData.Duration)
+            if (_motionBehavior == MotionBehavior.V2)
             {
-                time -= _motionData.Duration;
+                duration += 1.0f / _motionData.Fps;
+            }
+
+            while (time > duration)
+            {
+                time -= duration;
             }
         }
 
@@ -542,7 +618,7 @@ public class CubismMotion : ACubismMotion
         for (c = 0; c < _motionData.CurveCount && curves[c].Type == CubismMotionCurveTarget.Model; ++c)
         {
             // Evaluate curve and call handler.
-            value = EvaluateCurve(_motionData, c, time);
+            value = EvaluateCurve(_motionData, c, time, isCorrection, duration);
 
             if (curves[c].Id == _modelCurveIdEyeBlink)
             {
@@ -579,7 +655,7 @@ public class CubismMotion : ACubismMotion
             float sourceValue = model.GetParameterValue(parameterIndex);
 
             // Evaluate curve and apply value.
-            value = EvaluateCurve(_motionData, c, time);
+            value = EvaluateCurve(_motionData, c, time, isCorrection, duration);
 
             if (eyeBlinkValue != float.MaxValue)
             {
@@ -605,6 +681,12 @@ public class CubismMotion : ACubismMotion
                         break;
                     }
                 }
+            }
+
+            // 互換性のためリピートのみ処理する（官方 5-r.5）
+            if (model.IsRepeat(parameterIndex))
+            {
+                value = model.GetParameterRepeatValue(parameterIndex, value);
             }
 
             float v;
@@ -696,21 +778,16 @@ public class CubismMotion : ACubismMotion
             }
 
             // Evaluate curve and apply value.
-            value = EvaluateCurve(_motionData, c, time);
+            value = EvaluateCurve(_motionData, c, time, isCorrection, duration);
 
             model.SetParameterValue(parameterIndex, value);
         }
 
-        if (timeOffsetSeconds >= _motionData.Duration)
+        if (timeOffsetSeconds >= duration)
         {
-            if (IsLoop)
+            if (_isLoop)
             {
-                motionQueueEntry.StartTime = userTimeSeconds; //最初の状態へ
-                if (IsLoopFadeIn)
-                {
-                    //ループ中でループ用フェードインが有効のときは、フェードイン設定し直し
-                    motionQueueEntry.FadeInStartTime = userTimeSeconds;
-                }
+                UpdateForNextLoop(model, motionQueueEntry, userTimeSeconds, time);
             }
             else
             {
@@ -724,12 +801,71 @@ public class CubismMotion : ACubismMotion
     }
 
     /// <summary>
+    /// ループ時の次回再生に向けた状態更新（官方 5-r.5 の UpdateForNextLoop）。
+    /// </summary>
+    /// <param name="model">更新対象のモデル</param>
+    /// <param name="motionQueueEntry">CubismMotionQueueManagerで管理されているモーション</param>
+    /// <param name="userTimeSeconds">デルタ時間の積算値[秒]</param>
+    /// <param name="time">ループ内の現在時間[秒]</param>
+    /// <remarks>
+    /// 公式の UpdateForNextLoop は model を受け取らないが、本地の FinishedMotionCallback が
+    /// (CubismModel, ACubismMotion) の 2 引数のため model を追加している（private メソッドなので外部影響なし）。
+    /// </remarks>
+    private void UpdateForNextLoop(CubismModel model, CubismMotionQueueEntry motionQueueEntry, float userTimeSeconds,
+        float time)
+    {
+        switch (_motionBehavior)
+        {
+            case MotionBehavior.V2:
+            default:
+                motionQueueEntry.StartTime = userTimeSeconds - time; //最初の状態へ
+                if (_isLoopFadeIn)
+                {
+                    //ループ中でループ用フェードインが有効のときは、フェードイン設定し直し
+                    motionQueueEntry.FadeInStartTime = userTimeSeconds - time;
+                }
+
+                OnFinishedMotion?.Invoke(model, this);
+                break;
+
+            case MotionBehavior.V1:
+                // 旧ループ処理
+                motionQueueEntry.StartTime = userTimeSeconds; //最初の状態へ
+                if (_isLoopFadeIn)
+                {
+                    //ループ中でループ用フェードインが有効のときは、フェードイン設定し直し
+                    motionQueueEntry.FadeInStartTime = userTimeSeconds;
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>
     /// モーションの長さを取得する。
     /// </summary>
     /// <returns>モーションの長さ[秒]</returns>
     public override float GetDuration()
     {
-        return IsLoop ? -1.0f : _loopDurationSeconds;
+        return _isLoop ? -1.0f : _loopDurationSeconds;
+    }
+
+    /// <summary>
+    /// Motion Behavior のバージョンを設定する（官方 5-r.5 で追加）。
+    /// </summary>
+    /// <param name="motionBehavior">Motion Behavior のバージョン</param>
+    public void SetMotionBehavior(MotionBehavior motionBehavior)
+    {
+        _motionBehavior = motionBehavior;
+    }
+
+    /// <summary>
+    /// Motion Behavior のバージョンを取得する（官方 5-r.5 で追加）。
+    /// </summary>
+    /// <returns>Motion Behavior のバージョン</returns>
+    public MotionBehavior GetMotionBehavior()
+    {
+        return _motionBehavior;
     }
 
     /// <summary>

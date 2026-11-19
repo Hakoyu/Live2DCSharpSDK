@@ -529,7 +529,8 @@ public class CubismModel : IDisposable
     /// <returns>パーツのID</returns>
     public string GetPartId(int partIndex)
     {
-        if (0 <= partIndex && partIndex < PartIds.Count)
+        // インデックスの範囲外検知（t15: 旧実装は条件が反転していて、正しいインデックスで例外を投げていた）
+        if (0 > partIndex || partIndex >= PartIds.Count)
         {
             throw new IndexOutOfRangeException("Out of PartIds size");
         }
@@ -997,7 +998,8 @@ public class CubismModel : IDisposable
     /// <returns>DrawableのID</returns>
     public string GetDrawableId(int drawableIndex)
     {
-        if (0 <= drawableIndex && drawableIndex < DrawableIds.Count)
+        // インデックスの範囲外検知（t15: 旧実装は条件が反転していて、正しいインデックスで例外を投げていた）
+        if (0 > drawableIndex || drawableIndex >= DrawableIds.Count)
         {
             throw new IndexOutOfRangeException("Out of DrawableIds size");
         }
@@ -1674,7 +1676,8 @@ public class CubismModel : IDisposable
     /// <returns>パラメータのID</returns>
     public string GetParameterId(int parameterIndex)
     {
-        if (0 <= parameterIndex && parameterIndex < ParameterIds.Count)
+        // インデックスの範囲外検知（t15: 旧実装は条件が反転していて、正しいインデックスで例外を投げていた）
+        if (0 > parameterIndex || parameterIndex >= ParameterIds.Count)
         {
             throw new IndexOutOfRangeException("Out of ParameterIds size");
         }

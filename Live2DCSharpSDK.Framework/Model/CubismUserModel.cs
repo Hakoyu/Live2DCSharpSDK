@@ -42,6 +42,11 @@ public abstract class CubismUserModel : IDisposable
     protected CubismMoc _moc;
 
     /// <summary>
+    /// 更新処理のスケジューラ（官方 5-r.5 で CubismUserModel に追加された）
+    /// </summary>
+    protected readonly CubismUpdateScheduler _updateScheduler;
+
+    /// <summary>
     /// モーション管理
     /// </summary>
     protected CubismMotionManager _motionManager;
@@ -119,6 +124,9 @@ public abstract class CubismUserModel : IDisposable
     {
         Opacity = 1.0f;
 
+        // 更新処理のスケジューラを作成
+        _updateScheduler = new();
+
         // モーションマネージャーを作成
         // MotionQueueManagerクラスからの継承なので使い方は同じ
         _motionManager = new();
@@ -133,9 +141,20 @@ public abstract class CubismUserModel : IDisposable
 
     public void Dispose()
     {
+        _updateScheduler.Dispose();
+
         _moc.Dispose();
 
         DeleteRenderer();
+    }
+
+    /// <summary>
+    /// 更新処理をスケジューラに登録する（官方 5-r.5 の _updateScheduler.AddUpdatableList のラッパー）。
+    /// </summary>
+    /// <param name="updater">登録する更新処理</param>
+    protected void RegisterUpdater(ICubismUpdater updater)
+    {
+        _updateScheduler.AddUpdatableList(updater);
     }
 
     /// <summary>
@@ -176,19 +195,86 @@ public abstract class CubismUserModel : IDisposable
     /// <summary>
     /// モーションデータを読み込む（官方 5-r.5 の CubismUserModel::LoadMotion）。
     /// ローカルは moc3 と同様にファイルパスを受け取る形にしている。
+    /// model3.json のフェード値で上書きしない版（fade 引数は null 相当）。
     /// </summary>
     /// <param name="buffer">motion3.jsonのファイルパス</param>
     /// <param name="name">モーション名（ログ用）</param>
     /// <param name="onFinishedMotionHandler">モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
+    /// <param name="onBeganMotionHandler">モーション再生開始時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
+    /// <param name="shouldCheckMotionConsistency">motion3.jsonの整合性を検証するかどうか</param>
     /// <returns>生成したモーションデータ。読み込めない場合は null</returns>
-    /// <remarks>
-    /// TODO(P7): 官方は ICubismModelSetting* / group / index を受け取り、model3.json の
-    /// FadeInTime / FadeOutTime でモーション側のフェード値を上書きする（PLAN U01）。
-    /// 本地に ICubismModelSetting は無く、App 層が ModelSettingObj で同等処理を行っているため、
-    /// この上書きは App 側に残す（P7 で App から呼ぶ際に再検討する）。
-    /// shouldCheckMotionConsistency / BeganMotionCallback は P3（Motion 層）の受け皿ができてから追加する。
-    /// </remarks>
-    protected ACubismMotion? LoadMotion(string buffer, string name, FinishedMotionCallback? onFinishedMotionHandler = null)
+    protected ACubismMotion? LoadMotion(string buffer, string name,
+        FinishedMotionCallback? onFinishedMotionHandler = null,
+        BeganMotionCallback? onBeganMotionHandler = null,
+        bool shouldCheckMotionConsistency = false)
+    {
+        return LoadMotionCore(buffer, name, null, null,
+            onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
+    }
+
+    /// <summary>
+    /// モデル設定からモーションデータを読み込む（官方 5-r.5 の CubismUserModel::LoadMotion の modelSetting 版）。
+    /// 官方の ICubismModelSetting* に相当するものは、本地では ModelSettingObj（model3.json の DTO）である。
+    /// model3.json の FadeInTime / FadeOutTime が 0 以上の場合、motion3.json 側のフェード値を上書きする
+    /// （官方 GetMotionFadeInTimeValue / GetMotionFadeOutTimeValue と同じ判定）。
+    /// </summary>
+    /// <param name="modelSetting">モデル設定（公式 ICubismModelSetting* の本地等価物）</param>
+    /// <param name="group">モーショングループ名</param>
+    /// <param name="index">グループ内のインデックス</param>
+    /// <param name="shouldCheckMotionConsistency">motion3.jsonの整合性を検証するかどうか</param>
+    /// <param name="onFinishedMotionHandler">モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
+    /// <param name="onBeganMotionHandler">モーション再生開始時に呼び出されるコールバック関数。NULLの場合、呼び出されない。</param>
+    /// <param name="modelHomeDir">model3.json が置かれたディレクトリ（motion の相対パス解決用）。NULL の場合はカレントディレクトリ基準</param>
+    /// <returns>生成したモーションデータ。グループ/インデックス/ファイルが無い場合は null</returns>
+    protected ACubismMotion? LoadMotion(ModelSettingObj? modelSetting, string group, int index,
+        bool shouldCheckMotionConsistency = false,
+        FinishedMotionCallback? onFinishedMotionHandler = null,
+        BeganMotionCallback? onBeganMotionHandler = null,
+        string? modelHomeDir = null)
+    {
+        if (modelSetting == null)
+        {
+            CubismLog.Warning("Failed to LoadMotion(). Model setting is NULL.");
+            return null;
+        }
+
+        var fileName = modelSetting.GetMotionFileName(group, index);
+        if (string.IsNullOrEmpty(fileName))
+        {
+            CubismLog.Warning($"Failed to LoadMotion(). Motion is not found. group={group}, index={index}");
+            return null;
+        }
+
+        var path = string.IsNullOrEmpty(modelHomeDir)
+            ? Path.GetFullPath(fileName)
+            : Path.GetFullPath(modelHomeDir + fileName);
+
+        // 負値は「motion3.json 側の値を上書きしない」を意味する（官方と同じ）
+        var fadeInTime = modelSetting.GetMotionFadeInTimeValue(group, index);
+        var fadeOutTime = modelSetting.GetMotionFadeOutTimeValue(group, index);
+
+        return LoadMotionCore(path, $"{group}_{index}",
+            fadeInTime >= 0.0f ? fadeInTime : null,
+            fadeOutTime >= 0.0f ? fadeOutTime : null,
+            onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
+    }
+
+    /// <summary>
+    /// モーションデータ読み込みの共通処理。
+    /// </summary>
+    /// <param name="buffer">motion3.jsonのファイルパス</param>
+    /// <param name="name">モーション名（ログ用）</param>
+    /// <param name="fadeInTime">上書きするフェードイン時間（null は上書きしない）</param>
+    /// <param name="fadeOutTime">上書きするフェードアウト時間（null は上書きしない）</param>
+    /// <param name="onFinishedMotionHandler">モーション再生終了時に呼び出されるコールバック関数</param>
+    /// <param name="onBeganMotionHandler">モーション再生開始時に呼び出されるコールバック関数</param>
+    /// <param name="shouldCheckMotionConsistency">motion3.jsonの整合性を検証するかどうか</param>
+    /// <returns>生成したモーションデータ。読み込めない場合は null</returns>
+    private ACubismMotion? LoadMotionCore(string buffer, string name,
+        float? fadeInTime, float? fadeOutTime,
+        FinishedMotionCallback? onFinishedMotionHandler,
+        BeganMotionCallback? onBeganMotionHandler,
+        bool shouldCheckMotionConsistency)
     {
         if (string.IsNullOrEmpty(buffer))
         {
@@ -198,7 +284,20 @@ public abstract class CubismUserModel : IDisposable
 
         CubismLog.Debug($"[Live2D SDK]load motion: {name}");
 
-        return new CubismMotion(buffer, onFinishedMotionHandler);
+        var motion = new CubismMotion(buffer, onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
+
+        // 官方 LoadMotion: model3.json の FadeInTime / FadeOutTime が 0 以上なら上書きする
+        if (fadeInTime.HasValue)
+        {
+            motion.FadeInSeconds = fadeInTime.Value;
+        }
+
+        if (fadeOutTime.HasValue)
+        {
+            motion.FadeOutSeconds = fadeOutTime.Value;
+        }
+
+        return motion;
     }
 
     /// <summary>
