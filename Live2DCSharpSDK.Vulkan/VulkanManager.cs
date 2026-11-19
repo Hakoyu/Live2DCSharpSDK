@@ -26,14 +26,16 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     public static readonly string[] validationLayers = ["VK_LAYER_KHRONOS_validation"];
 
     /// <summary>
-    /// 是否启用验证层
+    /// 是否启用验证层.
     /// </summary>
     // 对应官方 VulkanManager.hpp 的 CSM_DEBUG 开关: Debug 构建启用, Release 关闭.
     // 原实现无条件 true, Release 机器未装 Vulkan SDK 时 CheckValidationLayerSupport 会直接抛异常.
+    // 使用 static readonly 而非 const: 编译期常量会让 if/else 的一支被判定为不可达(CS0162),
+    // 改为运行时读取的只读字段后编译器不再做常量折叠, 两种配置下都不会产生不可达代码警告.
 #if DEBUG
-    public const bool EnableValidationLayers = true;
+    public static readonly bool EnableValidationLayers = true;
 #else
-    public const bool EnableValidationLayers = false;
+    public static readonly bool EnableValidationLayers = false;
 #endif
 
     /// <summary>
@@ -206,7 +208,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     public unsafe void CreateInstance()
     {
         // 确认验证层启用时是否可用
-        if (EnableValidationLayers && !CheckValidationLayerSupport())
+        if (EnableValidationLayers && CheckValidationLayerSupport() is false)
         {
             CubismLog.Error("validation layers requested, but not available!");
         }
@@ -268,11 +270,11 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// </summary>
     public unsafe void SetupDebugMessenger()
     {
-        if (!EnableValidationLayers)
+        if (EnableValidationLayers is false)
             return;
 
         //TryGetInstanceExtension equivilant to method CreateDebugUtilsMessengerEXT from original tutorial.
-        if (!vk.TryGetInstanceExtension(_instance, out debugUtils))
+        if (vk.TryGetInstanceExtension(_instance, out debugUtils) is false)
             return;
 
         DebugUtilsMessengerCreateInfoEXT createInfo = new();
@@ -329,7 +331,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
     /// </summary>
     public unsafe void CreateSurface()
     {
-        if (!vk.TryGetInstanceExtension(_instance, out khrSurface))
+        if (vk.TryGetInstanceExtension(_instance, out khrSurface) is false)
         {
             throw new NotSupportedException("KHR_surface extension not found.");
         }
@@ -581,7 +583,7 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
 
         if (_khrs is null)
         {
-            if (!vk.TryGetDeviceExtension(_instance, _device, out _khrs))
+            if (vk.TryGetDeviceExtension(_instance, _device, out _khrs) is false)
             {
                 CubismLog.Error("VK_KHR_swapchain extension not found.");
             }
