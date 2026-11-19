@@ -85,7 +85,7 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
         gl.GetIntegerv(gl.GL_CURRENT_PROGRAM, out LastProgram);
 
         gl.GetIntegerv(gl.GL_ACTIVE_TEXTURE, out LastActiveTexture);
-        gl.ActiveTexture(gl.GL_TEXTURE2); // 激活纹理单元 2 (B15)
+        gl.ActiveTexture(gl.GL_TEXTURE2); // 激活纹理单元 2
         gl.GetIntegerv(gl.GL_TEXTURE_BINDING_2D, out LastTexture2Binding2D);
 
         gl.ActiveTexture(gl.GL_TEXTURE1); // 激活纹理单元 1 (作为后续设置的对象)
@@ -141,7 +141,7 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
         gl.BindBuffer(gl.GL_ARRAY_BUFFER, LastArrayBufferBinding); // 之前若有缓冲被绑定, 则需要丢弃
         gl.BindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, LastElementArrayBufferBinding);
 
-        gl.ActiveTexture(gl.GL_TEXTURE2); // 恢复纹理单元 2 (B15)
+        gl.ActiveTexture(gl.GL_TEXTURE2); // 恢复纹理单元 2
         gl.BindTexture(gl.GL_TEXTURE_2D, LastTexture2Binding2D);
 
         gl.ActiveTexture(gl.GL_TEXTURE1); // 恢复纹理单元 1
