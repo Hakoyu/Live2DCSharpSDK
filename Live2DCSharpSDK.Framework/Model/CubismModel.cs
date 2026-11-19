@@ -65,9 +65,14 @@ public class CubismModel : IDisposable
     }
 
     /// <summary>
-    /// モデル
+    /// モデル（Dispose 後は <see cref="IntPtr.Zero"/>。S1: 解放済みポインタを外へ出さない）
     /// </summary>
-    public IntPtr Model { get; }
+    public IntPtr Model { get; private set; }
+
+    /// <summary>
+    /// Dispose 済みか（S1: 二重解放を防ぐための冪等ガード）
+    /// </summary>
+    private bool _disposed;
 
     public readonly List<string> ParameterIds = [];
     public readonly List<string> PartIds = [];
@@ -166,9 +171,32 @@ public class CubismModel : IDisposable
         Initialize();
     }
 
+    /// <summary>
+    /// モデルを解放する（S1: 冪等。同じインスタンスを何度 Dispose しても二重解放しない）。
+    /// </summary>
+    /// <remarks>
+    /// 解放前に <see cref="Model"/> を <see cref="IntPtr.Zero"/> へ落とすため、以降のアクセサは
+    /// すべて「Model == IntPtr.Zero」のガードで安全値を返し、Core の解放済み領域へは触れない。
+    /// 子オブジェクト（<see cref="CubismModelMultiplyAndScreenColor"/> 等）はアンマネージドポインタを
+    /// 保持せず、モデルへのマネージド参照と境界チェックだけを持つため野指针にはならない。
+    /// </remarks>
     public virtual void Dispose()
     {
-        CubismFramework.DeallocateAligned(Model);
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        var model = Model;
+        Model = IntPtr.Zero;
+
+        if (model != IntPtr.Zero)
+        {
+            CubismFramework.DeallocateAligned(model);
+        }
+
         GC.SuppressFinalize(this);
     }
 
@@ -177,6 +205,11 @@ public class CubismModel : IDisposable
     /// </summary>
     protected unsafe void Initialize()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         _parameterValues = CubismCore.GetParameterValues(Model);
         _partOpacities = CubismCore.GetPartOpacities(Model);
         _parameterMaximumValues = CubismCore.GetParameterMaximumValues(Model);
@@ -248,6 +281,11 @@ public class CubismModel : IDisposable
     /// </summary>
     protected unsafe void InitializeBlendMode()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         var drawableCount = CubismCore.GetDrawableCount(Model);
 
         // オフスクリーンが存在するか、Drawable のブレンドモードで ColorBlend、AlphaBlend を使用するのであればブレンドモードを有効にする。
@@ -282,6 +320,11 @@ public class CubismModel : IDisposable
     /// </summary>
     protected unsafe void SetupPartsHierarchy()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         _partsHierarchy.Clear();
 
         // すべてのパーツのパーツ情報管理構造体を作成
@@ -350,6 +393,11 @@ public class CubismModel : IDisposable
     /// <param name="partInfoIndex">パーツ情報のインデックス</param>
     public unsafe void GetPartChildDrawObjects(int partInfoIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         if (_partsHierarchy[partInfoIndex].GetChildObjectCount() < 1)
         {
             return;
@@ -416,6 +464,11 @@ public class CubismModel : IDisposable
     /// </summary>
     public void Update()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         // Update model.
         CubismCore.UpdateModel(Model);
         // Reset dynamic drawable flags.
@@ -476,6 +529,11 @@ public class CubismModel : IDisposable
     /// <returns>キャンバスの幅(Unit)</returns>
     public float GetCanvasWidth()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0.0f;
+        }
+
         CubismCore.ReadCanvasInfo(Model, out var tmpSizeInPixels, out _, out var tmpPixelsPerUnit);
 
         return tmpSizeInPixels.X / tmpPixelsPerUnit;
@@ -487,6 +545,11 @@ public class CubismModel : IDisposable
     /// <returns>キャンバスの高さ(Unit)</returns>
     public float GetCanvasHeight()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0.0f;
+        }
+
         CubismCore.ReadCanvasInfo(Model, out var tmpSizeInPixels, out _, out var tmpPixelsPerUnit);
 
         return tmpSizeInPixels.Y / tmpPixelsPerUnit;
@@ -499,6 +562,11 @@ public class CubismModel : IDisposable
     /// <returns>パーツのインデックス</returns>
     public int GetPartIndex(string partId)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return -1;
+        }
+
         int partIndex = PartIds.IndexOf(partId);
         if (partIndex != -1)
         {
@@ -543,6 +611,11 @@ public class CubismModel : IDisposable
     /// <returns>パーツの個数</returns>
     public int GetPartCount()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         return CubismCore.GetPartCount(Model);
     }
 
@@ -552,6 +625,11 @@ public class CubismModel : IDisposable
     /// <returns>パーツの親パーツのインデックスリスト</returns>
     public unsafe int* GetPartParentPartIndices()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetPartParentPartIndices(Model);
     }
 
@@ -561,6 +639,11 @@ public class CubismModel : IDisposable
     /// <returns>パーツの Offscreen インデックスリスト</returns>
     public unsafe int* GetPartOffscreenIndices()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetPartOffscreenIndices(Model);
     }
 
@@ -571,6 +654,11 @@ public class CubismModel : IDisposable
     /// <returns>親パーツのインデックス。存在しない場合は CubismNoIndex_Parent</returns>
     public unsafe int GetPartParentPartIndex(int partIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return CubismNoIndex_Parent;
+        }
+
         return CubismCore.GetPartParentPartIndices(Model)[partIndex];
     }
 
@@ -599,6 +687,11 @@ public class CubismModel : IDisposable
     /// <param name="opacity">パーツの不透明度</param>
     public unsafe void SetPartOpacity(int partIndex, float opacity)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         if (_notExistPartOpacities.ContainsKey(partIndex))
         {
             _notExistPartOpacities[partIndex] = opacity;
@@ -639,6 +732,11 @@ public class CubismModel : IDisposable
     /// <returns>パーツの不透明度</returns>
     public unsafe float GetPartOpacity(int partIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0.0f;
+        }
+
         if (_notExistPartOpacities.TryGetValue(partIndex, out float value))
         {
             // モデルに存在しないパーツIDの場合、非存在パーツリストから不透明度を返す
@@ -661,6 +759,11 @@ public class CubismModel : IDisposable
     /// <returns>パラメータのインデックス</returns>
     public int GetParameterIndex(string parameterId)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return -1;
+        }
+
         int parameterIndex = ParameterIds.IndexOf(parameterId);
         if (parameterIndex != -1)
         {
@@ -688,6 +791,11 @@ public class CubismModel : IDisposable
     /// <returns>パラメータの個数</returns>
     public int GetParameterCount()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         return CubismCore.GetParameterCount(Model);
     }
 
@@ -699,6 +807,11 @@ public class CubismModel : IDisposable
     /// csmParameterType_BlendShape -> ブレンドシェイプパラメータ</returns>
     public unsafe int GetParameterType(int parameterIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         return CubismCore.GetParameterTypes(Model)[parameterIndex];
     }
 
@@ -709,6 +822,11 @@ public class CubismModel : IDisposable
     /// <returns>パラメータの最大値</returns>
     public unsafe float GetParameterMaximumValue(int parameterIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0.0f;
+        }
+
         return CubismCore.GetParameterMaximumValues(Model)[parameterIndex];
     }
 
@@ -719,6 +837,11 @@ public class CubismModel : IDisposable
     /// <returns>パラメータの最小値</returns>
     public unsafe float GetParameterMinimumValue(int parameterIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0.0f;
+        }
+
         return CubismCore.GetParameterMinimumValues(Model)[parameterIndex];
     }
 
@@ -729,6 +852,11 @@ public class CubismModel : IDisposable
     /// <returns> パラメータのデフォルト値</returns>
     public unsafe float GetParameterDefaultValue(int parameterIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0.0f;
+        }
+
         return CubismCore.GetParameterDefaultValues(Model)[parameterIndex];
     }
 
@@ -751,6 +879,11 @@ public class CubismModel : IDisposable
     /// <returns>パラメータの値</returns>
     public unsafe float GetParameterValue(int parameterIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0.0f;
+        }
+
         if (_notExistParameterValues.TryGetValue(parameterIndex, out var item))
         {
             return item;
@@ -786,6 +919,11 @@ public class CubismModel : IDisposable
     /// <param name="weight">重み</param>
     public unsafe void SetParameterValue(int parameterIndex, float value, float weight = 1.0f)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         if (_notExistParameterValues.TryGetValue(parameterIndex, out float value1))
         {
             _notExistParameterValues[parameterIndex] = weight == 1
@@ -822,6 +960,11 @@ public class CubismModel : IDisposable
     /// <returns>リピートするなら true</returns>
     public unsafe bool IsRepeat(int parameterIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         if (_notExistParameterValues.ContainsKey(parameterIndex))
         {
             return false;
@@ -858,6 +1001,11 @@ public class CubismModel : IDisposable
     /// <returns>循環させた値。パラメータが存在しない場合はそのまま返す</returns>
     public unsafe float GetParameterRepeatValue(int parameterIndex, float value)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return value;
+        }
+
         if (_notExistParameterValues.ContainsKey(parameterIndex))
         {
             return value;
@@ -895,6 +1043,11 @@ public class CubismModel : IDisposable
     /// <returns>クランプした値。パラメータが存在しない場合はそのまま返す</returns>
     public unsafe float GetParameterClampValue(int parameterIndex, float value)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return value;
+        }
+
         if (_notExistParameterValues.ContainsKey(parameterIndex))
         {
             return value;
@@ -919,6 +1072,11 @@ public class CubismModel : IDisposable
     /// <returns>リピートするなら true</returns>
     public unsafe bool GetParameterRepeats(int parameterIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         return CubismCore.GetParameterRepeats(Model)[parameterIndex] != 0;
     }
 
@@ -942,6 +1100,11 @@ public class CubismModel : IDisposable
     /// <param name="weight">重み</param>
     public void AddParameterValue(int parameterIndex, float value, float weight = 1.0f)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         if (parameterIndex == -1)
             return;
         SetParameterValue(parameterIndex, (GetParameterValue(parameterIndex) + (value * weight)));
@@ -967,6 +1130,11 @@ public class CubismModel : IDisposable
     /// <param name="weight">重み</param>
     public void MultiplyParameterValue(int parameterIndex, float value, float weight = 1.0f)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         if (parameterIndex == -1)
             return;
         SetParameterValue(parameterIndex, GetParameterValue(parameterIndex) * (1.0f + (value - 1.0f) * weight));
@@ -988,6 +1156,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの個数</returns>
     public int GetDrawableCount()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         return CubismCore.GetDrawableCount(Model);
     }
 
@@ -1017,6 +1190,11 @@ public class CubismModel : IDisposable
     /// </remarks>
     public unsafe int* GetRenderOrders()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetRenderOrders(Model);
     }
 
@@ -1027,6 +1205,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableのテクスチャインデックス</returns>
     public unsafe int GetDrawableTextureIndex(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         var textureIndices = CubismCore.GetDrawableTextureIndices(Model);
         return textureIndices[drawableIndex];
     }
@@ -1038,6 +1221,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの頂点インデックスの個数</returns>
     public unsafe int GetDrawableVertexIndexCount(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         return CubismCore.GetDrawableIndexCounts(Model)[drawableIndex];
     }
 
@@ -1048,6 +1236,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの頂点の個数</returns>
     public unsafe int GetDrawableVertexCount(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         return CubismCore.GetDrawableVertexCounts(Model)[drawableIndex];
     }
 
@@ -1058,6 +1251,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの頂点リスト</returns>
     public unsafe float* GetDrawableVertices(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return (float*)GetDrawableVertexPositions(drawableIndex);
     }
 
@@ -1068,6 +1266,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの頂点インデックスリスト</returns>
     public unsafe ushort* GetDrawableVertexIndices(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetDrawableIndices(Model)[drawableIndex];
     }
 
@@ -1078,6 +1281,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの頂点リスト</returns>
     public unsafe Vector2* GetDrawableVertexPositions(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetDrawableVertexPositions(Model)[drawableIndex];
     }
 
@@ -1088,6 +1296,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの頂点のUVリスト</returns>
     public unsafe Vector2* GetDrawableVertexUvs(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetDrawableVertexUvs(Model)[drawableIndex];
     }
 
@@ -1098,6 +1311,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの不透明度</returns>
     public unsafe float GetDrawableOpacity(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0.0f;
+        }
+
         return CubismCore.GetDrawableOpacities(Model)[drawableIndex];
     }
 
@@ -1108,6 +1326,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableの乗算色</returns>
     public unsafe Vector4 GetDrawableMultiplyColor(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return default;
+        }
+
         return CubismCore.GetDrawableMultiplyColors(Model)[drawableIndex];
     }
 
@@ -1118,6 +1341,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableのスクリーン色</returns>
     public unsafe Vector4 GetDrawableScreenColor(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return default;
+        }
+
         return CubismCore.GetDrawableScreenColors(Model)[drawableIndex];
     }
 
@@ -1128,6 +1356,11 @@ public class CubismModel : IDisposable
     /// <returns>drawableの親パーツのインデックス</returns>
     public unsafe int GetDrawableParentPartIndex(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return CubismNoIndex_Parent;
+        }
+
         return CubismCore.GetDrawableParentPartIndices(Model)[drawableIndex];
     }
 
@@ -1138,6 +1371,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableのブレンドモード</returns>
     public unsafe CsmBlendMode GetDrawableBlendModeType(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return default;
+        }
+
         var blendMode = new CsmBlendMode();
 
         // 5.2以前のモデルでも使用することが可能
@@ -1155,6 +1393,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableのマスクの反転設定</returns>
     public unsafe bool GetDrawableInvertedMask(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         var constantFlags = CubismCore.GetDrawableConstantFlags(Model)[drawableIndex];
         return IsBitSet(constantFlags, CsmEnum.CsmIsInvertedMask);
     }
@@ -1167,6 +1410,11 @@ public class CubismModel : IDisposable
     /// false   Drawableが非表示</returns>
     public unsafe bool GetDrawableDynamicFlagIsVisible(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         var dynamicFlags = CubismCore.GetDrawableDynamicFlags(Model)[drawableIndex];
         return IsBitSet(dynamicFlags, CsmEnum.CsmIsVisible);
     }
@@ -1179,6 +1427,11 @@ public class CubismModel : IDisposable
     /// false   Drawableの表示状態が直近のCubismModel::Update関数で変化していない</returns>
     public unsafe bool GetDrawableDynamicFlagVisibilityDidChange(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         var dynamicFlags = CubismCore.GetDrawableDynamicFlags(Model)[drawableIndex];
         return IsBitSet(dynamicFlags, CsmEnum.CsmVisibilityDidChange);
     }
@@ -1191,6 +1444,11 @@ public class CubismModel : IDisposable
     /// false   Drawableの不透明度が直近のCubismModel::Update関数で変化していない</returns>
     public unsafe bool GetDrawableDynamicFlagOpacityDidChange(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         var dynamicFlags = CubismCore.GetDrawableDynamicFlags(Model)[drawableIndex];
         return IsBitSet(dynamicFlags, CsmEnum.CsmOpacityDidChange);
     }
@@ -1204,6 +1462,11 @@ public class CubismModel : IDisposable
     /// false   Drawableの不透明度が直近のCubismModel::Update関数で変化していない</returns>
     public unsafe bool GetDrawableDynamicFlagDrawOrderDidChange(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         var dynamicFlags = CubismCore.GetDrawableDynamicFlags(Model)[drawableIndex];
         return IsBitSet(dynamicFlags, CsmEnum.CsmDrawOrderDidChange);
     }
@@ -1216,6 +1479,11 @@ public class CubismModel : IDisposable
     /// false   Drawableの描画の順序が直近のCubismModel::Update関数で変化していない</returns>
     public unsafe bool GetDrawableDynamicFlagRenderOrderDidChange(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         var dynamicFlags = CubismCore.GetDrawableDynamicFlags(Model)[drawableIndex];
         return IsBitSet(dynamicFlags, CsmEnum.CsmRenderOrderDidChange);
     }
@@ -1228,6 +1496,11 @@ public class CubismModel : IDisposable
     /// false   Drawableの頂点情報が直近のCubismModel::Update関数で変化していない</returns>
     public unsafe bool GetDrawableDynamicFlagVertexPositionsDidChange(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         var dynamicFlags = CubismCore.GetDrawableDynamicFlags(Model)[drawableIndex];
         return IsBitSet(dynamicFlags, CsmEnum.CsmVertexPositionsDidChange);
     }
@@ -1240,6 +1513,11 @@ public class CubismModel : IDisposable
     /// false   Drawableの乗算色・スクリーン色が直近のCubismModel::Update関数で変化していない</returns>
     public unsafe bool GetDrawableDynamicFlagBlendColorDidChange(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         var dynamicFlags = CubismCore.GetDrawableDynamicFlags(Model)[drawableIndex];
         return IsBitSet(dynamicFlags, CsmEnum.CsmBlendColorDidChange);
     }
@@ -1250,6 +1528,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableのクリッピングマスクリスト</returns>
     public unsafe int** GetDrawableMasks()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetDrawableMasks(Model);
     }
 
@@ -1259,6 +1542,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableのクリッピングマスクの個数リスト</returns>
     public unsafe int* GetDrawableMaskCounts()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetDrawableMaskCounts(Model);
     }
 
@@ -1273,6 +1561,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreen のブレンドモード</returns>
     public unsafe CsmBlendMode GetOffscreenBlendModeType(int offscreenIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return default;
+        }
+
         var blendMode = new CsmBlendMode();
 
         var blendModes = CubismCore.GetOffscreenBlendModes(Model);
@@ -1290,6 +1583,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreen の個数</returns>
     public int GetOffscreenCount()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         return CubismCore.GetOffscreenCount(Model);
     }
 
@@ -1299,6 +1597,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreen のクリッピングマスクリスト</returns>
     public unsafe int** GetOffscreenMasks()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetOffscreenMasks(Model);
     }
 
@@ -1308,6 +1611,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreen のクリッピングマスクの個数リスト</returns>
     public unsafe int* GetOffscreenMaskCounts()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetOffscreenMaskCounts(Model);
     }
 
@@ -1317,6 +1625,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreen のオーナーインデックスリスト</returns>
     public unsafe int* GetOffscreenOwnerIndices()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return null;
+        }
+
         return CubismCore.GetOffscreenOwnerIndices(Model);
     }
 
@@ -1328,6 +1641,11 @@ public class CubismModel : IDisposable
     /// <returns>オーナー（パーツ）の ID</returns>
     public unsafe string GetOffscreenOwnerId(int offscreenIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return string.Empty;
+        }
+
         var ownerIndex = GetOffscreenOwnerIndices()[offscreenIndex];
         var partIds = CubismCore.GetPartIds(Model);
 
@@ -1341,6 +1659,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreen の乗算色</returns>
     public unsafe Vector4 GetOffscreenMultiplyColor(int offscreenIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return default;
+        }
+
         return CubismCore.GetOffscreenMultiplyColors(Model)[offscreenIndex];
     }
 
@@ -1351,6 +1674,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreen のスクリーン色</returns>
     public unsafe Vector4 GetOffscreenScreenColor(int offscreenIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return default;
+        }
+
         return CubismCore.GetOffscreenScreenColors(Model)[offscreenIndex];
     }
 
@@ -1361,6 +1689,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreen のマスクの反転設定</returns>
     public unsafe bool GetOffscreenInvertedMask(int offscreenIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         var constantFlags = CubismCore.GetOffscreenConstantFlags(Model)[offscreenIndex];
         return IsBitSet(constantFlags, CsmEnum.CsmIsInvertedMask);
     }
@@ -1372,6 +1705,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreen の不透明度</returns>
     public unsafe float GetOffscreenOpacity(int offscreenIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 1.0f;
+        }
+
         if (offscreenIndex < 0 || offscreenIndex >= CubismCore.GetOffscreenCount(Model))
         {
             return 1.0f; // Offscreen が無いのでスキップ
@@ -1387,6 +1725,11 @@ public class CubismModel : IDisposable
     /// false   クリッピングマスクを使用していない</returns>
     public unsafe bool IsUsingMasking()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         for (int d = 0; d < CubismCore.GetDrawableCount(Model); ++d)
         {
             if (CubismCore.GetDrawableMaskCounts(Model)[d] <= 0)
@@ -1406,6 +1749,11 @@ public class CubismModel : IDisposable
     /// false   Offscreen がクリッピングマスクを使用していない</returns>
     public unsafe bool IsUsingMaskingForOffscreen()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return false;
+        }
+
         for (int d = 0; d < CubismCore.GetOffscreenCount(Model); ++d)
         {
             if (CubismCore.GetOffscreenMaskCounts(Model)[d] <= 0)
@@ -1423,6 +1771,11 @@ public class CubismModel : IDisposable
     /// </summary>
     public unsafe void LoadParameters()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         int parameterCount = CubismCore.GetParameterCount(Model);
         int savedParameterCount = _savedParameters.Count;
 
@@ -1442,6 +1795,11 @@ public class CubismModel : IDisposable
     /// </summary>
     public unsafe void SaveParameters()
     {
+        if (Model == IntPtr.Zero)
+        {
+            return;
+        }
+
         int parameterCount = CubismCore.GetParameterCount(Model);
         int savedParameterCount = _savedParameters.Count;
 
@@ -1540,6 +1898,11 @@ public class CubismModel : IDisposable
     /// <returns>Drawableのカリング情報（0: カリングしない / 1: カリングする）</returns>
     public unsafe int GetDrawableCulling(int drawableIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         if (GetOverrideFlagForModelCullings() || GetOverrideFlagForDrawableCullings(drawableIndex))
         {
             return _userDrawableCullings[drawableIndex].IsCulling;
@@ -1566,6 +1929,11 @@ public class CubismModel : IDisposable
     /// <returns>Offscreenのカリング情報（0: カリングしない / 1: カリングする）</returns>
     public unsafe int GetOffscreenCulling(int offscreenIndex)
     {
+        if (Model == IntPtr.Zero)
+        {
+            return 0;
+        }
+
         if (GetOverrideFlagForModelCullings() || GetOverrideFlagForOffscreenCullings(offscreenIndex))
         {
             return _userOffscreenCullings[offscreenIndex].IsCulling;

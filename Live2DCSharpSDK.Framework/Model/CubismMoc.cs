@@ -20,6 +20,11 @@ public class CubismMoc : IDisposable
     public CubismModel Model { get; }
 
     /// <summary>
+    /// 破棄済みか（S1: Dispose の冪等ガード。CubismUserModel の解放経路から二重に呼ばれても安全にする）
+    /// </summary>
+    private bool _disposed;
+
+    /// <summary>
     /// バッファからMocファイルを読み取り、Mocデータを作成する。
     /// </summary>
     /// <param name="mocBytes"> Mocファイルのバッファ</param>
@@ -130,10 +135,18 @@ public class CubismMoc : IDisposable
     }
 
     /// <summary>
-    /// デストラクタ。
+    /// デストラクタ（S1: 冪等。2 回目以降は何もしない）。
     /// </summary>
     public virtual void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        // Model.Dispose() 自体も冪等なので、CubismModel を先に破棄していても二重解放にならない。
         Model.Dispose();
         CubismFramework.DeallocateAligned(_moc);
         GC.SuppressFinalize(this);

@@ -42,6 +42,11 @@ public abstract class CubismUserModel : IDisposable
     protected CubismMoc _moc;
 
     /// <summary>
+    /// 破棄済みか（S1: Dispose の冪等ガード）
+    /// </summary>
+    private bool _disposed;
+
+    /// <summary>
     /// 更新処理のスケジューラ（官方 5-r.5 で CubismUserModel に追加された）
     /// </summary>
     protected readonly CubismUpdateScheduler _updateScheduler;
@@ -140,13 +145,23 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// 解放する（G2 finding F1: 派生クラスの Dispose が確実に呼ばれるよう virtual にする）。
+    /// 解放する（G2 finding F1: 派生クラスの Dispose が確実に呼ばれるよう virtual にする。
+    /// S1: 冪等。二重呼び出しで Moc / Model を二重解放しない）。
     /// </summary>
     public virtual void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
         _updateScheduler.Dispose();
 
-        _moc.Dispose();
+        // LoadModel 前に解放された場合は _moc が未生成（.editorconfig で CS8618 を無効化しているため
+        // 非 null 注釈でも実行時 null になり得る。analyse.md H-1）。
+        _moc?.Dispose();
 
         DeleteRenderer();
     }
@@ -371,6 +386,14 @@ public abstract class CubismUserModel : IDisposable
 
         var count = Model.GetDrawableVertexCount(drawIndex);
         var vertices = Model.GetDrawableVertices(drawIndex);
+
+        // S2: 頂点が空（count == 0）または null の場合はヒット判定しない。
+        // 旧実装は count / vertices を検証せず vertices[0] / vertices[1] を直接読んでいたため、
+        // 空メッシュや解放済みモデル（CubismModel.Dispose 後は count=0, vertices=null）で AV になっていた。
+        if (count <= 0 || vertices == null)
+        {
+            return false;
+        }
 
         var left = vertices[0];
         var right = vertices[0];
