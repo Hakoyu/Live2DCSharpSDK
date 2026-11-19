@@ -875,17 +875,31 @@ public class LAppModel : CubismUserModel
             for (int index = 0; index < _modelSetting.FileReferences.Textures.Count; index++)
             {
                 var texturePath = _modelSetting.FileReferences.Textures[index];
-                if (string.IsNullOrWhiteSpace(texturePath))
-                    continue;
-                texturePath = Path.GetFullPath(Path.Combine(_modelHomeDir, texturePath));
-                var texture = _lapp.TextureManager.CreateTextureFromPngFile(
-                    this,
-                    index,
-                    texturePath
-                );
-                Textures.Add(texture);
+                Textures.Add(LoadTexture(index, texturePath));
             }
         }
+    }
+
+    /// <summary>
+    /// 读取一张纹理.
+    /// 解码失败时用 1x1 占位纹理顶替, 保证 Textures 的下标与纹理单元编号一一对应.
+    /// </summary>
+    /// <param name="index">纹理单元编号, 即 model3.json 中 Textures 数组的下标</param>
+    /// <param name="texturePath">model3.json 中记录的纹理路径</param>
+    /// <returns>纹理信息; 解码失败时为占位纹理</returns>
+    private TextureInfo LoadTexture(int index, string? texturePath)
+    {
+        if (string.IsNullOrWhiteSpace(texturePath))
+        {
+            // 空路径也要占位: 直接跳过会让后面的纹理整体前移, 绑定到错误的纹理单元.
+            return _lapp.TextureManager.CreatePlaceholderTexture(this, index, string.Empty);
+        }
+
+        var fullPath = Path.GetFullPath(Path.Combine(_modelHomeDir, texturePath));
+
+        // 不能直接跳过解码失败的纹理: OpenGL 按显式编号绑定, Vulkan 按创建顺序追加,
+        // 跳过会让后续纹理整体前移, 因此必须用占位纹理保持索引不变.
+        return _lapp.TextureManager.CreateTextureOrPlaceholder(this, index, fullPath);
     }
 
     /// <summary>
