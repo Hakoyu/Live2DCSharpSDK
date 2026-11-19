@@ -19,7 +19,8 @@ public class CubismClippingManager_OpenGLES2(OpenGLApi gl) : CubismClippingManag
     public override unsafe CubismClippingContext CreateClippingContext(CubismClippingManager manager, CubismModel model,
         int* clippingDrawableIndices, int clipCount)
     {
-        return new CubismClippingContext_OpenGLES2(manager, model, clippingDrawableIndices, clipCount);
+        // v7: 派生コンテキストは model を受け取らない（基底 / Vulkan 側と同形。詳細は CubismClippingContext_OpenGLES2 の remarks）。
+        return new CubismClippingContext_OpenGLES2(manager, clippingDrawableIndices, clipCount);
     }
 
     /// <summary>
