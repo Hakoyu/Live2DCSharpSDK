@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Live2DCSharpSDK.Framework.Core;
 using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Model;
@@ -36,9 +36,9 @@ public abstract class CubismClippingManager
     public const int ClippingMaskMaxCountOnMultiRenderTexture = 32;
 
     /// <summary>
-    /// オフスクリーンサーフェイスのアドレス
+    /// オフスクリーンサーフェイスのアドレス（官方 T_RenderTarget。R5 で CubismRenderTarget 化）
     /// </summary>
-    protected CubismOffscreenSurface CurrentMaskBuffer;
+    protected CubismRenderTarget CurrentMaskBuffer = null!;
     /// <summary>
     /// マスクのクリアフラグの配列
     /// </summary>
@@ -53,6 +53,11 @@ public abstract class CubismClippingManager
     /// 描画用クリッピングコンテキストのリスト
     /// </summary>
     public List<CubismClippingContext?> ClippingContextListForDraw { get; init; } = [];
+    /// <summary>
+    /// オフスクリーン描画用クリッピングコンテキストのリスト
+    /// （官方 _clippingContextListForOffscreen / GetClippingContextListForOffscreen）
+    /// </summary>
+    public List<CubismClippingContext?> ClippingContextListForOffscreen { get; init; } = [];
     /// <summary>
     /// クリッピングマスクのバッファサイズ（初期値:256）
     /// </summary>
@@ -92,9 +97,14 @@ public abstract class CubismClippingManager
     public void Dispose()
     {
         ClippingContextListForDraw.Clear();
+        ClippingContextListForOffscreen.Clear();
         ClippingContextListForMask.Clear();
         ChannelColors.Clear();
         ClearedMaskBufferFlags.Clear();
+
+        // §2.F 漏点③: 公式 R5 はマスク用レンダーターゲットも破棄する
+        CurrentMaskBuffer?.DestroyRenderTarget();
+        CurrentMaskBuffer = null!;
     }
 
     /// <summary>
@@ -113,30 +123,73 @@ public abstract class CubismClippingManager
             ClearedMaskBufferFlags.Add(false);
         }
 
+        // 対象オブジェクトの種類に応じて、マスク対象の一覧を切り替える（公式 .tpp:91-106）
+        int objectCount;
+        int[] objectMaskCounts;
+        unsafe
+        {
+            objectMaskCounts = Type == CsmEnum.DrawableObjectType.Offscreen
+                ? ToArray(model.GetOffscreenMaskCounts(), model.GetOffscreenCount())
+                : ToArray(model.GetDrawableMaskCounts(), model.GetDrawableCount());
+        }
+
+        List<CubismClippingContext?> objectClippingContextList = Type == CsmEnum.DrawableObjectType.Offscreen
+            ? ClippingContextListForOffscreen
+            : ClippingContextListForDraw;
+
+        objectCount = objectMaskCounts.Length;
+
         //クリッピングマスクを使う描画オブジェクトを全て登録する
         //クリッピングマスクは、通常数個程度に限定して使うものとする
-        for (int i = 0; i < model.GetDrawableCount(); i++)
+        for (int i = 0; i < objectCount; i++)
         {
-            if (model.GetDrawableMaskCounts()[i] <= 0)
+            if (objectMaskCounts[i] <= 0)
             {
                 //クリッピングマスクが使用されていないアートメッシュ（多くの場合使用しない）
-                ClippingContextListForDraw.Add(null);
+                objectClippingContextList.Add(null);
                 continue;
             }
 
             // 既にあるClipContextと同じかチェックする
-            var cc = FindSameClip(model.GetDrawableMasks()[i], model.GetDrawableMaskCounts()[i]);
-            if (cc == null)
+            CubismClippingContext? cc;
+            unsafe
             {
-                // 同一のマスクが存在していない場合は生成する
-                cc = CreateClippingContext(this, model, model.GetDrawableMasks()[i], model.GetDrawableMaskCounts()[i]);
-                ClippingContextListForMask.Add(cc);
+                int* masks = Type == CsmEnum.DrawableObjectType.Offscreen
+                    ? model.GetOffscreenMasks()[i]
+                    : model.GetDrawableMasks()[i];
+                cc = FindSameClip(masks, objectMaskCounts[i]);
+                if (cc == null)
+                {
+                    // 同一のマスクが存在していない場合は生成する
+                    cc = CreateClippingContext(this, model, masks, objectMaskCounts[i]);
+                    ClippingContextListForMask.Add(cc);
+                }
             }
 
-            cc.AddClippedDrawable(i);
+            if (Type == CsmEnum.DrawableObjectType.Offscreen)
+            {
+                cc.AddClippedOffscreen(i);
+            }
+            else
+            {
+                cc.AddClippedDrawable(i);
+            }
 
-            ClippingContextListForDraw.Add(cc);
+            objectClippingContextList.Add(cc);
         }
+    }
+
+    /// <summary>
+    /// アンマネージド配列をマネージド配列へコピーする（マスク数取得用）
+    /// </summary>
+    private static unsafe int[] ToArray(int* source, int count)
+    {
+        int[] result = new int[count];
+        for (int i = 0; i < count; i++)
+        {
+            result[i] = source[i];
+        }
+        return result;
     }
 
     /// <summary>
@@ -179,11 +232,25 @@ public abstract class CubismClippingManager
     }
 
     /// <summary>
-    /// 高精細マスク処理用の行列を計算する
+    /// 高精細マスク処理用の行列を計算する（後方互換。Drawable 用）
     /// </summary>
     /// <param name="model">モデルのインスタンス</param>
     /// <param name="isRightHanded">処理が右手系であるか</param>
     public void SetupMatrixForHighPrecision(CubismModel model, bool isRightHanded)
+    {
+        SetupMatrixForHighPrecision(model, isRightHanded, CsmEnum.DrawableObjectType.Drawable);
+    }
+
+    /// <summary>
+    /// 高精細マスク処理用の行列を計算する
+    /// （公式 R5 .tpp:176-272。drawableObjectType / mvp 付き）
+    /// </summary>
+    /// <param name="model">モデルのインスタンス</param>
+    /// <param name="isRightHanded">処理が右手系であるか</param>
+    /// <param name="drawableObjectType">処理するオブジェクトタイプ</param>
+    /// <param name="mvp">MVP 行列（Offscreen 用）</param>
+    public void SetupMatrixForHighPrecision(CubismModel model, bool isRightHanded,
+        CsmEnum.DrawableObjectType drawableObjectType, CubismMatrix44? mvp = null)
     {
         // 全てのクリッピングを用意する
         // 同じクリップ（複数の場合はまとめて１つのクリップ）を使う場合は１度だけ設定する
@@ -194,7 +261,7 @@ public abstract class CubismClippingManager
             var cc = ClippingContextListForMask[clipIndex];
 
             // このクリップを利用する描画オブジェクト群全体を囲む矩形を計算
-            CalcClippedDrawTotalBounds(model, cc);
+            CalcClippedTotalBounds(model, cc, drawableObjectType);
 
             if (cc.IsUsing)
             {
@@ -272,7 +339,81 @@ public abstract class CubismClippingManager
 
             clipContext.MatrixForMask.SetMatrix(TmpMatrixForMask.Tr);
             clipContext.MatrixForDraw.SetMatrix(TmpMatrixForDraw.Tr);
+
+            if (drawableObjectType == CsmEnum.DrawableObjectType.Offscreen)
+            {
+                // clipContext * mvp^-1（公式 .tpp:265-270）
+                CubismMatrix44 invertMvp = mvp != null ? InvertMatrix44(mvp) : new CubismMatrix44();
+                clipContext.MatrixForDraw.MultiplyByMatrix(invertMvp);
+            }
         }
+    }
+
+    /// <summary>
+    /// 4x4 行列の逆行列を求める（官方 CubismMatrix44::GetInvert の 1:1 移植。
+    /// 本地 CubismMatrix44 に GetInvert が無いため、ここに置く）。
+    /// </summary>
+    private static CubismMatrix44 InvertMatrix44(CubismMatrix44 src)
+    {
+        float[] tr = src.Tr;
+        float r00 = tr[0];
+        float r10 = tr[1];
+        float r20 = tr[2];
+        float r01 = tr[4];
+        float r11 = tr[5];
+        float r21 = tr[6];
+        float r02 = tr[8];
+        float r12 = tr[9];
+        float r22 = tr[10];
+
+        float tx = tr[12];
+        float ty = tr[13];
+        float tz = tr[14];
+
+        float det = r00 * (r11 * r22 - r12 * r21) -
+                    r01 * (r10 * r22 - r12 * r20) +
+                    r02 * (r10 * r21 - r11 * r20);
+
+        CubismMatrix44 dst = new();
+
+        if (MathF.Abs(det) < CubismMath.Epsilon)
+        {
+            dst.LoadIdentity();
+            return dst;
+        }
+
+        float invDet = 1.0f / det;
+
+        float inv00 = (r11 * r22 - r12 * r21) * invDet;
+        float inv01 = -(r01 * r22 - r02 * r21) * invDet;
+        float inv02 = (r01 * r12 - r02 * r11) * invDet;
+        float inv10 = -(r10 * r22 - r12 * r20) * invDet;
+        float inv11 = (r00 * r22 - r02 * r20) * invDet;
+        float inv12 = -(r00 * r12 - r02 * r10) * invDet;
+        float inv20 = (r10 * r21 - r11 * r20) * invDet;
+        float inv21 = -(r00 * r21 - r01 * r20) * invDet;
+        float inv22 = (r00 * r11 - r01 * r10) * invDet;
+
+        float[] dstTr = dst.Tr;
+        dstTr[0] = inv00;
+        dstTr[1] = inv10;
+        dstTr[2] = inv20;
+        dstTr[3] = 0.0f;
+        dstTr[4] = inv01;
+        dstTr[5] = inv11;
+        dstTr[6] = inv21;
+        dstTr[7] = 0.0f;
+        dstTr[8] = inv02;
+        dstTr[9] = inv12;
+        dstTr[10] = inv22;
+        dstTr[11] = 0.0f;
+
+        dstTr[12] = -(inv00 * tx + inv01 * ty + inv02 * tz);
+        dstTr[13] = -(inv10 * tx + inv11 * ty + inv12 * tz);
+        dstTr[14] = -(inv20 * tx + inv21 * ty + inv22 * tz);
+        dstTr[15] = 1.0f;
+
+        return dst;
     }
 
     /// <summary>
@@ -326,8 +467,10 @@ public abstract class CubismClippingManager
             if (usingClipCount > useClippingMaskMaxCount)
             {
                 // マスクの制限数の警告を出す
+                // 官方 release 语义：仅记录 + 断言（CSM_ASSERT 在 release 下不生效），仍继续渲染。
+                // 本地 R1 的 CubismLog.Error 会 throw 导致加载中断，因此这里降为 Warning。
                 int count = usingClipCount - useClippingMaskMaxCount;
-                CubismLog.Error("[Live2D SDK]not supported mask count : %d\n[Details] render texture count: %d\n, mask count : %d"
+                CubismLog.Warning("[Live2D SDK]not supported mask count : {0}\n[Details] render texture count: {1}\n, mask count : {2}"
                     , count, RenderTextureCount, usingClipCount);
             }
 
@@ -467,6 +610,19 @@ public abstract class CubismClippingManager
     /// <param name="clippingContext">クリッピングマスクのコンテキスト</param>
     protected unsafe void CalcClippedDrawTotalBounds(CubismModel model, CubismClippingContext clippingContext)
     {
+        CalcClippedTotalBounds(model, clippingContext, CsmEnum.DrawableObjectType.Drawable);
+    }
+
+    /// <summary>
+    /// マスクされる描画オブジェクト群全体を囲む矩形(モデル座標系)を計算する
+    /// （公式 R5 .tpp:466-592。Drawable / Offscreen の両対応）
+    /// </summary>
+    /// <param name="model">モデルのインスタンス</param>
+    /// <param name="clippingContext">クリッピングマスクのコンテキスト</param>
+    /// <param name="drawableObjectType">処理するオブジェクトタイプ</param>
+    protected unsafe void CalcClippedTotalBounds(CubismModel model, CubismClippingContext clippingContext,
+        CsmEnum.DrawableObjectType drawableObjectType)
+    {
         // 被クリッピングマスク（マスクされる描画オブジェクト）の全体の矩形
         float clippedDrawTotalMinX = float.MaxValue, clippedDrawTotalMinY = float.MaxValue;
         float clippedDrawTotalMaxX = float.MinValue, clippedDrawTotalMaxY = float.MinValue;
@@ -474,11 +630,33 @@ public abstract class CubismClippingManager
         // このマスクが実際に必要か判定する
         // このクリッピングを利用する「描画オブジェクト」がひとつでも使用可能であればマスクを生成する必要がある
 
-        int clippedDrawCount = clippingContext.ClippedDrawableIndexList.Count;
-        for (int clippedDrawableIndex = 0; clippedDrawableIndex < clippedDrawCount; clippedDrawableIndex++)
+        int clippedDrawCount;
+        List<int> clippedOffscreenChildDrawableIndexList = [];
+
+        if (drawableObjectType == CsmEnum.DrawableObjectType.Offscreen)
+        {
+            int clippedOffscreenCount = clippingContext.ClippedOffscreenIndexList.Count;
+
+            for (int clippedOffscreenIndex = 0; clippedOffscreenIndex < clippedOffscreenCount; ++clippedOffscreenIndex)
+            {
+                // マスクを使用する描画オブジェクトの描画される矩形を求める
+                int offscreenIndex = clippingContext.ClippedOffscreenIndexList[clippedOffscreenIndex];
+                CollectOffscreenChildDrawableIndexList(model, offscreenIndex, clippedOffscreenChildDrawableIndexList);
+            }
+
+            clippedDrawCount = clippedOffscreenChildDrawableIndexList.Count;
+        }
+        else
+        {
+            clippedDrawCount = clippingContext.ClippedDrawableIndexList.Count;
+        }
+
+        for (int clippedObjectIndex = 0; clippedObjectIndex < clippedDrawCount; ++clippedObjectIndex)
         {
             // マスクを使用する描画オブジェクトの描画される矩形を求める
-            int drawableIndex = clippingContext.ClippedDrawableIndexList[clippedDrawableIndex];
+            int drawableIndex = drawableObjectType == CsmEnum.DrawableObjectType.Offscreen
+                ? clippedOffscreenChildDrawableIndexList[clippedObjectIndex]
+                : clippingContext.ClippedDrawableIndexList[clippedObjectIndex];
 
             int drawableVertexCount = model.GetDrawableVertexCount(drawableIndex);
             var drawableVertexes = model.GetDrawableVertices(drawableIndex);
@@ -523,6 +701,39 @@ public abstract class CubismClippingManager
             clippingContext.AllClippedDrawRect.Y = clippedDrawTotalMinY;
             clippingContext.AllClippedDrawRect.Width = w;
             clippingContext.AllClippedDrawRect.Height = h;
+        }
+    }
+
+    /// <summary>
+    /// offscreen に紐づいている part の子の drawable を格納先に格納する
+    /// （公式 .tpp:595-600）
+    /// </summary>
+    /// <param name="model">モデルのインスタンス</param>
+    /// <param name="offscreenIndex">オフスクリーンのインデックス</param>
+    /// <param name="childDrawableIndexList">対象になった drawable の格納先</param>
+    public unsafe void CollectOffscreenChildDrawableIndexList(CubismModel model, int offscreenIndex, List<int> childDrawableIndexList)
+    {
+        // 親オブジェクトを取得
+        int ownerIndex = model.GetOffscreenOwnerIndices()[offscreenIndex];
+        CollectPartChildDrawableIndexList(model, ownerIndex, childDrawableIndexList);
+    }
+
+    /// <summary>
+    /// part の子の drawable を格納先に格納する（公式 .tpp:603-614）
+    /// </summary>
+    /// <param name="model">モデルのインスタンス</param>
+    /// <param name="partIndex">パーツのインデックス</param>
+    /// <param name="childDrawableIndexList">対象になった drawable の格納先</param>
+    public void CollectPartChildDrawableIndexList(CubismModel model, int partIndex, List<int> childDrawableIndexList)
+    {
+        PartChildDrawObjects childDrawObjects = model.GetPartsHierarchy()[partIndex].ChildDrawObjects;
+        for (int i = 0; i < childDrawObjects.DrawableIndices.Count; ++i)
+        {
+            childDrawableIndexList.Add(childDrawObjects.DrawableIndices[i]);
+        }
+        for (int i = 0; i < childDrawObjects.OffscreenIndices.Count; ++i)
+        {
+            CollectOffscreenChildDrawableIndexList(model, childDrawObjects.OffscreenIndices[i], childDrawableIndexList);
         }
     }
 

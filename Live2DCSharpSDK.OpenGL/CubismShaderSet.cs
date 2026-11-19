@@ -1,4 +1,4 @@
-﻿namespace Live2DCSharpSDK.OpenGL;
+namespace Live2DCSharpSDK.OpenGL;
 
 internal record CubismShaderSet
 {
@@ -30,6 +30,10 @@ internal record CubismShaderSet
     /// シェーダプログラムに渡す変数のアドレス(Texture1)
     /// </summary>
     internal int SamplerTexture1Location;
+    /// <summary>
+    /// シェーダプログラムに渡す変数のアドレス(BlendTexture)（B15、官方 .hpp:184）
+    /// </summary>
+    internal int SamplerBlendTextureLocation;
     /// <summary>
     /// シェーダプログラムに渡す変数のアドレス(BaseColor)
     /// </summary>

@@ -1,5 +1,12 @@
-﻿namespace Live2DCSharpSDK.OpenGL;
+namespace Live2DCSharpSDK.OpenGL;
 
+/// <summary>
+/// モデル描画直前のOpenGLES2のステートを保持・復帰させるクラス
+/// （官方 OpenGL/CubismRenderer_OpenGLES2.hpp:116-173）。
+/// B13: FBO / viewport は Profile では保持しない（官方 R5 は DoDrawModel のローカル変数へ移動）。
+/// B15: blend モード用にテクスチャユニット2も保存・復帰する（官方は 0/1 のみだが、
+/// blend 用テクスチャの漏れを防ぐためローカルで補強）。
+/// </summary>
 internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
 {
     /// <summary>
@@ -27,15 +34,19 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     /// </summary>
     internal int LastTexture1Binding2D;
     /// <summary>
-    /// モデル描画直前のテクスチャユニット1
+    /// モデル描画直前のテクスチャユニット2（blend 用、B15）
     /// </summary>
-    internal int[] LastVertexAttribArrayEnabled = new int[4];
+    internal int LastTexture2Binding2D;
     /// <summary>
     /// モデル描画直前のGL_VERTEX_ATTRIB_ARRAY_ENABLEDパラメータ
     /// </summary>
-    internal bool LastScissorTest;
+    internal int[] LastVertexAttribArrayEnabled = new int[4];
     /// <summary>
     /// モデル描画直前のGL_SCISSOR_TESTパラメータ
+    /// </summary>
+    internal bool LastScissorTest;
+    /// <summary>
+    /// モデル描画直前のGL_BLENDパラメータ
     /// </summary>
     internal bool LastBlend;
     /// <summary>
@@ -51,7 +62,7 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     /// </summary>
     internal bool LastCullFace;
     /// <summary>
-    /// モデル描画直前のGL_CULL_FACEパラメータ
+    /// モデル描画直前のGL_FRONT_FACEパラメータ
     /// </summary>
     internal int LastFrontFace;
     /// <summary>
@@ -62,14 +73,6 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
     /// モデル描画直前のカラーブレンディングパラメータ
     /// </summary>
     internal int[] LastBlending = new int[4];
-    /// <summary>
-    /// モデル描画直前のフレームバッファ
-    /// </summary>
-    internal int LastFBO;
-    /// <summary>
-    /// モデル描画直前のビューポート
-    /// </summary>
-    internal int[] LastViewport = new int[4];
 
     /// <summary>
     /// OpenGLES2のステートを保持する
@@ -82,6 +85,9 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
         gl.GetIntegerv(gl.GL_CURRENT_PROGRAM, out LastProgram);
 
         gl.GetIntegerv(gl.GL_ACTIVE_TEXTURE, out LastActiveTexture);
+        gl.ActiveTexture(gl.GL_TEXTURE2); //テクスチャユニット2をアクティブに（B15）
+        gl.GetIntegerv(gl.GL_TEXTURE_BINDING_2D, out LastTexture2Binding2D);
+
         gl.ActiveTexture(gl.GL_TEXTURE1); //テクスチャユニット1をアクティブに（以後の設定対象とする）
         gl.GetIntegerv(gl.GL_TEXTURE_BINDING_2D, out LastTexture1Binding2D);
 
@@ -108,10 +114,6 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
         gl.GetIntegerv(gl.GL_BLEND_DST_RGB, out LastBlending[1]);
         gl.GetIntegerv(gl.GL_BLEND_SRC_ALPHA, out LastBlending[2]);
         gl.GetIntegerv(gl.GL_BLEND_DST_ALPHA, out LastBlending[3]);
-
-        // モデル描画直前のFBOとビューポートを保存
-        gl.GetIntegerv(gl.GL_FRAMEBUFFER_BINDING, out LastFBO);
-        gl.GetIntegerv(gl.GL_VIEWPORT, LastViewport);
     }
 
     /// <summary>
@@ -138,6 +140,9 @@ internal class CubismRendererProfile_OpenGLES2(OpenGLApi gl)
 
         gl.BindBuffer(gl.GL_ARRAY_BUFFER, LastArrayBufferBinding); //前にバッファがバインドされていたら破棄する必要がある
         gl.BindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, LastElementArrayBufferBinding);
+
+        gl.ActiveTexture(gl.GL_TEXTURE2); //テクスチャユニット2を復元（B15）
+        gl.BindTexture(gl.GL_TEXTURE_2D, LastTexture2Binding2D);
 
         gl.ActiveTexture(gl.GL_TEXTURE1); //テクスチャユニット1を復元
         gl.BindTexture(gl.GL_TEXTURE_2D, LastTexture1Binding2D);

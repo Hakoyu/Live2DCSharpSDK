@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
@@ -127,6 +127,23 @@ public class AvaloniaApi(OpenGlControlBase con, GlInterface gl) : OpenGLApi
     public override void DeleteFramebuffer(int fb)
     {
         gl.DeleteFramebuffer(fb);
+    }
+
+    public override void BlitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, int mask, int filter)
+    {
+        gl.BlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+    }
+
+    public override unsafe void DeleteBuffer(int index)
+    {
+        int value = index;
+        gl.DeleteBuffers(1, &value);
+    }
+
+    public override unsafe void DeleteVertexArray(int index)
+    {
+        int value = index;
+        gl.DeleteVertexArrays(1, &value);
     }
 
     public override void DeleteProgram(int index)

@@ -1,4 +1,4 @@
-﻿namespace Live2DCSharpSDK.OpenGL;
+namespace Live2DCSharpSDK.OpenGL;
 
 public abstract class OpenGLApi
 {
@@ -44,6 +44,18 @@ public abstract class OpenGLApi
     public readonly int GL_CLAMP_TO_EDGE = 0x812F;
     public readonly int GL_TEXTURE0 = 0x84C0;
     public readonly int GL_TEXTURE1 = 0x84C1;
+    /// <summary>
+    /// テクスチャユニット2（blend 用、B15）
+    /// </summary>
+    public readonly int GL_TEXTURE2 = 0x84C2;
+    /// <summary>
+    /// テクスチャ繰り返し（B2、官方 CubismRenderTarget_OpenGLES2.cpp:102）
+    /// </summary>
+    public readonly int GL_REPEAT = 0x2901;
+    /// <summary>
+    /// 最近傍フィルタ（B2、官方 .cpp:105）
+    /// </summary>
+    public readonly int GL_NEAREST = 0x2600;
     public readonly int GL_ACTIVE_TEXTURE = 0x84E0;
     public readonly int GL_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;
     public readonly int GL_VERTEX_ATTRIB_ARRAY_ENABLED = 0x8622;
@@ -60,6 +72,14 @@ public abstract class OpenGLApi
     public readonly int GL_CURRENT_PROGRAM = 0x8B8D;
     public readonly int GL_STATIC_DRAW = 0x88E4;
     public readonly int GL_FRAMEBUFFER_BINDING = 0x8CA6;
+    /// <summary>
+    /// 読み取り用フレームバッファ（B2、glBlitFramebuffer 用）
+    /// </summary>
+    public readonly int GL_READ_FRAMEBUFFER = 0x8CA8;
+    /// <summary>
+    /// 書き込み用フレームバッファ（B2、glBlitFramebuffer 用）
+    /// </summary>
+    public readonly int GL_DRAW_FRAMEBUFFER = 0x8CA9;
     public readonly int GL_COLOR_ATTACHMENT0 = 0x8CE0;
     public readonly int GL_FRAMEBUFFER = 0x8D40;
 
@@ -113,6 +133,18 @@ public abstract class OpenGLApi
     public abstract void FramebufferTexture2D(int a, int b, int c, int buff, int data);
     public abstract void DeleteTexture(int data);
     public abstract void DeleteFramebuffer(int fb);
+    /// <summary>
+    /// フレームバッファ間でビットブロック転送する（B2、官方 glBlitFramebuffer）
+    /// </summary>
+    public abstract void BlitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, int mask, int filter);
+    /// <summary>
+    /// バッファオブジェクトを削除する（§2.F 漏点①、公式 glDeleteBuffers）
+    /// </summary>
+    public abstract void DeleteBuffer(int index);
+    /// <summary>
+    /// 頂点配列オブジェクトを削除する（§2.F 漏点①、公式 glDeleteVertexArrays）
+    /// </summary>
+    public abstract void DeleteVertexArray(int index);
     public abstract void BlendFunc(int a, int b);
     public abstract void GetWindowSize(out int w, out int h);
     public abstract void GenerateMipmap(int a);
