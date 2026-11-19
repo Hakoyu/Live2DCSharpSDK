@@ -12,6 +12,11 @@ namespace Live2DCSharpSDK.Vulkan;
 
 public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
 {
+    /// <summary>
+    /// ホスト（背景色取得用、P8c-offscreen）
+    /// </summary>
+    public LAppDelegateVulkan LApp => lapp;
+
     public static readonly string[] deviceExtensions =
     [
         "VK_KHR_swapchain",
@@ -401,15 +406,9 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
             PpEnabledExtensionNames = (byte**)SilkMarshal.StringArrayToPtr(deviceExtensions)
         };
 
-        if (EnableValidationLayers)
-        {
-            createInfo.EnabledLayerCount = (uint)validationLayers.Length;
-            createInfo.PpEnabledLayerNames = (byte**)SilkMarshal.StringArrayToPtr(validationLayers);
-        }
-        else
-        {
-            createInfo.EnabledLayerCount = 0;
-        }
+        // Vulkan 1.0 以降、デバイスレイヤーは無効。インスタンスレイヤーのみ使用する（validation VUID 対応）。
+        createInfo.EnabledLayerCount = 0;
+        createInfo.PpEnabledLayerNames = null;
 
         var dynamicRenderingF = new PhysicalDeviceDynamicRenderingFeatures
         {
@@ -439,11 +438,6 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
 
         vk.GetDeviceQueue(_device, (uint)Indices.GraphicsFamily, 0, out _graphicQueue);
         vk.GetDeviceQueue(_device, (uint)Indices.PresentFamily, 0, out _presentQueue);
-
-        if (EnableValidationLayers)
-        {
-            SilkMarshal.Free((nint)createInfo.PpEnabledLayerNames);
-        }
 
         SilkMarshal.Free((nint)createInfo.PpEnabledExtensionNames);
     }
@@ -528,7 +522,6 @@ public class VulkanManager(LAppDelegateVulkan lapp, Vk vk, VulkanApi api)
         SwapchainManager = new SwapchainManager(_khrs, khrSurface, api, vk, PhysicalDevice, _device, Surface, Indices.GraphicsFamily,
                                                 Indices.PresentFamily);
         CreateCommandPool();
-        SwapchainManager.ChangeLayout(_device, _commandPool, _graphicQueue);
         CreateSyncObjects();
     }
 

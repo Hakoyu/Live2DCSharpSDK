@@ -75,9 +75,19 @@ internal class Program : VulkanApi
         {
             live2d.Resize();
         };
+        // t16 検証用: 30 フレーム後に offscreen 数と DrawOffscreen 回数を出力して終了する
+        int probeFrames = 0;
+        bool probeOffscreen = Environment.GetEnvironmentVariable("L2D_PROBE_OFFSCREEN") == "1";
         window.Render += (time) =>
         {
             live2d.Run((float)time);
+
+            if (probeOffscreen && ++probeFrames >= 30)
+            {
+                var renderer = model.Renderer as CubismRenderer_Vulkan;
+                Console.WriteLine($"OFFSCREEN_PROBE offscreens={renderer?.OffscreenCount} draws={renderer?.OffscreenDrawCount}");
+                window.Close();
+            }
         };
         window.Run();
     }

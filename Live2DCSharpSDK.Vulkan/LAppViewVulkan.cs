@@ -1,5 +1,4 @@
-﻿using Live2DCSharpSDK.App;
-using Silk.NET.Vulkan;
+using Live2DCSharpSDK.App;
 
 namespace Live2DCSharpSDK.Vulkan;
 
@@ -7,40 +6,17 @@ public class LAppViewVulkan(LAppDelegateVulkan lapp) : LAppView(lapp)
 {
     public override void RenderPost()
     {
-
     }
 
+    /// <summary>
+    /// 背景クリアはレンダラ側で行う。ここでは acquire 済みイメージのセマフォを
+    /// 最初の描画前に消費するための空コマンドを 1 回だけ Submit する
+    /// （旧実装の clear はレイアウト遷移なしで validation error の原因だった）。
+    /// </summary>
     public override unsafe void RenderPre()
     {
         var vkManager = lapp.VulkanManager;
         var commandBuffer = vkManager.BeginSingleTimeCommands();
-
-        var color = lapp.BGColor;
-
-        var colorAttachment = new RenderingAttachmentInfo
-        {
-            SType = StructureType.RenderingAttachmentInfoKhr,
-            ImageView = vkManager.GetSwapchainImageView(),
-            ImageLayout = ImageLayout.AttachmentOptimal,
-            LoadOp = AttachmentLoadOp.Clear,
-            StoreOp = AttachmentStoreOp.Store,
-            ClearValue = new()
-            {
-                Color = new(color.R, color.G, color.B, color.A)
-            }
-        };
-
-        var renderingInfo = new RenderingInfo
-        {
-            SType = StructureType.RenderingInfo,
-            RenderArea = new(new(0, 0), vkManager.SwapchainManager.Extent),
-            LayerCount = 1,
-            ColorAttachmentCount = 1,
-            PColorAttachments = &colorAttachment
-        };
-
-        lapp._vk.CmdBeginRendering(commandBuffer, &renderingInfo);
-        lapp._vk.CmdEndRendering(commandBuffer);
         vkManager.SubmitCommand(commandBuffer, true);
     }
 }

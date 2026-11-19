@@ -26,6 +26,7 @@ public class CubismPipeline_Vulkan(Vk vk, Device device) : IDisposable
             return;
         }
 
+
         _pipelineResource = new PipelineResource[ShaderCount];
 
         for (int i = 0; i < ShaderCount; i++)

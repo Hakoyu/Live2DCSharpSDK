@@ -205,7 +205,7 @@ public class CubismRenderTarget_Vulkan : CubismRenderTarget
         _colorImage.CreateImage(device, physicalDevice, displayBufferWidth, displayBufferHeight,
                                  1, surfaceFormat, ImageTiling.Optimal,
                                  ImageUsageFlags.ColorAttachmentBit | ImageUsageFlags.SampledBit |
-                                 ImageUsageFlags.TransferDstBit);
+                                 ImageUsageFlags.TransferSrcBit | ImageUsageFlags.TransferDstBit);
         _colorImage.CreateView(device, surfaceFormat, ImageAspectFlags.ColorBit, 1);
         _colorImage.CreateSampler(device, 1.0f, 1);
 

@@ -145,6 +145,65 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     private CubismClippingManager_Vulkan _clippingManager;
     /// <summary>
+    /// オフスクリーン用クリッピングマスク管理オブジェクト（P8c-offscreen）
+    /// </summary>
+    private CubismClippingManager_Vulkan? _offscreenClippingManager;
+    /// <summary>
+    /// オフスクリーン用クリッピングコンテキスト（P8c-offscreen）
+    /// </summary>
+    public CubismClippingContext_Vulkan? ClippingContextBufferForOffscreen { get; set; }
+    /// <summary>
+    /// モデルのオフスクリーン一覧（官方 _offscreenList）
+    /// </summary>
+    private readonly List<CubismOffscreenRenderTarget_Vulkan> _offscreenList = [];
+    /// <summary>
+    /// 現在描画中のオフスクリーン（官方 _currentOffscreen）
+    /// </summary>
+    private CubismOffscreenRenderTarget_Vulkan? _currentOffscreen;
+    /// <summary>
+    /// 現在の描画先レンダーターゲット（官方 _currentRenderTarget）
+    /// </summary>
+    private CubismRenderTarget_Vulkan? _currentRenderTarget;
+    /// <summary>
+    /// モデル全体を描画するレンダーターゲット（官方 _modelRenderTargets）
+    /// </summary>
+    private readonly List<CubismRenderTarget_Vulkan> _modelRenderTargets = [];
+    /// <summary>
+    /// blend shader 用のスナップショット（描画中 RT を直接サンプルすると validation error になるため）
+    /// </summary>
+    private CubismRenderTarget_Vulkan? _blendSnapshot;
+    private bool _blendSnapshotInitialized;
+    /// <summary>
+    /// オフスクリーン用マスクバッファ（官方 _offscreenMaskBuffers）
+    /// </summary>
+    private readonly List<CubismRenderTarget_Vulkan> _offscreenMaskBuffers = [];
+    /// <summary>
+    /// blend / offscreen を使用するためモデル RT 経由で描画するか
+    /// </summary>
+    private bool _useModelRenderTarget;
+    /// <summary>
+    /// モデル RT をクリア済みか（官方 _isClearedModelRenderTarget）
+    /// </summary>
+    private bool _isClearedModelRenderTarget;
+    /// <summary>
+    /// オフスクリーンを描画中か（マスクバッファ選択に使用）
+    /// </summary>
+    private bool _isDrawingOffscreen;
+    /// <summary>
+    /// オフスクリーン合成用ディスクリプタ（index = offscreenIndex）
+    /// </summary>
+    private readonly List<Descriptor> _offscreenDescriptors = [];
+    /// <summary>
+    /// モデル RT / オフスクリーン合成用コピーディスクリプタ
+    /// </summary>
+    private Descriptor? _copyDescriptor;
+    /// <summary>
+    /// 合成用フルスクリーンクワッドの頂点/インデックスバッファ
+    /// </summary>
+    private CubismBufferVulkan? _quadVertexBuffer;
+    private CubismBufferVulkan? _quadStagingBuffer;
+    private CubismBufferVulkan? _quadIndexBuffer;
+    /// <summary>
     /// 描画オブジェクトのインデックスを描画順に並べたリスト
     /// </summary>
     private readonly int[] _sortedObjectsIndexList;
@@ -213,7 +272,22 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// </summary>
     private CommandBuffer _drawCommandBuffer;
 
+    /// <summary>
+    /// swapchain / 深度イメージの現在レイアウト（validation 用の簡易トラッキング）
+    /// </summary>
+    private readonly Dictionary<ulong, ImageLayout> _imageLayouts = [];
+
     private readonly VulkanManager _vulkanManager;
+
+    /// <summary>
+    /// モデルのオフスクリーン数（t16 検証用）
+    /// </summary>
+    public int OffscreenCount => _offscreenList.Count;
+
+    /// <summary>
+    /// DrawOffscreen 実行回数（t16 検証用）
+    /// </summary>
+    public int OffscreenDrawCount { get; private set; }
 
     public CubismRenderer_Vulkan(Vk vk, VulkanManager manager, CubismModel model, int maskBufferCount = 1) : base(model)
     {
@@ -253,12 +327,119 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 _offscreenFrameBuffers[i] = new(_vk);
                 _offscreenFrameBuffers[i].CreateRenderTarget(Device, PhysicalDevice, bufferWidth, bufferHeight,
                     ImageFormat, DepthFormat);
+                InitializeMaskBufferLayout(_offscreenFrameBuffers[i]);
             }
         }
+
+        //------------ オフスクリーン用クリッピングマスク（P8c-offscreen）------------
+        if (model.IsUsingMaskingForOffscreen())
+        {
+            _offscreenClippingManager = new CubismClippingManager_Vulkan(_vk)
+            {
+                Type = CsmEnum.DrawableObjectType.Offscreen
+            };
+            _offscreenClippingManager.Initialize(model, maskBufferCount);
+
+            for (int i = 0; i < maskBufferCount; ++i)
+            {
+                var mask = new CubismRenderTarget_Vulkan(_vk);
+                mask.CreateRenderTarget(Device, PhysicalDevice,
+                    (uint)_offscreenClippingManager.ClippingMaskBufferSize.X,
+                    (uint)_offscreenClippingManager.ClippingMaskBufferSize.Y,
+                    ImageFormat, DepthFormat);
+                InitializeMaskBufferLayout(mask);
+                _offscreenMaskBuffers.Add(mask);
+            }
+        }
+
+        //------------ 描画順ソート + オフスクリーン一覧（P8c-offscreen）------------
+        int offscreenCount = model.GetOffscreenCount();
+        if (offscreenCount > 0)
+        {
+            for (int offscreenIndex = 0; offscreenIndex < offscreenCount; ++offscreenIndex)
+            {
+                var renderTarget = new CubismOffscreenRenderTarget_Vulkan();
+                renderTarget.SetOffscreenIndex(offscreenIndex);
+                _offscreenList.Add(renderTarget);
+            }
+
+            SetupParentOffscreens(model, offscreenCount);
+        }
+
+        _useModelRenderTarget = model.IsBlendModeEnabled() || offscreenCount > 0;
+        ApplyBlendModeMaskPrecision(model.IsBlendModeEnabled());
 
         _depthImage = new(vk);
 
         InitializeRenderer();
+    }
+
+    /// <summary>
+    /// マスクバッファを初期レイアウト（ShaderReadOnly）へ遷移させる。
+    /// 未使用のマスクを descriptor に束縛した際の validation error を避ける。
+    /// </summary>
+    private unsafe void InitializeMaskBufferLayout(CubismRenderTarget_Vulkan mask)
+    {
+        if (!mask.IsValid())
+        {
+            return;
+        }
+
+        // 描画パスを開かず、レイアウト遷移だけで初期化する
+        // （dynamicRenderingUnusedAttachments の validation error を避ける）。
+        var commandBuffer = BeginSingleTimeCommands();
+        var barrier = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.None,
+            DstAccessMask = AccessFlags.ShaderReadBit,
+            OldLayout = ImageLayout.Undefined,
+            NewLayout = ImageLayout.ShaderReadOnlyOptimal,
+            Image = mask.GetTextureImage(),
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(commandBuffer, PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.FragmentShaderBit, 0, 0, null, 0, null, 1, ref barrier);
+        mask.SetColorImageCurrentLayout(ImageLayout.ShaderReadOnlyOptimal);
+        SubmitCommand(commandBuffer);
+    }
+
+    /// <summary>
+    /// オフスクリーンの親を探して設定する（官方 SetupParentOffscreens）。
+    /// </summary>
+    private unsafe void SetupParentOffscreens(CubismModel model, int offscreenCount)
+    {
+        int* ownerIndices = model.GetOffscreenOwnerIndices();
+
+        for (int offscreenIndex = 0; offscreenIndex < offscreenCount; ++offscreenIndex)
+        {
+            CubismOffscreenRenderTarget_Vulkan? parentOffscreen = null;
+            int ownerIndex = ownerIndices[offscreenIndex];
+            int parentIndex = model.GetPartParentPartIndex(ownerIndex);
+
+            while (parentIndex != CubismModel.CubismNoIndex_Parent)
+            {
+                for (int i = 0; i < offscreenCount; ++i)
+                {
+                    if (ownerIndices[_offscreenList[i].GetOffscreenIndex()] != parentIndex)
+                    {
+                        continue;
+                    }
+
+                    parentOffscreen = _offscreenList[i];
+                    break;
+                }
+
+                if (parentOffscreen != null)
+                {
+                    break;
+                }
+
+                parentIndex = model.GetPartParentPartIndex(parentIndex);
+            }
+
+            _offscreenList[offscreenIndex].SetParentPartOffscreen(parentOffscreen);
+        }
     }
 
     /// <summary>
@@ -488,10 +669,12 @@ public class CubismRenderer_Vulkan : CubismRenderer
     {
         // ディスクリプタプールの作成
         int drawableCount = Model.GetDrawableCount();
+        int offscreenCount = Model.GetOffscreenCount();
         // テクスチャは 3 枚: binding1=モデル, binding2=マスク, binding3=blend 用（P8c）
         int textureCount = 3;
         int drawModeCount = 2; // マスクされる描画と通常の描画
-        int descriptorSetCount = drawableCount * drawModeCount;
+        // drawable 用 + offscreen 合成用（masked/unmasked）+ copy 用
+        int descriptorSetCount = drawableCount * drawModeCount + offscreenCount * drawModeCount + 1;
 
         var poolSizes = new DescriptorPoolSize[]
         {
@@ -591,6 +774,31 @@ public class CubismRenderer_Vulkan : CubismRenderer
             _descriptorSets.Add(desc);
         }
 
+        // オフスクリーン合成用（offscreen ごとに masked/unmasked の 2 セット）
+        _offscreenDescriptors.Clear();
+        for (int offscreenIndex = 0; offscreenIndex < offscreenCount; ++offscreenIndex)
+        {
+            var desc = new Descriptor
+            {
+                UniformBuffer = new CubismBufferVulkan(_vk)
+            };
+            desc.UniformBuffer.CreateBuffer(Device, PhysicalDevice, (ulong)Unsafe.SizeOf<ModelUBO>(),
+                BufferUsageFlags.UniformBufferBit,
+                MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
+            desc.UniformBuffer.Map(Device, ulong.MaxValue);
+            _offscreenDescriptors.Add(desc);
+        }
+
+        // Copy 合成用（モデル RT → swapchain）
+        _copyDescriptor = new Descriptor
+        {
+            UniformBuffer = new CubismBufferVulkan(_vk)
+        };
+        _copyDescriptor.UniformBuffer.CreateBuffer(Device, PhysicalDevice, (ulong)Unsafe.SizeOf<ModelUBO>(),
+            BufferUsageFlags.UniformBufferBit,
+            MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
+        _copyDescriptor.UniformBuffer.Map(Device, ulong.MaxValue);
+
         var allocInfo = new DescriptorSetAllocateInfo
         {
             SType = StructureType.DescriptorSetAllocateInfo,
@@ -614,12 +822,80 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 }
             }
 
+            int setIndex = 0;
             for (int drawAssign = 0; drawAssign < drawableCount; drawAssign++)
             {
-                _descriptorSets[drawAssign].DescriptorSet = descriptorSets[drawAssign * 2];
-                _descriptorSets[drawAssign].DescriptorSetMasked = descriptorSets[drawAssign * 2 + 1];
+                _descriptorSets[drawAssign].DescriptorSet = descriptorSets[setIndex++];
+                _descriptorSets[drawAssign].DescriptorSetMasked = descriptorSets[setIndex++];
             }
+
+            for (int offscreenIndex = 0; offscreenIndex < offscreenCount; ++offscreenIndex)
+            {
+                _offscreenDescriptors[offscreenIndex].DescriptorSet = descriptorSets[setIndex++];
+                _offscreenDescriptors[offscreenIndex].DescriptorSetMasked = descriptorSets[setIndex++];
+            }
+
+            _copyDescriptor!.DescriptorSet = descriptorSets[setIndex++];
         }
+    }
+
+    /// <summary>
+    /// モデル RT / オフスクリーン合成用のフルスクリーンクワッドバッファを作成する。
+    /// 公式 modelRenderTargetVertexArray / modelRenderTargetIndexArray と同じ頂点列（P8c-offscreen）。
+    /// </summary>
+    private unsafe void CreateQuadBuffers()
+    {
+        if (_quadVertexBuffer != null)
+        {
+            return;
+        }
+
+        ModelVertex[] vertices =
+        [
+            new() { Pos = new(-1.0f, -1.0f), TexCoord = new(0.0f, 0.0f) },
+            new() { Pos = new(1.0f, -1.0f), TexCoord = new(1.0f, 0.0f) },
+            new() { Pos = new(1.0f, 1.0f), TexCoord = new(1.0f, 1.0f) },
+            new() { Pos = new(-1.0f, 1.0f), TexCoord = new(0.0f, 1.0f) },
+        ];
+        ushort[] indices = [0, 1, 2, 2, 3, 0];
+
+        ulong vertexSize = (ulong)(Unsafe.SizeOf<ModelVertex>() * vertices.Length);
+        _quadStagingBuffer = new(_vk);
+        _quadStagingBuffer.CreateBuffer(Device, PhysicalDevice, vertexSize, BufferUsageFlags.TransferSrcBit,
+            MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
+        _quadStagingBuffer.Map(Device, vertexSize);
+        fixed (ModelVertex* v = vertices)
+        {
+            _quadStagingBuffer.MemCpy(v, vertexSize);
+        }
+        _quadStagingBuffer.UnMap(Device);
+        _quadVertexBuffer = new(_vk);
+        _quadVertexBuffer.CreateBuffer(Device, PhysicalDevice, vertexSize,
+            BufferUsageFlags.TransferDstBit | BufferUsageFlags.VertexBufferBit,
+            MemoryPropertyFlags.DeviceLocalBit);
+
+        ulong indexSize = (ulong)(sizeof(ushort) * indices.Length);
+        var indexStaging = new CubismBufferVulkan(_vk);
+        indexStaging.CreateBuffer(Device, PhysicalDevice, indexSize, BufferUsageFlags.TransferSrcBit,
+            MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
+        indexStaging.Map(Device, indexSize);
+        fixed (ushort* i = indices)
+        {
+            indexStaging.MemCpy(i, indexSize);
+        }
+        indexStaging.UnMap(Device);
+        _quadIndexBuffer = new(_vk);
+        _quadIndexBuffer.CreateBuffer(Device, PhysicalDevice, indexSize,
+            BufferUsageFlags.TransferDstBit | BufferUsageFlags.IndexBufferBit,
+            MemoryPropertyFlags.DeviceLocalBit);
+
+        var commandBuffer = BeginSingleTimeCommands();
+        var vertexCopy = new BufferCopy { Size = vertexSize };
+        _vk.CmdCopyBuffer(commandBuffer, _quadStagingBuffer.Buffer, _quadVertexBuffer.Buffer, 1, ref vertexCopy);
+        var indexCopy = new BufferCopy { Size = indexSize };
+        _vk.CmdCopyBuffer(commandBuffer, indexStaging.Buffer, _quadIndexBuffer.Buffer, 1, ref indexCopy);
+        SubmitCommand(commandBuffer);
+        indexStaging.Destroy(Device);
     }
 
     /// <summary>
@@ -655,6 +931,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         CreateIndexBuffer();
         CreateDescriptorSets();
         CreateDepthBuffer();
+        CreateQuadBuffers();
 
         _deviceInfo.Pipeline.CreatePipelines(_descriptorSetLayout);
     }
@@ -907,9 +1184,24 @@ public class CubismRenderer_Vulkan : CubismRenderer
 
         // ディスクリプタセットのバインド
         UpdateDescriptorSet(descriptor, textureIndex, masked);
-        // blend shader 用テクスチャ（binding3）。P8c 暫定: モデルテクスチャを既定値にし、
-        // オフスクリーン/モデル RT 合成時は P8c の描画先テクスチャで上書きする。
-        UpdateBlendTexture(descriptor, masked, _textures[textureIndex].View, _textures[textureIndex].Sampler);
+
+        // blend shader 用テクスチャ（binding3）: OpenGL texture2 相当。
+        // 描画中 RT を直接サンプルできないため、5.3 以降の blend ではスナップショットをコピーして使う。
+        bool advancedBlend = shaderIndex >= ShaderNames.NormalAtop && Model.IsBlendModeEnabled();
+        if (advancedBlend)
+        {
+            PrepareBlendSnapshot();
+        }
+
+        if (advancedBlend && _blendSnapshot is { } snapshot && snapshot.IsValid())
+        {
+            UpdateBlendTexture(descriptor, masked, snapshot.GetTextureView(), snapshot.GetTextureSampler());
+        }
+        else
+        {
+            UpdateBlendTexture(descriptor, masked,
+                _textures[textureIndex].View, _textures[textureIndex].Sampler);
+        }
         var descriptorSet = masked ? _descriptorSets[index].DescriptorSetMasked
                                                  : _descriptorSets[index].DescriptorSet;
         _vk.CmdBindDescriptorSets(cmdBuffer, PipelineBindPoint.Graphics,
@@ -920,6 +1212,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _vk.CmdBindPipeline(cmdBuffer, PipelineBindPoint.Graphics,
                           _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex));
 
+        // 5.3 以降の blend は PrepareBlendSnapshot() で RT を再開済み
         // 描画
         _vk.CmdDrawIndexed(cmdBuffer, (uint)model.GetDrawableVertexIndexCount(index), 1, 0, 0, 0);
     }
@@ -1044,8 +1337,45 @@ public class CubismRenderer_Vulkan : CubismRenderer
     /// <param name="isResume">レンダリング再開かのフラグ</param>
     public unsafe void BeginRendering(CommandBuffer drawCommandBuffer, bool isResume)
     {
+        Image colorImage = UseRenderTarget ? RenderTargetImage : SwapchainImage;
+        ImageLayout currentLayout = _imageLayouts.TryGetValue(colorImage.Handle, out ImageLayout tracked)
+            ? tracked
+            : ImageLayout.Undefined;
+
+        var colorBarrier = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.None,
+            DstAccessMask = AccessFlags.ColorAttachmentWriteBit,
+            OldLayout = currentLayout,
+            NewLayout = ImageLayout.ColorAttachmentOptimal,
+            Image = colorImage,
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(drawCommandBuffer, PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.ColorAttachmentOutputBit, 0, 0, null, 0, null, 1, ref colorBarrier);
+        _imageLayouts[colorImage.Handle] = ImageLayout.ColorAttachmentOptimal;
+
+        ImageLayout depthLayout = _imageLayouts.TryGetValue(_depthImage.Image.Handle, out ImageLayout trackedDepth)
+            ? trackedDepth
+            : ImageLayout.Undefined;
+        var depthBarrier = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.None,
+            DstAccessMask = AccessFlags.DepthStencilAttachmentWriteBit,
+            OldLayout = depthLayout,
+            NewLayout = ImageLayout.DepthStencilAttachmentOptimal,
+            Image = _depthImage.Image,
+            SubresourceRange = new(ImageAspectFlags.DepthBit | ImageAspectFlags.StencilBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(drawCommandBuffer, PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.EarlyFragmentTestsBit, 0, 0, null, 0, null, 1, ref depthBarrier);
+        _imageLayouts[_depthImage.Image.Handle] = ImageLayout.DepthStencilAttachmentOptimal;
+
+        var bgColor = _vulkanManager.LApp.BGColor;
         var clearValue = new ClearValue[2];
-        clearValue[0].Color = _clearColor.Color;
+        clearValue[0].Color = new(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
         clearValue[1].DepthStencil = new(1.0f, 0);
 
         var colorAttachment = new RenderingAttachmentInfo
@@ -1067,7 +1397,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
         else
         {
             colorAttachment.ImageView = SwapchainImageView;
-            colorAttachment.LoadOp = AttachmentLoadOp.Load;
+            // 非モデル RT パスではこの BeginRendering がフレーム先頭なので背景をクリアする
+            colorAttachment.LoadOp = isResume ? AttachmentLoadOp.Load : AttachmentLoadOp.Clear;
         }
         colorAttachment.ImageLayout = ImageLayout.AttachmentOptimal;
         colorAttachment.StoreOp = AttachmentStoreOp.Store;
@@ -1109,36 +1440,23 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _vk.CmdEndRendering(drawCommandBuffer);
 
         // レイアウト変更
-        if (UseRenderTarget)
+        Image colorImage = UseRenderTarget ? RenderTargetImage : SwapchainImage;
+        ImageLayout newLayout = UseRenderTarget ? ImageLayout.ShaderReadOnlyOptimal : ImageLayout.PresentSrcKhr;
+        var memoryBarrier = new ImageMemoryBarrier
         {
-            var memoryBarrier = new ImageMemoryBarrier
-            {
-                SType = StructureType.ImageMemoryBarrier,
-                SrcAccessMask = AccessFlags.ColorAttachmentWriteBit,
-                OldLayout = ImageLayout.Undefined,
-                NewLayout = ImageLayout.ShaderReadOnlyOptimal,
-                Image = RenderTargetImage,
-                SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
-            };
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.ColorAttachmentWriteBit,
+            DstAccessMask = UseRenderTarget ? AccessFlags.ShaderReadBit : AccessFlags.None,
+            OldLayout = ImageLayout.ColorAttachmentOptimal,
+            NewLayout = newLayout,
+            Image = colorImage,
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
 
-            _vk.CmdPipelineBarrier(drawCommandBuffer, PipelineStageFlags.ColorAttachmentOutputBit,
-                               PipelineStageFlags.BottomOfPipeBit, 0, 0, null, 0, null, 1, ref memoryBarrier);
-        }
-        else
-        {
-            var memoryBarrier = new ImageMemoryBarrier
-            {
-                SType = StructureType.ImageMemoryBarrier,
-                SrcAccessMask = AccessFlags.ColorAttachmentWriteBit,
-                OldLayout = ImageLayout.Undefined,
-                NewLayout = ImageLayout.PresentSrcKhr,
-                Image = SwapchainImage,
-                SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
-            };
-
-            _vk.CmdPipelineBarrier(drawCommandBuffer, PipelineStageFlags.ColorAttachmentOutputBit,
-                                 PipelineStageFlags.BottomOfPipeBit, 0, 0, null, 0, null, 1, ref memoryBarrier);
-        }
+        _vk.CmdPipelineBarrier(drawCommandBuffer, PipelineStageFlags.ColorAttachmentOutputBit,
+            UseRenderTarget ? PipelineStageFlags.FragmentShaderBit : PipelineStageFlags.BottomOfPipeBit,
+            0, 0, null, 0, null, 1, ref memoryBarrier);
+        _imageLayouts[colorImage.Handle] = newLayout;
     }
 
     public void BindTexture(CubismImageVulkan image)
@@ -1183,6 +1501,24 @@ public class CubismRenderer_Vulkan : CubismRenderer
         }
 
         return _offscreenFrameBuffers![index];
+    }
+
+    /// <summary>
+    /// クリッピングマネージャの Type に応じてマスクバッファを返す（drawable / offscreen の 2 系統）。
+    /// </summary>
+    public CubismRenderTarget_Vulkan GetMaskBufferForType(CsmEnum.DrawableObjectType type, int index)
+    {
+        if (type == CsmEnum.DrawableObjectType.Offscreen)
+        {
+            if ((uint)index >= (uint)_offscreenMaskBuffers.Count)
+            {
+                CubismLog.Error("[Vulkan] offscreen mask buffer index out of range: {0}", index);
+            }
+
+            return _offscreenMaskBuffers[index];
+        }
+
+        return GetMaskBuffer(index);
     }
 
     private void BindVertexAndIndexBuffers(int index, CommandBuffer cmdBuffer)
@@ -1240,6 +1576,39 @@ public class CubismRenderer_Vulkan : CubismRenderer
         }
 
         _clippingManager?.Dispose();
+        _offscreenClippingManager?.Dispose();
+
+        // モデル RT / オフスクリーン用マスク / 合成用バッファの解放（P8c-offscreen）
+        for (int i = 0; i < _modelRenderTargets.Count; i++)
+        {
+            _modelRenderTargets[i].DestroyRenderTarget();
+        }
+        _modelRenderTargets.Clear();
+
+        _blendSnapshot?.DestroyRenderTarget();
+        _blendSnapshot = null;
+
+        for (int i = 0; i < _offscreenMaskBuffers.Count; i++)
+        {
+            _offscreenMaskBuffers[i].DestroyRenderTarget();
+        }
+        _offscreenMaskBuffers.Clear();
+
+        for (int i = 0; i < _offscreenDescriptors.Count; i++)
+        {
+            _offscreenDescriptors[i].UniformBuffer.Destroy(Device);
+        }
+        _offscreenDescriptors.Clear();
+
+        _copyDescriptor?.UniformBuffer.Destroy(Device);
+        _copyDescriptor = null;
+
+        _quadStagingBuffer?.Destroy(Device);
+        _quadVertexBuffer?.Destroy(Device);
+        _quadIndexBuffer?.Destroy(Device);
+        _quadStagingBuffer = null;
+        _quadVertexBuffer = null;
+        _quadIndexBuffer = null;
 
         // テクスチャは TextureInfoVulkan / LAppTextureManager が所有しており、
         // ここで Destroy すると共有キャッシュの二重解放になる。参照だけ切る
@@ -1255,17 +1624,779 @@ public class CubismRenderer_Vulkan : CubismRenderer
         }
     }
 
-    // P5 基类契约（官方 CubismRenderer.hpp:284,289）：
-    // P8 在 DoDrawModel 前后实现真正的 offscreen 绑定（官方 Vulkan 对应 CubismRenderer_Vulkan.cpp）。
+    /// <summary>
+    /// モデル描画直前のオフスクリーン設定（官方 BeforeDrawModelRenderTarget）。
+    /// blend / offscreen 使用時はモデル RT を描画先にし、最後に Copy で swapchain へ合成する。
+    /// </summary>
     protected override void BeforeDrawModelRenderTarget()
     {
+        if (!_useModelRenderTarget)
+        {
+            return;
+        }
+
+        if (_modelRenderTargets.Count == 0)
+        {
+            _modelRenderTargets.Add(new CubismRenderTarget_Vulkan(_vk));
+        }
+
+        var modelRenderTarget = _modelRenderTargets[0];
+        if (!modelRenderTarget.IsValid() ||
+            modelRenderTarget.GetBufferWidth() != SwapchainExtent.Width ||
+            modelRenderTarget.GetBufferHeight() != SwapchainExtent.Height)
+        {
+            modelRenderTarget.DestroyRenderTarget();
+            modelRenderTarget.CreateRenderTarget(Device, PhysicalDevice,
+                SwapchainExtent.Width, SwapchainExtent.Height, SwapchainImageFormat, DepthFormat);
+            _isClearedModelRenderTarget = false;
+        }
+
+        // vkCmdCopyImage 合成では alpha blend できないため、モデル RT 自体を背景色でクリアする
+        var bgColor = _vulkanManager.LApp.BGColor;
+        modelRenderTarget.BeginDraw(_drawCommandBuffer, bgColor.R, bgColor.G, bgColor.B, bgColor.A,
+            !_isClearedModelRenderTarget);
+        _currentRenderTarget = modelRenderTarget;
+        _currentOffscreen = null;
+        _isDrawingOffscreen = false;
+        _isClearedModelRenderTarget = true;
     }
 
     /// <summary>
-    /// モデル描画後のオフスクリーン設定（P5 契约占位，P8 实现）
+    /// モデル描画後のオフスクリーン設定（官方 AfterDrawModelRenderTarget）。
+    /// モデル RT を終了し、Copy シェーダで swapchain へ合成する。
     /// </summary>
     protected override void AfterDrawModelRenderTarget()
     {
+        if (!_useModelRenderTarget)
+        {
+            return;
+        }
+
+        // 念のため未フラッシュのオフスクリーンを親へ伝搬
+        while (_currentOffscreen != null)
+        {
+            DrawOffscreen(_currentOffscreen);
+        }
+
+        var modelRenderTarget = _modelRenderTargets[0];
+        if (modelRenderTarget.IsRendering())
+        {
+            modelRenderTarget.EndDraw(_drawCommandBuffer);
+        }
+
+        _currentRenderTarget = null;
+        CopyRenderTarget(modelRenderTarget);
+    }
+
+    /// <summary>
+    /// 現在の描画先を終了して次のレンダーターゲットへ切り替える（官方 EnsurePreviousRenderFinished）。
+    /// </summary>
+    private void EnsurePreviousRenderFinished(CubismRenderTarget_Vulkan nextRenderTarget)
+    {
+        if (_currentRenderTarget == null)
+        {
+            EndRendering(_drawCommandBuffer);
+        }
+        else if (!ReferenceEquals(_currentRenderTarget, nextRenderTarget) && _currentRenderTarget.IsRendering())
+        {
+            _currentRenderTarget.EndDraw(_drawCommandBuffer);
+        }
+    }
+
+    /// <summary>
+    /// レンダーターゲット描画開始（blend/offscreen 時はモデル RT、それ以外は swapchain）。
+    /// </summary>
+    private void BeginRenderTarget(bool isResume)
+    {
+        if (_useModelRenderTarget)
+        {
+            BeforeDrawModelRenderTarget();
+        }
+        else
+        {
+            BeginRendering(_drawCommandBuffer, isResume);
+        }
+    }
+
+    /// <summary>
+    /// レンダーターゲット描画終了（blend/offscreen 時は Copy 合成）。
+    /// </summary>
+    private void EndRenderTarget()
+    {
+        if (_useModelRenderTarget)
+        {
+            AfterDrawModelRenderTarget();
+        }
+        else
+        {
+            EndRendering(_drawCommandBuffer);
+        }
+    }
+
+    /// <summary>
+    /// レンダーターゲットの内容を Copy シェーダで現在の swapchain へ合成する。
+    /// </summary>
+    private unsafe void CopyRenderTarget(CubismRenderTarget_Vulkan src)
+    {
+        if (!src.IsValid())
+        {
+            return;
+        }
+
+        // P6 の glBlitFramebuffer と等価な画像コピー（Vulkan の texture barrier 代替）。
+        // Copy シェーダ（ExecuteDrawForRenderTarget）はクワッド経由の代替実装として残すが、
+        // モデル RT → swapchain の合成はレイアウト遷移込みの vkCmdCopyImage で行う。
+        var srcImage = src.GetTextureImage();
+        var dstImage = SwapchainImage;
+
+        var srcToTransfer = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.ShaderReadBit,
+            DstAccessMask = AccessFlags.TransferReadBit,
+            OldLayout = ImageLayout.ShaderReadOnlyOptimal,
+            NewLayout = ImageLayout.TransferSrcOptimal,
+            Image = srcImage,
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.FragmentShaderBit,
+            PipelineStageFlags.TransferBit, 0, 0, null, 0, null, 1, ref srcToTransfer);
+
+        ImageLayout dstOldLayout = _imageLayouts.TryGetValue(dstImage.Handle, out ImageLayout tracked)
+            ? tracked
+            : ImageLayout.Undefined;
+        var dstToTransfer = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.None,
+            DstAccessMask = AccessFlags.TransferWriteBit,
+            OldLayout = dstOldLayout,
+            NewLayout = ImageLayout.TransferDstOptimal,
+            Image = dstImage,
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.TransferBit, 0, 0, null, 0, null, 1, ref dstToTransfer);
+
+        // swapchain を背景色でクリアしてからモデル RT をコピーする
+        var bgColor = _vulkanManager.LApp.BGColor;
+        var clearColor = new ClearColorValue(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
+        var clearRange = new ImageSubresourceRange(ImageAspectFlags.ColorBit, 0, 1, 0, 1);
+        _vk.CmdClearColorImage(_drawCommandBuffer, dstImage, ImageLayout.TransferDstOptimal,
+            ref clearColor, 1, &clearRange);
+
+        var copy = new ImageCopy
+        {
+            SrcSubresource = new(ImageAspectFlags.ColorBit, 0, 0, 1),
+            DstSubresource = new(ImageAspectFlags.ColorBit, 0, 0, 1),
+            Extent = new(src.GetBufferWidth(), src.GetBufferHeight(), 1)
+        };
+        _vk.CmdCopyImage(_drawCommandBuffer, srcImage, ImageLayout.TransferSrcOptimal,
+            dstImage, ImageLayout.TransferDstOptimal, 1, ref copy);
+
+        var dstToPresent = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.TransferWriteBit,
+            DstAccessMask = AccessFlags.None,
+            OldLayout = ImageLayout.TransferDstOptimal,
+            NewLayout = ImageLayout.PresentSrcKhr,
+            Image = dstImage,
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TransferBit,
+            PipelineStageFlags.BottomOfPipeBit, 0, 0, null, 0, null, 1, ref dstToPresent);
+        _imageLayouts[dstImage.Handle] = ImageLayout.PresentSrcKhr;
+
+        // コピー元 RT を ShaderReadOnly に戻し、次フレームの BeginDraw と整合させる
+        var srcToRead = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.TransferReadBit,
+            DstAccessMask = AccessFlags.ShaderReadBit,
+            OldLayout = ImageLayout.TransferSrcOptimal,
+            NewLayout = ImageLayout.ShaderReadOnlyOptimal,
+            Image = srcImage,
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TransferBit,
+            PipelineStageFlags.FragmentShaderBit, 0, 0, null, 0, null, 1, ref srcToRead);
+        src.SetColorImageCurrentLayout(ImageLayout.ShaderReadOnlyOptimal);
+    }
+
+    /// <summary>
+    /// Copy シェーダで src の内容を全画面クワッドに描画する（官方 ExecuteDrawForRenderTarget）。
+    /// </summary>
+    private unsafe void ExecuteDrawForRenderTarget(CubismRenderTarget_Vulkan src)
+    {
+        if (_copyDescriptor == null || _quadVertexBuffer == null || _quadIndexBuffer == null)
+        {
+            return;
+        }
+
+        var baseColor = GetModelColorWithOpacity(1.0f);
+        var ubo = new ModelUBO();
+        UpdateColor(ubo.BaseColor, baseColor.R * baseColor.A, baseColor.G * baseColor.A,
+            baseColor.B * baseColor.A, baseColor.A);
+        UpdateColor(ubo.MultiplyColor, 1.0f, 1.0f, 1.0f, 1.0f);
+        UpdateColor(ubo.ScreenColor, 0.0f, 0.0f, 0.0f, 1.0f);
+        _copyDescriptor.UniformBuffer.MemCpy(&ubo, (ulong)Unsafe.SizeOf<ModelUBO>());
+
+        UpdateCopyDescriptor(src);
+
+        var descriptorSet = _copyDescriptor.DescriptorSet;
+        _vk.CmdBindDescriptorSets(_drawCommandBuffer, PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipelineLayout(ShaderNames.Copy, 0), 0, 1, ref descriptorSet, 0, null);
+        _vk.CmdBindPipeline(_drawCommandBuffer, PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipeline(ShaderNames.Copy, 0));
+
+        vkCmdSetCullModeEXT(_drawCommandBuffer, CullModeFlags.None);
+        BindQuadBuffers(_drawCommandBuffer);
+
+        var viewport = GetViewport(SwapchainExtent.Width, SwapchainExtent.Height, 0.0f, 1.0f);
+        _vk.CmdSetViewport(_drawCommandBuffer, 0, 1, &viewport);
+        var rect = GetScissor(0.0f, 0.0f, SwapchainExtent.Width, SwapchainExtent.Height);
+        _vk.CmdSetScissor(_drawCommandBuffer, 0, 1, &rect);
+
+        _vk.CmdDrawIndexed(_drawCommandBuffer, 6, 1, 0, 0, 0);
+    }
+
+    /// <summary>
+    /// Copy 用ディスクリプタ（UBO + 合成元テクスチャ）を更新する。
+    /// </summary>
+    private unsafe void UpdateCopyDescriptor(CubismRenderTarget_Vulkan src)
+    {
+        if (_copyDescriptor == null)
+        {
+            return;
+        }
+
+        var imageInfo = new DescriptorImageInfo
+        {
+            ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
+            ImageView = src.GetTextureView(),
+            Sampler = src.GetTextureSampler()
+        };
+        Span<WriteDescriptorSet> writes = stackalloc WriteDescriptorSet[2];
+
+        var bufferInfo = new DescriptorBufferInfo
+        {
+            Buffer = _copyDescriptor.UniformBuffer.Buffer,
+            Offset = 0,
+            Range = ulong.MaxValue
+        };
+        writes[0] = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = _copyDescriptor.DescriptorSet,
+            DstBinding = 0,
+            DescriptorType = DescriptorType.UniformBuffer,
+            DescriptorCount = 1,
+            PBufferInfo = &bufferInfo
+        };
+        writes[1] = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = _copyDescriptor.DescriptorSet,
+            DstBinding = 1,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
+            PImageInfo = &imageInfo
+        };
+
+        fixed (WriteDescriptorSet* ptr = writes)
+        {
+            _vk.UpdateDescriptorSets(Device, 2, ptr, 0, null);
+        }
+    }
+
+    /// <summary>
+    /// フルスクリーンクワッドの頂点/インデックスバッファをバインドする。
+    /// </summary>
+    private unsafe void BindQuadBuffers(CommandBuffer cmdBuffer)
+    {
+        if (_quadVertexBuffer == null || _quadIndexBuffer == null)
+        {
+            return;
+        }
+
+        var vertexBuffer = _quadVertexBuffer.Buffer;
+        ulong offset = 0;
+        _vk.CmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer, &offset);
+        _vk.CmdBindIndexBuffer(cmdBuffer, _quadIndexBuffer.Buffer, 0, IndexType.Uint16);
+    }
+
+    /// <summary>
+    /// オフスクリーンを追加する（官方 AddOffscreen）。
+    /// </summary>
+    private unsafe void AddOffscreen(int offscreenIndex)
+    {
+        // 越界/所有権チェック: drawable index を offscreen として使わない（t16 §5）
+        if ((uint)offscreenIndex >= (uint)_offscreenList.Count)
+        {
+            CubismLog.Error("[Vulkan] offscreenIndex out of range: {0} (offscreenCount={1})",
+                offscreenIndex, _offscreenList.Count);
+            return;
+        }
+
+        CubismOffscreenRenderTarget_Vulkan offscreen = _offscreenList[offscreenIndex];
+
+        if (_currentOffscreen != null && !ReferenceEquals(_currentOffscreen, offscreen))
+        {
+            bool isParent = false;
+            int ownerIndex = Model.GetOffscreenOwnerIndices()[offscreenIndex];
+            int parentIndex = Model.GetPartParentPartIndex(ownerIndex);
+            int currentOwnerIndex = Model.GetOffscreenOwnerIndices()[_currentOffscreen.GetOffscreenIndex()];
+
+            while (parentIndex != CubismModel.CubismNoIndex_Parent)
+            {
+                if (parentIndex == currentOwnerIndex)
+                {
+                    isParent = true;
+                    break;
+                }
+                parentIndex = Model.GetPartParentPartIndex(parentIndex);
+            }
+
+            if (!isParent)
+            {
+                SubmitDrawToParentOffscreen(offscreenIndex, CsmEnum.DrawableObjectType.Offscreen);
+            }
+        }
+
+        offscreen.SetOffscreenRenderTarget(Device, PhysicalDevice, _deviceInfo.OffscreenManager,
+            SwapchainExtent.Width, SwapchainExtent.Height, SwapchainImageFormat, DepthFormat);
+
+        CubismRenderTarget_Vulkan? target = offscreen.GetRenderTarget();
+        if (target == null || !target.IsValid())
+        {
+            return;
+        }
+
+        offscreen.SetOldOffscreen(offscreen.GetParentPartOffscreen());
+        EnsurePreviousRenderFinished(target);
+        target.BeginDraw(_drawCommandBuffer, 0.0f, 0.0f, 0.0f, 0.0f, true);
+
+        var viewport = GetViewport(SwapchainExtent.Width, SwapchainExtent.Height, 0.0f, 1.0f);
+        _vk.CmdSetViewport(_drawCommandBuffer, 0, 1, &viewport);
+        var rect = GetScissor(0.0f, 0.0f, SwapchainExtent.Width, SwapchainExtent.Height);
+        _vk.CmdSetScissor(_drawCommandBuffer, 0, 1, &rect);
+
+        _currentOffscreen = offscreen;
+        _currentRenderTarget = target;
+        _isDrawingOffscreen = true;
+        ClippingContextBufferForOffscreen = _offscreenClippingManager?.ClippingContextListForOffscreen[offscreenIndex]
+            as CubismClippingContext_Vulkan;
+    }
+
+    /// <summary>
+    /// オフスクリーンを親へ伝搬する（官方 SubmitDrawToParentOffscreen）。
+    /// </summary>
+    private unsafe void SubmitDrawToParentOffscreen(int objectIndex, CsmEnum.DrawableObjectType objectType)
+    {
+        if (_currentOffscreen == null || objectIndex == CubismModel.CubismNoIndex_Offscreen)
+        {
+            return;
+        }
+
+        int currentOwnerIndex = Model.GetOffscreenOwnerIndices()[_currentOffscreen.GetOffscreenIndex()];
+        if (currentOwnerIndex == CubismModel.CubismNoIndex_Offscreen)
+        {
+            return;
+        }
+
+        int targetParentIndex;
+        if (objectType == CsmEnum.DrawableObjectType.Drawable)
+        {
+            targetParentIndex = Model.GetDrawableParentPartIndex(objectIndex);
+        }
+        else
+        {
+            if ((uint)objectIndex >= (uint)_offscreenList.Count)
+            {
+                CubismLog.Error("[Vulkan] offscreenIndex out of range: {0}", objectIndex);
+                return;
+            }
+            targetParentIndex = Model.GetPartParentPartIndex(Model.GetOffscreenOwnerIndices()[objectIndex]);
+        }
+
+        while (targetParentIndex != CubismModel.CubismNoIndex_Parent)
+        {
+            if (targetParentIndex == currentOwnerIndex)
+            {
+                return;
+            }
+            targetParentIndex = Model.GetPartParentPartIndex(targetParentIndex);
+        }
+
+        DrawOffscreen(_currentOffscreen);
+        SubmitDrawToParentOffscreen(objectIndex, objectType);
+    }
+
+    /// <summary>
+    /// オフスクリーンを描画して親のレンダーターゲットへ合成する（官方 DrawOffscreen）。
+    /// </summary>
+    private unsafe void DrawOffscreen(CubismOffscreenRenderTarget_Vulkan offscreen)
+    {
+        int offscreenIndex = offscreen.GetOffscreenIndex();
+        CubismRenderTarget_Vulkan? target = offscreen.GetRenderTarget();
+        if (target == null || !target.IsValid())
+        {
+            _currentOffscreen = null;
+            _currentRenderTarget = null;
+            return;
+        }
+
+        if (target.IsRendering())
+        {
+            target.EndDraw(_drawCommandBuffer);
+        }
+
+        CubismOffscreenRenderTarget_Vulkan? parent = offscreen.GetOldOffscreen();
+        _currentOffscreen = parent;
+        _isDrawingOffscreen = parent != null;
+
+        CubismClippingContext_Vulkan? clipContext = _offscreenClippingManager != null
+            ? _offscreenClippingManager.ClippingContextListForOffscreen[offscreenIndex] as CubismClippingContext_Vulkan
+            : null;
+        ClippingContextBufferForOffscreen = clipContext;
+
+        // 親のレンダーターゲットを再開（なければモデル RT）
+        if (parent?.GetRenderTarget() is { } parentTarget)
+        {
+            if (!parentTarget.IsRendering())
+            {
+                parentTarget.BeginDraw(_drawCommandBuffer, 0.0f, 0.0f, 0.0f, 0.0f, false);
+            }
+            _currentRenderTarget = parentTarget;
+        }
+        else if (_useModelRenderTarget && _modelRenderTargets.Count > 0)
+        {
+            var modelRenderTarget = _modelRenderTargets[0];
+            if (!modelRenderTarget.IsRendering())
+            {
+                modelRenderTarget.BeginDraw(_drawCommandBuffer, 0.0f, 0.0f, 0.0f, 0.0f, false);
+            }
+            _currentRenderTarget = modelRenderTarget;
+        }
+        else
+        {
+            BeginRendering(_drawCommandBuffer, true);
+            _currentRenderTarget = null;
+        }
+
+        var viewport = GetViewport(SwapchainExtent.Width, SwapchainExtent.Height, 0.0f, 1.0f);
+        _vk.CmdSetViewport(_drawCommandBuffer, 0, 1, &viewport);
+        var rect = GetScissor(0.0f, 0.0f, SwapchainExtent.Width, SwapchainExtent.Height);
+        _vk.CmdSetScissor(_drawCommandBuffer, 0, 1, &rect);
+
+        IsCulling = Model.GetOffscreenCulling(offscreenIndex) != 0;
+        ExecuteDrawForOffscreen(offscreen, clipContext);
+
+        offscreen.StopUsingRenderTexture(_deviceInfo.OffscreenManager);
+        ClippingContextBufferForOffscreen = null;
+    }
+
+    /// <summary>
+    /// オフスクリーン合成用クワッドを描画する（官方 ExecuteDrawForOffscreen）。
+    /// </summary>
+    private unsafe void ExecuteDrawForOffscreen(CubismOffscreenRenderTarget_Vulkan offscreen,
+        CubismClippingContext_Vulkan? clipContext)
+    {
+        int offscreenIndex = offscreen.GetOffscreenIndex();
+        if ((uint)offscreenIndex >= (uint)_offscreenDescriptors.Count)
+        {
+            CubismLog.Error("[Vulkan] offscreen descriptor missing: {0}", offscreenIndex);
+            return;
+        }
+
+        bool masked = clipContext is { IsUsing: true };
+        bool invertedMask = Model.GetOffscreenInvertedMask(offscreenIndex);
+        const int usePremultipliedAlpha = 3;
+        int offset = (masked ? (invertedMask ? 2 : 1) : 0) + usePremultipliedAlpha;
+
+        CsmBlendMode blendMode = Model.GetOffscreenBlendModeType(offscreenIndex);
+        int shaderNameBegin = ShaderNames.GetShaderNamesBegin(blendMode);
+        int shaderIndex;
+        int blendIndex;
+        bool isBlendMode;
+        switch (shaderNameBegin)
+        {
+            case ShaderNames.Normal:
+                shaderIndex = ShaderNames.Normal + offset;
+                blendIndex = Blend.Normal;
+                isBlendMode = false;
+                break;
+            case ShaderNames.Add:
+                shaderIndex = ShaderNames.Add + offset;
+                blendIndex = Blend.Add;
+                isBlendMode = false;
+                break;
+            case ShaderNames.Mult:
+                shaderIndex = ShaderNames.Mult + offset;
+                blendIndex = Blend.Mult;
+                isBlendMode = false;
+                break;
+            default:
+                shaderIndex = shaderNameBegin + offset;
+                blendIndex = 0;
+                isBlendMode = true;
+                break;
+        }
+
+        var descriptor = _offscreenDescriptors[offscreenIndex];
+        var ubo = new ModelUBO();
+
+        if (masked)
+        {
+            UpdateMatrix(ubo.ClipMatrix, clipContext!.MatrixForDraw);
+            SetColorChannel(&ubo, clipContext);
+        }
+
+        var identity = new CubismMatrix44();
+        identity.LoadIdentity();
+        UpdateMatrix(ubo.ProjectionMatrix, identity);
+
+        float opacity = Model.GetOffscreenOpacity(offscreenIndex);
+        var baseColor = new CubismTextureColor(opacity, opacity, opacity, opacity);
+        Vector4 multiply = Model.GetOffscreenMultiplyColor(offscreenIndex);
+        Vector4 screen = Model.GetOffscreenScreenColor(offscreenIndex);
+        SetColorUniformBuffer(&ubo, baseColor,
+            new CubismTextureColor(multiply.X, multiply.Y, multiply.Z, multiply.W),
+            new CubismTextureColor(screen.X, screen.Y, screen.Z, screen.W));
+
+        descriptor.UniformBuffer.MemCpy(&ubo, (ulong)Unsafe.SizeOf<ModelUBO>());
+
+        if (isBlendMode)
+        {
+            PrepareBlendSnapshot();
+        }
+
+        ImageView blendView;
+        Sampler blendSampler;
+        if (isBlendMode && _blendSnapshot is { } snapshot && snapshot.IsValid())
+        {
+            blendView = snapshot.GetTextureView();
+            blendSampler = snapshot.GetTextureSampler();
+        }
+        else
+        {
+            CubismRenderTarget_Vulkan? srcTarget = offscreen.GetRenderTarget();
+            if (srcTarget == null)
+            {
+                return;
+            }
+            blendView = srcTarget.GetTextureView();
+            blendSampler = srcTarget.GetTextureSampler();
+        }
+
+        UpdateOffscreenDescriptor(descriptor, masked, offscreen, clipContext, blendView, blendSampler);
+
+        var descriptorSet = masked ? descriptor.DescriptorSetMasked : descriptor.DescriptorSet;
+        _vk.CmdBindDescriptorSets(_drawCommandBuffer, PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipelineLayout(shaderIndex, blendIndex), 0, 1, ref descriptorSet, 0, null);
+        _vk.CmdBindPipeline(_drawCommandBuffer, PipelineBindPoint.Graphics,
+            _deviceInfo.Pipeline.GetPipeline(shaderIndex, blendIndex));
+
+        BindQuadBuffers(_drawCommandBuffer);
+
+        OffscreenDrawCount++;
+        _vk.CmdDrawIndexed(_drawCommandBuffer, 6, 1, 0, 0, 0);
+    }
+
+    /// <summary>
+    /// オフスクリーン合成用ディスクリプタを更新する。
+    /// </summary>
+    private unsafe void UpdateOffscreenDescriptor(Descriptor descriptor, bool masked,
+        CubismOffscreenRenderTarget_Vulkan offscreen, CubismClippingContext_Vulkan? clipContext,
+        ImageView blendView, Sampler blendSampler)
+    {
+        CubismRenderTarget_Vulkan? src = offscreen.GetRenderTarget();
+        if (src == null)
+        {
+            return;
+        }
+
+        DescriptorSet descriptorSet = masked ? descriptor.DescriptorSetMasked : descriptor.DescriptorSet;
+        Span<WriteDescriptorSet> writes = stackalloc WriteDescriptorSet[4];
+        int count = 0;
+
+        var bufferInfo = new DescriptorBufferInfo
+        {
+            Buffer = descriptor.UniformBuffer.Buffer,
+            Offset = 0,
+            Range = ulong.MaxValue
+        };
+        writes[count++] = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = descriptorSet,
+            DstBinding = 0,
+            DescriptorType = DescriptorType.UniformBuffer,
+            DescriptorCount = 1,
+            PBufferInfo = &bufferInfo
+        };
+
+        var srcInfo = new DescriptorImageInfo
+        {
+            ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
+            ImageView = src.GetTextureView(),
+            Sampler = src.GetTextureSampler()
+        };
+        writes[count++] = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = descriptorSet,
+            DstBinding = 1,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
+            PImageInfo = &srcInfo
+        };
+
+        if (masked && clipContext != null && (uint)clipContext.BufferIndex < (uint)_offscreenMaskBuffers.Count)
+        {
+            var maskBuffer = _offscreenMaskBuffers[clipContext.BufferIndex];
+            var maskInfo = new DescriptorImageInfo
+            {
+                ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
+                ImageView = maskBuffer.GetTextureView(),
+                Sampler = maskBuffer.GetTextureSampler()
+            };
+            writes[count++] = new WriteDescriptorSet
+            {
+                SType = StructureType.WriteDescriptorSet,
+                DstSet = descriptorSet,
+                DstBinding = 2,
+                DescriptorType = DescriptorType.CombinedImageSampler,
+                DescriptorCount = 1,
+                PImageInfo = &maskInfo
+            };
+        }
+
+        var blendInfo = new DescriptorImageInfo
+        {
+            ImageLayout = ImageLayout.ShaderReadOnlyOptimal,
+            ImageView = blendView,
+            Sampler = blendSampler
+        };
+        writes[count++] = new WriteDescriptorSet
+        {
+            SType = StructureType.WriteDescriptorSet,
+            DstSet = descriptorSet,
+            DstBinding = 3,
+            DescriptorType = DescriptorType.CombinedImageSampler,
+            DescriptorCount = 1,
+            PImageInfo = &blendInfo
+        };
+
+        fixed (WriteDescriptorSet* ptr = writes)
+        {
+            _vk.UpdateDescriptorSets(Device, (uint)count, ptr, 0, null);
+        }
+    }
+
+    /// <summary>
+    /// blend shader 用に現在の描画先 RT をスナップショットへコピーし、RT を再開する。
+    /// Vulkan では描画中アタッチメントを同時にサンプルできないため、
+    /// 直前内容を別テクスチャへコピーして binding3 にバインドする（validation 対応）。
+    /// </summary>
+    private unsafe bool PrepareBlendSnapshot()
+    {
+        CubismRenderTarget_Vulkan? target = _currentRenderTarget
+            ?? (_modelRenderTargets.Count > 0 ? _modelRenderTargets[0] : null);
+        if (target == null || !target.IsValid())
+        {
+            return false;
+        }
+
+        if (_blendSnapshot == null)
+        {
+            _blendSnapshot = new CubismRenderTarget_Vulkan(_vk);
+        }
+
+        if (!_blendSnapshot.IsValid() ||
+            _blendSnapshot.GetBufferWidth() != target.GetBufferWidth() ||
+            _blendSnapshot.GetBufferHeight() != target.GetBufferHeight())
+        {
+            _blendSnapshot.DestroyRenderTarget();
+            _blendSnapshot.CreateRenderTarget(Device, PhysicalDevice,
+                target.GetBufferWidth(), target.GetBufferHeight(), SwapchainImageFormat, DepthFormat);
+            _blendSnapshotInitialized = false;
+        }
+
+        if (!target.IsRendering())
+        {
+            return false;
+        }
+
+        target.EndDraw(_drawCommandBuffer);
+
+        var srcBarrier = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.ShaderReadBit,
+            DstAccessMask = AccessFlags.TransferReadBit,
+            OldLayout = ImageLayout.ShaderReadOnlyOptimal,
+            NewLayout = ImageLayout.TransferSrcOptimal,
+            Image = target.GetTextureImage(),
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.FragmentShaderBit,
+            PipelineStageFlags.TransferBit, 0, 0, null, 0, null, 1, ref srcBarrier);
+
+        var dstBarrier = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.None,
+            DstAccessMask = AccessFlags.TransferWriteBit,
+            OldLayout = _blendSnapshotInitialized ? ImageLayout.ShaderReadOnlyOptimal : ImageLayout.Undefined,
+            NewLayout = ImageLayout.TransferDstOptimal,
+            Image = _blendSnapshot.GetTextureImage(),
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TopOfPipeBit,
+            PipelineStageFlags.TransferBit, 0, 0, null, 0, null, 1, ref dstBarrier);
+
+        var copy = new ImageCopy
+        {
+            SrcSubresource = new(ImageAspectFlags.ColorBit, 0, 0, 1),
+            DstSubresource = new(ImageAspectFlags.ColorBit, 0, 0, 1),
+            Extent = new(target.GetBufferWidth(), target.GetBufferHeight(), 1)
+        };
+        _vk.CmdCopyImage(_drawCommandBuffer, target.GetTextureImage(), ImageLayout.TransferSrcOptimal,
+            _blendSnapshot.GetTextureImage(), ImageLayout.TransferDstOptimal, 1, ref copy);
+
+        var toRead = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.TransferWriteBit,
+            DstAccessMask = AccessFlags.ShaderReadBit,
+            OldLayout = ImageLayout.TransferDstOptimal,
+            NewLayout = ImageLayout.ShaderReadOnlyOptimal,
+            Image = _blendSnapshot.GetTextureImage(),
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TransferBit,
+            PipelineStageFlags.FragmentShaderBit, 0, 0, null, 0, null, 1, ref toRead);
+        _blendSnapshotInitialized = true;
+
+        // target を TransferSrc から描画用レイアウトへ戻してから再開する
+        var toColor = new ImageMemoryBarrier
+        {
+            SType = StructureType.ImageMemoryBarrier,
+            SrcAccessMask = AccessFlags.TransferReadBit,
+            DstAccessMask = AccessFlags.ColorAttachmentWriteBit,
+            OldLayout = ImageLayout.TransferSrcOptimal,
+            NewLayout = ImageLayout.ColorAttachmentOptimal,
+            Image = target.GetTextureImage(),
+            SubresourceRange = new(ImageAspectFlags.ColorBit, 0, 1, 0, 1)
+        };
+        _vk.CmdPipelineBarrier(_drawCommandBuffer, PipelineStageFlags.TransferBit,
+            PipelineStageFlags.ColorAttachmentOutputBit, 0, 0, null, 0, null, 1, ref toColor);
+        target.SetColorImageCurrentLayout(ImageLayout.ColorAttachmentOptimal);
+
+        target.BeginDraw(_drawCommandBuffer, 0.0f, 0.0f, 0.0f, 0.0f, false);
+        return true;
     }
 
     /// <summary>
@@ -1307,6 +2438,36 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 _clippingManager.SetupClippingContext(Model, _drawCommandBuffer, _updateCommandBuffer, this);
             }
         }
+
+        //------------ オフスクリーン用クリッピングマスク前処理（P8c-offscreen）------------
+        if (_offscreenClippingManager != null)
+        {
+            for (int i = 0; i < _offscreenClippingManager.RenderTextureCount; ++i)
+            {
+                if (_offscreenMaskBuffers[i].BufferWidth != _offscreenClippingManager.ClippingMaskBufferSize.X
+                    || _offscreenMaskBuffers[i].BufferHeight != _offscreenClippingManager.ClippingMaskBufferSize.Y)
+                {
+                    _offscreenMaskBuffers[i].DestroyRenderTarget();
+                    _offscreenMaskBuffers[i].CreateRenderTarget(
+                        Device, PhysicalDevice,
+                        (uint)_offscreenClippingManager.ClippingMaskBufferSize.X,
+                        (uint)_offscreenClippingManager.ClippingMaskBufferSize.Y,
+                        ImageFormat, DepthFormat
+                    );
+                }
+            }
+
+            if (UseHighPrecisionMask)
+            {
+                _offscreenClippingManager.SetupMatrixForHighPrecision(Model, false,
+                    CsmEnum.DrawableObjectType.Offscreen, GetMvpMatrix());
+            }
+            else
+            {
+                _offscreenClippingManager.SetupClippingContext(Model, _drawCommandBuffer, _updateCommandBuffer, this);
+            }
+        }
+
         SubmitCommand(_updateCommandBuffer, _updateFinishedSemaphore);
         SubmitCommand(_drawCommandBuffer, null, _updateFinishedSemaphore);
 
@@ -1343,7 +2504,7 @@ public class CubismRenderer_Vulkan : CubismRenderer
         //描画
         _vk.BeginCommandBuffer(_updateCommandBuffer, &beginInfo);
         _vk.BeginCommandBuffer(_drawCommandBuffer, &beginInfo);
-        BeginRendering(_drawCommandBuffer, false);
+        BeginRenderTarget(false);
 
         for (int i = 0; i < totalCount; ++i)
         {
@@ -1351,6 +2512,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
             // G1 門禁の順序配列だけ先に用意し、本フェーズは drawable のみ描画する（R1 语义維持）。
             if (_sortedObjectsTypeList[i] == CsmEnum.DrawableObjectType.Offscreen)
             {
+                // インデックスは AddOffscreen 内で offscreen 空間として検証する
+                AddOffscreen(_sortedObjectsIndexList[i]);
                 continue;
             }
 
@@ -1361,6 +2524,9 @@ public class CubismRenderer_Vulkan : CubismRenderer
                 continue;
             }
 
+            // 現在のオフスクリーンの描画対象外なら、親オフスクリーンへ伝搬する
+            SubmitDrawToParentOffscreen(drawableIndex, CsmEnum.DrawableObjectType.Drawable);
+
             // クリッピングマスクをセットする
             var clipContext = (_clippingManager != null) ? _clippingManager.ClippingContextListForDraw[drawableIndex]
                 as CubismClippingContext_Vulkan : null;
@@ -1369,8 +2535,8 @@ public class CubismRenderer_Vulkan : CubismRenderer
             {
                 if (clipContext.IsUsing) // 書くことになっていた
                 {
-                    // 一旦オフスクリーン描画に移る
-                    EndRendering(_drawCommandBuffer);
+                    // 一旦オフスクリーン描画に移る（blend/offscreen 時はモデル RT を終了）
+                    EnsurePreviousRenderFinished(_offscreenFrameBuffers![clipContext.BufferIndex]);
 
                     // 描画順を考慮して今までに積んだコマンドを実行する
                     SubmitCommand(_updateCommandBuffer, _updateFinishedSemaphore);
@@ -1414,7 +2580,14 @@ public class CubismRenderer_Vulkan : CubismRenderer
                     _vk.BeginCommandBuffer(_drawCommandBuffer, &beginInfo);
 
                     // 描画再開
-                    BeginRendering(_drawCommandBuffer, true);
+                    if (_currentRenderTarget != null)
+                    {
+                        _currentRenderTarget.BeginDraw(_drawCommandBuffer, 0.0f, 0.0f, 0.0f, 0.0f, false);
+                    }
+                    else
+                    {
+                        BeginRendering(_drawCommandBuffer, true);
+                    }
                 }
             }
 
@@ -1431,7 +2604,13 @@ public class CubismRenderer_Vulkan : CubismRenderer
             DrawMeshVulkan(Model, drawableIndex, _drawCommandBuffer, _updateCommandBuffer);
         }
 
-        EndRendering(_drawCommandBuffer);
+        // 残っているオフスクリーンを親へ伝搬してから合成
+        while (_currentOffscreen != null)
+        {
+            DrawOffscreen(_currentOffscreen);
+        }
+
+        EndRenderTarget();
         SubmitCommand(_updateCommandBuffer, _updateFinishedSemaphore);
         SubmitCommand(_drawCommandBuffer, null, _updateFinishedSemaphore);
     }

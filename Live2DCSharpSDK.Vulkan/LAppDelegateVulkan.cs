@@ -103,7 +103,12 @@ public class LAppDelegateVulkan : LAppDelegate
 
     public override void OnUpdatePre()
     {
-        CubismRenderer_Vulkan.UpdateRendererSettings(VulkanManager.GetSwapchainImage(), VulkanManager.GetSwapchainImageView());
+        // swapchain 再作成後の extent も毎フレーム同期する（古い extent でモデル RT を作ると
+        // ウィンドウとの解像度不一致で描画が右下にずれる）。
+        CubismRenderer_Vulkan.UpdateSwapchainVariable(
+            VulkanManager.SwapchainManager.Extent,
+            VulkanManager.GetSwapchainImage(),
+            VulkanManager.GetSwapchainImageView());
     }
 
     public override void RunPost()

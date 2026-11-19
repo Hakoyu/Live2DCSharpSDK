@@ -51,7 +51,7 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
         // マスク作成処理
         // 後の計算のためにインデックスの最初をセット
         // P6 で Framework の CurrentMaskBuffer は CubismRenderTarget 型になった（P8b の私有フィールドを削除）。
-        CurrentMaskBuffer = renderer.GetMaskBuffer(0);
+        CurrentMaskBuffer = renderer.GetMaskBufferForType(Type, 0);
 
         var buffer = (CubismRenderTarget_Vulkan)CurrentMaskBuffer;
 
@@ -97,7 +97,7 @@ public class CubismClippingManager_Vulkan(Vk vk) : CubismClippingManager
             var MARGIN = 0.05f;
 
             // clipContextに設定したオフスクリーンサーフェイスをインデックスで取得
-            var clipContextOffscreenSurface = renderer.GetMaskBuffer(clipContext.BufferIndex)!;
+            var clipContextOffscreenSurface = renderer.GetMaskBufferForType(Type, clipContext.BufferIndex)!;
 
             // 現在のオフスクリーンサーフェイスがclipContextのものと異なる場合
             if (CurrentMaskBuffer != clipContextOffscreenSurface)
