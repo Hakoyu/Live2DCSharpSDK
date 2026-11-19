@@ -1,4 +1,4 @@
-﻿using Live2DCSharpSDK.Framework;
+using Live2DCSharpSDK.Framework;
 
 namespace Live2DCSharpSDK.App;
 
@@ -6,9 +6,9 @@ namespace Live2DCSharpSDK.App;
 /// モデルリソース（model3.json / moc3 / テクスチャ）の場所を解決する。
 /// </summary>
 /// <remarks>
-/// 上流 sample（Coloryr 版の OpenTK / WPF デモ）は <c>"F:\\live2d\\Resources"</c> を直書きしていた。
+/// 上流 sample（Coloryr 版の OpenTK / WPF デモ）はモデルパスを直書きしていたが、
 /// 本仓库ではパスをパラメータ化し、環境変数で差し替えられるようにする
-/// （ハードコードパスは「既知の候補」の 1 つとしてのみ残す。上流由来のため）。
+/// （上流由来のハードコードパスは削除済み）。
 ///
 /// 解決順:
 /// 1. 環境変数 <c>LIVE2D_MODEL_DIR</c>（+ <c>LIVE2D_MODEL_NAME</c>）
@@ -37,11 +37,10 @@ public static class ModelResourceLocator
 
     /// <summary>
     /// 既知の候補ディレクトリ。
-    /// 先頭は上流 sample が直書きしていたパス（本仓库では候補の 1 つに降格）。
+    /// 上流 sample が直書きしていたパスは削除し、公式 5-r.5 パッケージのサンプルのみを候補に残す。
     /// </summary>
     public static IReadOnlyList<string> CandidateDirectories { get; } =
     [
-        @"F:\live2d\Resources",
         @"D:\AgentGameWorkSpace\CubismSdkForNative-5-r.5\Samples\Resources",
     ];
 
