@@ -26,16 +26,36 @@ public class CubismModelUserData
     public readonly List<CubismModelUserDataNode> ArtMeshUserDataNodes = [];
 
     /// <summary>
-    /// 解析 userdata3.json.
+    /// 使用默认上下文解析 userdata3.json (过渡期兼容重载).
     /// </summary>
     /// <param name="data">已读入 userdata3.json 的缓冲区</param>
+    /// <remarks>
+    /// 仅为兼容既有调用点保留, 内部回落到 <see cref="CubismContext.Default"/>.
+    /// 新代码请使用带 context 的重载.
+    /// </remarks>
     public CubismModelUserData(string data)
+        : this(CubismContext.Default, data)
     {
+    }
+
+    /// <summary>
+    /// 使用指定上下文解析 userdata3.json.
+    /// </summary>
+    /// <param name="context">所属上下文 (提供 ID 管理器)</param>
+    /// <param name="data">已读入 userdata3.json 的缓冲区</param>
+    /// <exception cref="ArgumentNullException">context 为 null 时抛出</exception>
+    public CubismModelUserData(CubismContext context, string data)
+    {
+        if (context is null)
+        {
+            throw new ArgumentNullException(nameof(context), "CubismModelUserData requires a context instance.");
+        }
+
         using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         var obj = JsonSerializer.Deserialize(stream, CubismModelUserDataObjContext.Default.CubismModelUserDataObj)
             ?? throw new Exception("Load UserData error");
 
-        string typeOfArtMesh = CubismFramework.CubismIdManager.GetId(ArtMesh);
+        string typeOfArtMesh = context.IdManager.GetId(ArtMesh);
 
         int nodeCount = obj.Meta.UserDataCount;
 
@@ -44,9 +64,9 @@ public class CubismModelUserData
             var node = obj.UserData[i];
             CubismModelUserDataNode addNode = new()
             {
-                TargetId = CubismFramework.CubismIdManager.GetId(node.Id),
-                TargetType = CubismFramework.CubismIdManager.GetId(node.Target),
-                Value = CubismFramework.CubismIdManager.GetId(node.Value)
+                TargetId = context.IdManager.GetId(node.Id),
+                TargetType = context.IdManager.GetId(node.Target),
+                Value = context.IdManager.GetId(node.Value)
             };
             _userDataNodes.Add(addNode);
 

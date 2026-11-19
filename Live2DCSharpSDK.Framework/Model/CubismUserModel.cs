@@ -123,10 +123,36 @@ public abstract class CubismUserModel : IDisposable
     }
 
     /// <summary>
-    /// 构造函数.
+    /// 所属上下文 (提供 ID 管理器与内存分配器).
     /// </summary>
+    public CubismContext Context { get; }
+
+    /// <summary>
+    /// 使用默认上下文构造 (过渡期兼容重载).
+    /// </summary>
+    /// <remarks>
+    /// 仅为兼容既有派生类保留, 内部回落到 <see cref="CubismContext.Default"/>.
+    /// 新代码请使用带 context 的构造函数.
+    /// </remarks>
     public CubismUserModel()
+        : this(CubismContext.Default)
     {
+    }
+
+    /// <summary>
+    /// 使用指定上下文构造.
+    /// </summary>
+    /// <param name="context">所属上下文 (提供 ID 管理器与内存分配器)</param>
+    /// <exception cref="ArgumentNullException">context 为 null 时抛出</exception>
+    public CubismUserModel(CubismContext context)
+    {
+        if (context is null)
+        {
+            throw new ArgumentNullException(nameof(context), "CubismUserModel requires a context instance.");
+        }
+
+        Context = context;
+
         Opacity = 1.0f;
 
         // 创建更新处理的调度器
@@ -205,7 +231,7 @@ public abstract class CubismUserModel : IDisposable
     /// <param name="shouldCheckMocConsistency">MOC 一致性检查标志(初始值 : false)</param>
     protected void LoadModel(byte[] buffer, bool shouldCheckMocConsistency = false)
     {
-        _moc = new CubismMoc(buffer, shouldCheckMocConsistency);
+        _moc = new CubismMoc(Context, buffer, shouldCheckMocConsistency);
         Model.SaveParameters();
         ModelMatrix = new CubismModelMatrix(Model.GetCanvasWidth(), Model.GetCanvasHeight());
     }
@@ -306,7 +332,7 @@ public abstract class CubismUserModel : IDisposable
         ACubismMotion motion;
         try
         {
-            motion = new CubismMotion(buffer, onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
+            motion = new CubismMotion(buffer, Context, onFinishedMotionHandler, onBeganMotionHandler, shouldCheckMotionConsistency);
         }
         catch (CubismMotionConsistencyException e)
         {
@@ -337,7 +363,7 @@ public abstract class CubismUserModel : IDisposable
     /// <param name="buffer">已读入 pose3.json 的缓冲区</param>
     protected void LoadPose(string buffer)
     {
-        _pose = new CubismPose(buffer);
+        _pose = new CubismPose(buffer, Context);
     }
 
     /// <summary>
@@ -355,7 +381,7 @@ public abstract class CubismUserModel : IDisposable
     /// <param name="buffer">已读入 userdata3.json 的缓冲区</param>
     protected void LoadUserData(string buffer)
     {
-        _modelUserData = new CubismModelUserData(buffer);
+        _modelUserData = new CubismModelUserData(Context, buffer);
     }
 
     /// <summary>
@@ -364,8 +390,17 @@ public abstract class CubismUserModel : IDisposable
     /// <param name="buffer">已读入 moc3 文件的缓冲区</param>
     /// <returns>.moc3 Version</returns>
     public static uint GetMocVersionFromBuffer(byte[] buffer)
+        => CubismMoc.GetMocVersionFromBuffer(CubismContext.Default, buffer);
+
+    /// <summary>
+    /// 使用指定上下文从未还原的 Moc 缓冲区获取 .moc3 的版本 (官方 CubismUserModel::GetMocVersionFromBuffer).
+    /// </summary>
+    /// <param name="context">所属上下文 (提供内存分配器)</param>
+    /// <param name="buffer">已读入 moc3 文件的缓冲区</param>
+    /// <returns>.moc3 Version</returns>
+    public static uint GetMocVersionFromBuffer(CubismContext context, byte[] buffer)
     {
-        return CubismMoc.GetMocVersionFromBuffer(buffer);
+        return CubismMoc.GetMocVersionFromBuffer(context, buffer);
     }
 
     /// <summary>
@@ -403,8 +438,8 @@ public abstract class CubismUserModel : IDisposable
 
         for (int j = 1; j < count; ++j)
         {
-            var x = vertices[CubismFramework.VertexOffset + j * CubismFramework.VertexStep];
-            var y = vertices[CubismFramework.VertexOffset + j * CubismFramework.VertexStep + 1];
+            var x = vertices[CubismModel.VertexOffset + j * CubismModel.VertexStep];
+            var y = vertices[CubismModel.VertexOffset + j * CubismModel.VertexStep + 1];
 
             if (x < left)
             {

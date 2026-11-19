@@ -15,6 +15,14 @@ public class CubismModel : IDisposable
     /// 引用的 Offscreen 不存在时的索引值
     /// </summary>
     public const int CubismNoIndex_Offscreen = -1;
+    /// <summary>
+    /// 网格顶点的偏移值
+    /// </summary>
+    public const int VertexOffset = 0;
+    /// <summary>
+    /// 网格顶点的步进值
+    /// </summary>
+    public const int VertexStep = 2;
 
     /// <summary>
     /// 用于管理纹理剔除设置的结构体 (官方 CubismModel::CullingData)
@@ -153,10 +161,24 @@ public class CubismModel : IDisposable
     protected bool _isBlendModeEnabled;
 
     /// <summary>
+    /// 所属上下文 (提供 ID 管理器与内存分配器).
+    /// </summary>
+    public CubismContext Context { get; }
+
+    /// <summary>
     /// 构造函数 (官方为 protected, 只能由 CubismMoc 生成. C# 由同一程序集中的 CubismMoc 生成)
     /// </summary>
-    protected internal unsafe CubismModel(IntPtr model)
+    /// <param name="context">所属上下文 (提供 ID 管理器与内存分配器)</param>
+    /// <param name="model">Core 生成的模型句柄</param>
+    /// <exception cref="ArgumentNullException">context 为 null 时抛出</exception>
+    protected internal unsafe CubismModel(CubismContext context, IntPtr model)
     {
+        if (context is null)
+        {
+            throw new ArgumentNullException(nameof(context), "CubismModel requires a context instance.");
+        }
+
+        Context = context;
         Model = model;
         _modelOpacity = 1.0f;
 
@@ -194,7 +216,7 @@ public class CubismModel : IDisposable
 
         if (model != IntPtr.Zero)
         {
-            CubismFramework.DeallocateAligned(model);
+            Context.Allocator.DeallocateAligned(model);
         }
 
         GC.SuppressFinalize(this);
@@ -224,7 +246,7 @@ public class CubismModel : IDisposable
             for (int i = 0; i < parameterCount; ++i)
             {
                 var str = new string(parameterIds[i]);
-                ParameterIds.Add(CubismFramework.CubismIdManager.GetId(str));
+                ParameterIds.Add(Context.IdManager.GetId(str));
 
                 _userParameterRepeatDataList[i] = new ParameterRepeatData(false, false);
             }
@@ -241,7 +263,7 @@ public class CubismModel : IDisposable
             for (int i = 0; i < partCount; ++i)
             {
                 var str = new string(partIds[i]);
-                PartIds.Add(CubismFramework.CubismIdManager.GetId(str));
+                PartIds.Add(Context.IdManager.GetId(str));
             }
         }
 
@@ -254,7 +276,7 @@ public class CubismModel : IDisposable
             for (int i = 0; i < drawableCount; ++i)
             {
                 var str = new string(drawableIds[i]);
-                DrawableIds.Add(CubismFramework.CubismIdManager.GetId(str));
+                DrawableIds.Add(Context.IdManager.GetId(str));
                 _userDrawableCullings[i] = new CullingData(false, 0);
             }
         }
@@ -1649,7 +1671,7 @@ public class CubismModel : IDisposable
         var ownerIndex = GetOffscreenOwnerIndices()[offscreenIndex];
         var partIds = CubismCore.GetPartIds(Model);
 
-        return CubismFramework.CubismIdManager.GetId(new string(partIds[ownerIndex]));
+        return Context.IdManager.GetId(new string(partIds[ownerIndex]));
     }
 
     /// <summary>
