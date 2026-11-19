@@ -1,4 +1,4 @@
-﻿//IDで指定された目のパラメータが、0のときに閉じるなら true 、1の時に閉じるなら false 。
+//IDで指定された目のパラメータが、0のときに閉じるなら true 、1の時に閉じるなら false 。
 //#define CloseIfZero
 
 using Live2DCSharpSDK.Framework.Model;
@@ -184,7 +184,9 @@ public class CubismEyeBlink
     /// <returns>次のまばたきを行う時刻[秒]</returns>
     private float DetermineNextBlinkingTiming()
     {
-        float r = _random.Next() / int.MaxValue;
+        // C# 整数除法陷阱：两侧 int 会先做整除再隐式转 float，结果恒 0。
+        // 官方 R5 は static_cast<csmFloat32>(rand()) / static_cast<csmFloat32>(RAND_MAX) で [0,1) の乱数を得る。
+        float r = (float)_random.Next() / int.MaxValue;
 
         return _userTimeSeconds + (r * (2.0f * _blinkingIntervalSeconds - 1.0f));
     }

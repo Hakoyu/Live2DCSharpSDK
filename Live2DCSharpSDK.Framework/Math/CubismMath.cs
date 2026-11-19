@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace Live2DCSharpSDK.Framework.Math;
 
@@ -25,6 +25,46 @@ public static class CubismMath
     }
 
     /// <summary>
+    /// サイン関数の値を返す（官方 5-r.5 の CubismMath::SinF）。
+    /// </summary>
+    /// <param name="x">角度[rad]</param>
+    /// <returns>sin(x)</returns>
+    public static float SinF(float x)
+    {
+        return MathF.Sin(x);
+    }
+
+    /// <summary>
+    /// コサイン関数の値を返す（官方 5-r.5 の CubismMath::CosF）。
+    /// </summary>
+    /// <param name="x">角度[rad]</param>
+    /// <returns>cos(x)</returns>
+    public static float CosF(float x)
+    {
+        return MathF.Cos(x);
+    }
+
+    /// <summary>
+    /// 絶対値を返す（官方 5-r.5 の CubismMath::AbsF）。
+    /// </summary>
+    /// <param name="x">絶対値を求める値</param>
+    /// <returns>絶対値</returns>
+    public static float AbsF(float x)
+    {
+        return MathF.Abs(x);
+    }
+
+    /// <summary>
+    /// 平方根を返す（官方 5-r.5 の CubismMath::SqrtF）。
+    /// </summary>
+    /// <param name="x">平方根を求める値</param>
+    /// <returns>平方根</returns>
+    public static float SqrtF(float x)
+    {
+        return MathF.Sqrt(x);
+    }
+
+    /// <summary>
     /// イージング処理されたサインを求める
     /// フェードイン・アウト時のイージングに利用できる
     /// </summary>
@@ -35,7 +75,7 @@ public static class CubismMath
         if (value < 0.0f) return 0.0f;
         else if (value > 1.0f) return 1.0f;
 
-        return 0.5f - 0.5f * MathF.Cos(value * Pi);
+        return 0.5f - 0.5f * CosF(value * Pi);
     }
 
     /// <summary>

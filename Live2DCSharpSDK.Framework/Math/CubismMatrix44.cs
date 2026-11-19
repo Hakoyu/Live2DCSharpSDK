@@ -1,4 +1,4 @@
-﻿namespace Live2DCSharpSDK.Framework.Math;
+namespace Live2DCSharpSDK.Framework.Math;
 
 /// <summary>
 /// 4x4行列の便利クラス。
@@ -235,5 +235,70 @@ public record CubismMatrix44
     public void MultiplyByMatrix(CubismMatrix44 m)
     {
         MultiplyByMatrix(m.Tr);
+    }
+
+    /// <summary>
+    /// 現在の行列の逆行列を返す（官方 5-r.5 で追加された CubismMatrix44::GetInvert）。
+    /// </summary>
+    /// <returns>逆行列。行列式が 0 に近い場合は単位行列</returns>
+    public CubismMatrix44 GetInvert()
+    {
+        float r00 = _tr[0];
+        float r10 = _tr[1];
+        float r20 = _tr[2];
+        float r01 = _tr[4];
+        float r11 = _tr[5];
+        float r21 = _tr[6];
+        float r02 = _tr[8];
+        float r12 = _tr[9];
+        float r22 = _tr[10];
+
+        float tx = _tr[12];
+        float ty = _tr[13];
+        float tz = _tr[14];
+
+        float det = (r00 * ((r11 * r22) - (r12 * r21)))
+                    - (r01 * ((r10 * r22) - (r12 * r20)))
+                    + (r02 * ((r10 * r21) - (r11 * r20)));
+
+        var dst = new CubismMatrix44();
+
+        if (CubismMath.AbsF(det) < CubismMath.Epsilon)
+        {
+            dst.LoadIdentity();
+            return dst;
+        }
+
+        float invDet = 1.0f / det;
+
+        float inv00 = ((r11 * r22) - (r12 * r21)) * invDet;
+        float inv01 = -((r01 * r22) - (r02 * r21)) * invDet;
+        float inv02 = ((r01 * r12) - (r02 * r11)) * invDet;
+        float inv10 = -((r10 * r22) - (r12 * r20)) * invDet;
+        float inv11 = ((r00 * r22) - (r02 * r20)) * invDet;
+        float inv12 = -((r00 * r12) - (r02 * r10)) * invDet;
+        float inv20 = ((r10 * r21) - (r11 * r20)) * invDet;
+        float inv21 = -((r00 * r21) - (r01 * r20)) * invDet;
+        float inv22 = ((r00 * r11) - (r01 * r10)) * invDet;
+
+        dst.Tr[0] = inv00;
+        dst.Tr[1] = inv10;
+        dst.Tr[2] = inv20;
+        dst.Tr[3] = 0.0f;
+        dst.Tr[4] = inv01;
+        dst.Tr[5] = inv11;
+        dst.Tr[6] = inv21;
+        dst.Tr[7] = 0.0f;
+        dst.Tr[8] = inv02;
+        dst.Tr[9] = inv12;
+        dst.Tr[10] = inv22;
+        dst.Tr[11] = 0.0f;
+
+        dst.Tr[12] = -((inv00 * tx) + (inv01 * ty) + (inv02 * tz));
+        dst.Tr[13] = -((inv10 * tx) + (inv11 * ty) + (inv12 * tz));
+        dst.Tr[14] = -((inv20 * tx) + (inv21 * ty) + (inv22 * tz));
+        dst.Tr[15] = 1.0f;
+
+        return dst;
     }
 }

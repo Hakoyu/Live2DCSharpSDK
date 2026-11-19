@@ -1,4 +1,5 @@
-﻿using Live2DCSharpSDK.Framework.Model;
+using Live2DCSharpSDK.Framework.Math;
+using Live2DCSharpSDK.Framework.Model;
 
 namespace Live2DCSharpSDK.Framework.Effect;
 
@@ -25,7 +26,8 @@ public class CubismBreath
     {
         _currentTime += deltaTimeSeconds;
 
-        float t = _currentTime * 2.0f * 3.14159f;
+        // 官方 5-r.2 で 3.14159f から CubismMath.Pi に変更された
+        float t = _currentTime * 2.0f * CubismMath.Pi;
 
         foreach (var item in Parameters)
         {
