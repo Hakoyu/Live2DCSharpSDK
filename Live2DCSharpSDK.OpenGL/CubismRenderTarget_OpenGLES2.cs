@@ -12,15 +12,15 @@ namespace Live2DCSharpSDK.OpenGL;
 public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
 {
     /// <summary>
-    /// 无参构造函数使用的默认 API. 
-    /// 官方直接调用全局 GL 函数, 因此作为对等处理, 在创建渲染器时设置. 
+    /// 本渲染目标使用的 OpenGL API. 
+    /// 由构造函数传入, 或由所属的 CubismOffscreenManager_OpenGLES2 在新建后绑定. 
     /// </summary>
-    private static OpenGLApi? s_defaultApi;
-
-    private readonly OpenGLApi? _gl;
+    private OpenGLApi? _gl;
 
     /// <summary>
     /// 无参构造函数 (为满足 ICubismOffscreenManager&lt;T&gt; 的 new() 约束). 
+    /// 创建时未绑定 OpenGLApi, 由所属管理器在归还调用方之前通过 BindApi 绑定;
+    /// 绑定之前访问 GL 会抛出 InvalidOperationException.
     /// </summary>
     public CubismRenderTarget_OpenGLES2()
     {
@@ -30,21 +30,55 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
     /// 带参数的构造函数
     /// </summary>
     /// <param name="gl">OpenGL API</param>
+    /// <exception cref="ArgumentNullException">gl 为 null 时抛出</exception>
     public CubismRenderTarget_OpenGLES2(OpenGLApi gl)
     {
+        if (gl is null)
+        {
+            throw new ArgumentNullException(nameof(gl),
+                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2 requires an OpenGLApi instance.");
+        }
+
         _gl = gl;
     }
 
     /// <summary>
-    /// 设置无参构造函数使用的默认 API. 
+    /// 当前渲染目标绑定的 OpenGL API. 未绑定时为 null. 
     /// </summary>
-    internal static void SetDefaultApi(OpenGLApi gl)
+    public OpenGLApi? Api => _gl;
+
+    /// <summary>
+    /// 绑定 OpenGL API. 
+    /// 仅由所属的 CubismOffscreenManager_OpenGLES2 在新建渲染目标后调用;
+    /// 已绑定其它 API 时抛出异常, 防止两个上下文互相覆盖 (旧 s_defaultApi 的回归点). 
+    /// </summary>
+    /// <param name="gl">OpenGL API</param>
+    /// <exception cref="ArgumentNullException">gl 为 null 时抛出</exception>
+    /// <exception cref="InvalidOperationException">已绑定其它 OpenGLApi 时抛出</exception>
+    internal void BindApi(OpenGLApi gl)
     {
-        s_defaultApi = gl;
+        if (gl is null)
+        {
+            throw new ArgumentNullException(nameof(gl),
+                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2 requires an OpenGLApi instance.");
+        }
+
+        if (_gl is null)
+        {
+            _gl = gl;
+            return;
+        }
+
+        if (ReferenceEquals(_gl, gl) is false)
+        {
+            throw new InvalidOperationException(
+                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2 is already bound to another OpenGLApi instance.");
+        }
     }
 
-    private OpenGLApi GL => _gl ?? s_defaultApi
-        ?? throw new InvalidOperationException("[Live2D OpenGL]CubismRenderTarget_OpenGLES2: OpenGLApi is not set.");
+    private OpenGLApi GL => _gl ?? throw new InvalidOperationException(
+        "[Live2D OpenGL]CubismRenderTarget_OpenGLES2: OpenGLApi is not set. " +
+        "Create the render target with an OpenGLApi, or let the owning offscreen manager bind one.");
 
     /// <summary>
     /// 作为渲染目标的地址
@@ -95,6 +129,16 @@ public class CubismRenderTarget_OpenGLES2 : CubismRenderTarget
         }
 
         OpenGLApi gl = src.GL;
+
+        // 双方必须绑定同一个 OpenGLApi 实例. 
+        // 跨上下文拷贝没有意义, 旧实现会静默按最后设置 s_defaultApi 的 API 执行 (G2 的回归点). 
+        if (ReferenceEquals(gl, dst.GL) is false)
+        {
+            throw new InvalidOperationException(
+                "[Live2D OpenGL]CubismRenderTarget_OpenGLES2.CopyBuffer requires both render targets " +
+                "to be bound to the same OpenGLApi instance.");
+        }
+
         gl.GetIntegerv(gl.GL_FRAMEBUFFER_BINDING, out int framebuffer);
 
         gl.BindFramebuffer(gl.GL_READ_FRAMEBUFFER, src.RenderTexture);

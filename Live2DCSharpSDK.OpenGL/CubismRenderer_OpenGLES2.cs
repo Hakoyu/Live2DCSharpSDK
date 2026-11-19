@@ -24,6 +24,12 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     private readonly OpenGLApi GL;
 
     /// <summary>
+    /// 本渲染器专用的离屏渲染目标管理器. 
+    /// 多个渲染器 (多个 GL 上下文) 共存时各自独立, 不再共享进程级单例. 
+    /// </summary>
+    public CubismOffscreenManager_OpenGLES2 OffscreenManager { get; }
+
+    /// <summary>
     /// 模型引用的纹理与渲染器绑定的纹理之间的映射
     /// </summary>
     private readonly Dictionary<int, int> _textures;
@@ -198,8 +204,18 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
     /// </summary>
     public unsafe CubismRenderer_OpenGLES2(OpenGLApi gl, LAppDelegate lapp, CubismModel model, int maskBufferCount = 1) : base(model)
     {
+        if (gl is null)
+        {
+            throw new ArgumentNullException(nameof(gl),
+                "[Live2D OpenGL]CubismRenderer_OpenGLES2 requires an OpenGLApi instance.");
+        }
+
         GL = gl;
-        CubismRenderTarget_OpenGLES2.SetDefaultApi(gl);
+
+        // 每个渲染器持有自己的离屏管理器, 与 GL 上下文一一对应.
+        // 旧实现在这里设置静态 s_defaultApi, 后创建的渲染器会覆盖先创建的 (多上下文污染). 
+        OffscreenManager = new(gl);
+
         Shader = new(gl);
         _lapp = lapp;
         _rendererProfile = new(gl);
@@ -280,7 +296,7 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         {
             for (int offscreenIndex = 0; offscreenIndex < offscreenCount; ++offscreenIndex)
             {
-                var renderTarget = new CubismOffscreenRenderTarget_OpenGLES2();
+                var renderTarget = new CubismOffscreenRenderTarget_OpenGLES2(OffscreenManager);
                 renderTarget.SetOffscreenIndex(offscreenIndex);
                 _offscreenList.Add(renderTarget);
             }
@@ -1409,18 +1425,18 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         }
         _offscreenMasks.Clear();
 
-        // 离屏(只释放自有的渲染目标).
+        // 离屏: 先归还本渲染器借用的槽位, 再释放本渲染器自有的管理器 (池内的渲染目标).
         // 官方析构函数(Framework/Rendering/OpenGL/CubismRenderer_OpenGLES2.cpp:494-525)只销毁
         // 自己持有的 _modelRenderTargets / _drawableMasks / _offscreenMasks,
-        // 不触碰共享单例 CubismOffscreenManager_OpenGLES2 的渲染目标.
-        // manager 的释放由应用层(官方 Samples/OpenGL/.../LAppLive2DManager.cpp:77 的 ReleaseInstance)负责.
-        // 此处只将本 renderer 借用的 target 恢复为已结束使用状态
-        // (其他 renderer 正在使用的 target 不在 StopUsingRenderTexture 的对象内, 因此不会误伤). 
+        // 不触碰 CubismOffscreenManager_OpenGLES2 的渲染目标.
+        // 本地自 M-1 起每个渲染器持有自己的管理器, 因此在这里一并释放
+        // (与其它释放路径一样, 需要 GL 上下文为 current).
         foreach (var offscreen in _offscreenList)
         {
             offscreen.StopUsingRenderTexture();
         }
         _offscreenList.Clear();
+        OffscreenManager.Dispose();
 
         // GL 对象 (§2.F 漏点①: 此前未被释放)
         GL.DeleteBuffer(VertexBuffer);
