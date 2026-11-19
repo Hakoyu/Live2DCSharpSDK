@@ -299,6 +299,19 @@ public class CubismRenderer_OpenGLES2 : CubismRenderer
         _rendererProfile.Restore();
     }
 
+    // P5 基类契约（官方 CubismRenderer.hpp:284,289）：
+    // P6 在 DoDrawModel 前后实现真正的 offscreen 绑定（官方 OpenGL 为 CubismRenderer_OpenGLES2.cpp:724,788）。
+    protected override void BeforeDrawModelRenderTarget()
+    {
+    }
+
+    /// <summary>
+    /// モデル描画後のオフスクリーン設定（P5 契约占位，P6 实现）
+    /// </summary>
+    protected override void AfterDrawModelRenderTarget()
+    {
+    }
+
     protected override unsafe void DoDrawModel()
     {
         //------------ クリッピングマスク・バッファ前処理方式の場合 ------------

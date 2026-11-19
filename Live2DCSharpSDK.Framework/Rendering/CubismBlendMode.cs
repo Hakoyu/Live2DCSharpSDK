@@ -21,4 +21,8 @@ public enum CubismBlendMode
     /// マスク
     /// </summary>
     Mask = 3,
+    /// <summary>
+    /// コピー（R5 で追加。offscreen 合成用。CubismRenderer.hpp:48）
+    /// </summary>
+    Copy = 4,
 };

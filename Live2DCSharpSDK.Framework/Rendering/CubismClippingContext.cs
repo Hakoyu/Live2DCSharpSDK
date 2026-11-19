@@ -42,6 +42,10 @@ public unsafe abstract class CubismClippingContext(CubismClippingManager manager
     /// </summary>
     public List<int> ClippedDrawableIndexList = [];
     /// <summary>
+    /// このマスクにクリップされるオフスクリーンのリスト（R5 追加、CubismRenderer.hpp:351）
+    /// </summary>
+    public List<int> ClippedOffscreenIndexList = [];
+    /// <summary>
     /// このマスクが割り当てられるレンダーテクスチャ（フレームバッファ）やカラーバッファのインデックス
     /// </summary>
     public int BufferIndex;
@@ -55,5 +59,14 @@ public unsafe abstract class CubismClippingContext(CubismClippingManager manager
     public void AddClippedDrawable(int drawableIndex)
     {
         ClippedDrawableIndexList.Add(drawableIndex);
+    }
+
+    /// <summary>
+    /// このマスクにクリップされるオフスクリーンを追加する（R5 追加、CubismRenderer.cpp:215-218）
+    /// </summary>
+    /// <param name="offscreenIndex">クリッピング対象に追加するオフスクリーンのインデックス</param>
+    public void AddClippedOffscreen(int offscreenIndex)
+    {
+        ClippedOffscreenIndexList.Add(offscreenIndex);
     }
 }

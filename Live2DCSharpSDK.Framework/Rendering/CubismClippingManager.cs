@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Live2DCSharpSDK.Framework.Core;
 using Live2DCSharpSDK.Framework.Math;
 using Live2DCSharpSDK.Framework.Model;
 using Live2DCSharpSDK.Framework.Type;
@@ -7,7 +8,17 @@ namespace Live2DCSharpSDK.Framework.Rendering;
 
 public abstract class CubismClippingManager
 {
+    /// <summary>
+    /// バックエンドの種類（既存。OpenGL / Vulkan の判別用にそのまま残す）
+    /// </summary>
     public abstract RenderType RenderType { get; }
+    /// <summary>
+    /// 処理するオブジェクトタイプ（Drawable / Offscreen の 2 系統を区別する。PLAN D-08）。
+    /// 官方 R5 は Initialize 等の引数で都度渡すが、本地は manager を 2 系統に分ける
+    /// （drawable 用 / offscreen 用）ためフィールドで保持する。
+    /// 既定値は Drawable（値 0）。Offscreen は値 2（値 1 は官方で削除済み）。
+    /// </summary>
+    public CsmEnum.DrawableObjectType Type { get; set; } = CsmEnum.DrawableObjectType.Drawable;
     public unsafe abstract CubismClippingContext CreateClippingContext(CubismClippingManager manager,
         CubismModel model, int* clippingDrawableIndices, int clipCount);
 

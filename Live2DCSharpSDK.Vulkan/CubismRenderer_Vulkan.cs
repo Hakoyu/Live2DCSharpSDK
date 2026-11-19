@@ -1149,6 +1149,19 @@ public class CubismRenderer_Vulkan : CubismRenderer
         _clippingManager.Dispose();
     }
 
+    // P5 基类契约（官方 CubismRenderer.hpp:284,289）：
+    // P8 在 DoDrawModel 前后实现真正的 offscreen 绑定（官方 Vulkan 对应 CubismRenderer_Vulkan.cpp）。
+    protected override void BeforeDrawModelRenderTarget()
+    {
+    }
+
+    /// <summary>
+    /// モデル描画後のオフスクリーン設定（P5 契约占位，P8 实现）
+    /// </summary>
+    protected override void AfterDrawModelRenderTarget()
+    {
+    }
+
     /// <summary>
     /// モデルを描画する実際の処理
     /// </summary>
